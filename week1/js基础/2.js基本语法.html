@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JS 基本语法</title>
+</head>
+<body>
+    <script>
+        // ===== 变量声明 =====
+        var a;           // 旧式声明，作用域是函数级，不推荐
+        let b;           // 可变变量，作用域是块级 {}，推荐
+        const c = 1;     // 常量，声明时必须赋值，不可修改
+        console.log(a, b, c);  // a=undefined（var声明未赋值默认值），b同理，c=1
+
+        // ===== 字符串 =====
+        let name = "张三";     // 字符串可以用双引号或单引号
+        console.log(name);
+
+        // ===== null =====
+        let empty = null;      // 表示"空"，故意设置为空值
+        console.log(empty);
+
+        // ===== if-else 条件判断 =====
+        let age = 19;
+        if (age >= 18) {           // 条件成立执行这里
+            console.log("成年人");
+        } else {                   // 条件不成立执行这里
+            console.log("未成年人");
+        }
+
+        // ===== for 循环 =====
+        // for (初始值; 条件; 每次循环后执行)
+        console.log("for循环");
+        for (let i = 0; i < 5; i++) {   // i从0开始，i<5时循环，每次i+1
+            console.log(i);             // 输出 0,1,2,3,4
+        }
+
+        // ===== while 循环 =====
+        let cont = 1;
+        while (cont % 2 === 0) {    // cont % 2 === 0 表示 cont 是偶数
+            console.log(cont);      // 当前 cont=1 是奇数，条件不成立，循环不执行
+            cont++;
+        }
+
+    </script>
+</body>
+</html>

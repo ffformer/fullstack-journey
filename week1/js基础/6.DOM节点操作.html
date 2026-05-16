@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOM节点操作</title>
+    <style>
+        table{
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px;
+        }
+        td,th{
+            border: 2px solid black;
+            text-align: center;
+            padding: 8px;
+        }
+        th{
+            background-color: antiquewhite;
+        }
+    </style>
+</head>
+<body>
+    
+    <h1 style="text-align: center ;">表格的增删改查</h1>
+    <button onclick="addData()">添加数据</button>
+    <table id="tb">
+        <tr>
+            <th>名字</th>
+            <th>年龄</th>
+            <th>操作</th>
+        </tr>
+        <tr>
+            <td>张三</td>
+            <td>20</td>
+            <td><button onclick="deleteData(this)">删除</button><button onclick="editData(this)">修改</button></td>
+        </tr>
+    </table>
+
+    <script src="./table.js"></script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JS 函数</title>
+</head>
+<body>
+    <script>
+        // ===== 1. 函数声明（最常用） =====
+        function sayHello() {                  // function 函数名(参数)
+            console.log("你好！");
+        }
+        sayHello();                            // 调用函数，输出：你好！
+
+        // ===== 2. 带参数 =====
+        function greet(name) {                 // name 是形参
+            console.log("你好，" + name);
+        }
+        greet("张三");                         // "张三" 是实参 → 你好，张三
+
+        // ===== 3. 带返回值 =====
+        function add(a, b) {
+            return a + b;                      // return 把结果返回给调用者
+        }
+        let result = add(3, 5);                // result = 8
+        console.log("3 + 5 =", result);
+
+        // ===== 4. 函数表达式（把函数赋值给变量） =====
+        let multiply = function (a, b) {
+            return a * b;
+        };
+        console.log("3 × 5 =", multiply(3, 5));
+
+        // ===== 5. 箭头函数（简洁写法，推荐） =====
+        let divide = (a, b) => {
+            return a / b;
+        };
+        console.log("10 ÷ 2 =", divide(10, 2));
+
+        // 箭头函数更简洁写法（只有一行时 {} 和 return 都可以省略）
+        let square = n => n * n;
+        console.log("5² =", square(5));
+
+        // ===== 6. 默认参数 =====
+        function welcome(name = "访客") {
+            console.log(name + "，欢迎回来！");
+        }
+        welcome();            // 没传参，用默认值 → 访客，欢迎回来！
+        welcome("李四");      // 传了参，覆盖默认值 → 李四，欢迎回来！
+
+    </script>
+</body>
+</html>

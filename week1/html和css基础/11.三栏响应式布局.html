@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>三栏响应式布局 — Day 1 产出</title>
+    <style>
+        /* ========== 全局重置 ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "KaiTi", "Microsoft YaHei", sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ========== 导航栏 ========== */
+        .navbar {
+            background-color: #2c3e50;
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .navbar .nav-links {
+            display: flex;
+            gap: 24px;
+            list-style: none;
+        }
+
+        .navbar .nav-links a {
+            color: white;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .navbar .nav-links a:hover {
+            color: #3498db;
+        }
+
+        /* ========== 主内容区：三栏 Flex 布局 ========== */
+        .main-container {
+            display: flex;
+            flex: 1;
+            gap: 20px;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* 左侧栏 */
+        .sidebar-left {
+            flex: 1;
+            background-color: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .sidebar-left h3 {
+            margin-bottom: 12px;
+            color: #2c3e50;
+        }
+
+        .sidebar-left ul {
+            list-style: none;
+        }
+
+        .sidebar-left li {
+            padding: 8px 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .sidebar-left li a {
+            color: #333;
+            text-decoration: none;
+        }
+
+        .sidebar-left li a:hover {
+            color: #3498db;
+        }
+
+        /* 中间内容区 */
+        .content {
+            flex: 2;
+            padding: 20px;
+        }
+
+        .content h2 {
+            margin-bottom: 16px;
+            color: #2c3e50;
+        }
+
+        .content .card {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .content .card h3 {
+            margin-bottom: 8px;
+            color: #3498db;
+        }
+
+        /* 右侧栏 */
+        .sidebar-right {
+            flex: 1;
+            background-color: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .sidebar-right h3 {
+            margin-bottom: 12px;
+            color: #2c3e50;
+        }
+
+        .sidebar-right .tag {
+            display: inline-block;
+            background-color: #3498db;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            margin: 4px;
+            font-size: 14px;
+        }
+
+        /* ========== 底部 ========== */
+        .footer {
+            background-color: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-size: 14px;
+        }
+
+        /* ========== 响应式：平板/移动端 → 三栏变单栏 ========== */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .navbar .nav-links {
+                flex-direction: column;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .main-container {
+                flex-direction: column;
+                padding: 12px;
+            }
+
+            .sidebar-left,
+            .content,
+            .sidebar-right {
+                flex: none;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="logo">My Blog</div>
+        <ul class="nav-links">
+            <li><a href="#">首页</a></li>
+            <li><a href="#">文章</a></li>
+            <li><a href="#">关于</a></li>
+            <li><a href="#">联系</a></li>
+        </ul>
+    </nav>
+
+    <!-- 主内容区：三栏 -->
+    <div class="main-container">
+        <!-- 左侧栏 -->
+        <aside class="sidebar-left">
+            <h3>分类导航</h3>
+            <ul>
+                <li><a href="#">前端开发</a></li>
+                <li><a href="#">后端开发</a></li>
+                <li><a href="#">数据库</a></li>
+                <li><a href="#">DevOps</a></li>
+                <li><a href="#">面试题</a></li>
+            </ul>
+        </aside>
+
+        <!-- 中间内容 -->
+        <main class="content">
+            <h2>最新文章</h2>
+
+            <article class="card">
+                <h3>Flex 布局完全指南</h3>
+                <p>Flex 布局是 CSS3 中最重要的布局方式之一。通过 display: flex 可以轻松实现一维布局，配合 justify-content 和 align-items 控制主轴和交叉轴的对齐方式。</p>
+            </article>
+
+            <article class="card">
+                <h3>CSS 盒模型深入理解</h3>
+                <p>每个 HTML 元素都可以看作一个盒子，由 content → padding → border → margin 四层组成。box-sizing: border-box 是最实用的设置，让宽高包含 padding 和 border。</p>
+            </article>
+
+            <article class="card">
+                <h3>响应式设计入门</h3>
+                <p>使用 @media 媒体查询，可以根据屏幕宽度切换布局。结合 Flex 的 flex-direction: column，可以让桌面端的多栏布局在移动端自动变成单栏。</p>
+            </article>
+        </main>
+
+        <!-- 右侧栏 -->
+        <aside class="sidebar-right">
+            <h3>标签云</h3>
+            <span class="tag">HTML</span>
+            <span class="tag">CSS</span>
+            <span class="tag">Flex</span>
+            <span class="tag">响应式</span>
+            <span class="tag">盒模型</span>
+            <span class="tag">JavaScript</span>
+            <span class="tag">React</span>
+        </aside>
+    </div>
+
+    <!-- 底部 -->
+    <footer class="footer">
+        <p>&copy; 2026 My Blog. 全栈学习之旅 Day 1 产出.</p>
+    </footer>
+
+</body>
+</html>

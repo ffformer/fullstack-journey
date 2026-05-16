@@ -1,0 +1,12 @@
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+
+# 依赖（以后会用到）
+node_modules/
+
+# 环境变量
+.env

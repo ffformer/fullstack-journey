@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOM</title>
+</head>
+<body>
+    <div id="box1">这是一个id选择器标签</div>
+    <div class="box2">这是一个class选择器标签</div>
+    <div>这是一个普通的div标签</div>
+    <button >点击我</button>
+    <script>
+        var box1 = document.getElementById("box1");  // 通过id选择器获取元素
+        console.log(box1);  // 输出：<div id="box1">这是一个id选择器标签</div>  
+        let box2 = document.getElementsByClassName("box2")[0];  // 通过class选择器获取元素，返回HTMLCollection，取第一个元素
+        console.log(box2);  // 输出：<div class="box2">这是一个class选择器标签</div>
+        let divs = document.getElementsByTagName("div");  // 通过标签名选择器获取元素，返回HTMLCollection
+        console.log(divs[2]);  // 输出第3个div元素（索引从0开始：0,1,2）
+
+        box1.innerHTML = "这是通过id选择器修改的内容";  // 修改变量box1对应的元素内容
+        box2.style.color = "red";  
+
+        let button = document.getElementsByTagName("button")[0];  // 获取第一个button元素
+        // button.onclick = function() {  // 给按钮添加点击事件监听
+        //     alert("按钮被点击了！");
+        // };
+        button.addEventListener("click", function() {  // 另一种添加事件监听的方式
+            alert("按钮被点击了（通过addEventListener）！");
+        });
+    </script>
+
+</body>
+</html>
