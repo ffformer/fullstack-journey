@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vue 3 响应式原理 — Proxy 演示</title>
+</head>
+<body>
+    <h1>打开控制台看 Proxy 是怎么工作的</h1>
+    <p>这个页面没有引用 Vue，纯原生 JS 的 Proxy 演示</p>
+
+    <script>
+        console.clear()
+        console.log('═══════════════════════════════════════')
+        console.log('第1步：一个普通对象')
+        console.log('═══════════════════════════════════════')
+
+        const obj = { name: '张三', age: 25 }
+        console.log('普通对象：', obj)
+        console.log('obj.name = "李四" 改了，但没有任何通知机制')
+        obj.name = '李四'
+
+        console.log('\n═══════════════════════════════════════')
+        console.log('第2步：用 Proxy 包装这个对象')
+        console.log('═══════════════════════════════════════')
+
+        // Proxy 就像一个保安，拦截所有对对象的"读"和"写"操作
+        const reactiveObj = new Proxy(obj, {
+            // get：每次读取属性时触发
+            get(target, key) {
+                console.log(`📖 读取了 ${String(key)} → 值是 ${target[key]}`)
+                return target[key]
+            },
+            // set：每次写入属性时触发
+            set(target, key, value) {
+                console.log(`✏️ 修改了 ${String(key)}：${target[key]} → ${value}`)
+                target[key] = value
+                console.log('   → 此时 Vue 会通知页面更新！')
+                return true // 必须返回 true 表示设置成功
+            }
+        })
+
+        console.log('\n----- 现在通过 Proxy 来读写 -----')
+        console.log(reactiveObj.name)   // 触发 get → 打印读取日志
+        reactiveObj.age = 30           // 触发 set → 打印修改日志
+        reactiveObj.name = '王五'       // 触发 set → 打印修改日志
+
+        console.log('\n═══════════════════════════════════════')
+        console.log('第3步：手动触发"视图更新"（模拟 Vue 做的事）')
+        console.log('═══════════════════════════════════════')
+
+        // Vue 内部维护了一个"更新函数"，每当 set 触发就调用它
+        function updateView() {
+            console.log('🔄 视图更新！页面重新渲染...')
+            document.getElementById('output').textContent =
+                `${reactiveObj.name}，${reactiveObj.age} 岁`
+        }
+
+        // 重写 set：每次修改后自动调 updateView
+        const reactiveWithView = new Proxy({ name: '张三', age: 25 }, {
+            get(target, key) {
+                return target[key]
+            },
+            set(target, key, value) {
+                target[key] = value
+                updateView()  // ← 这就是 Vue 自动更新页面的核心原理
+                return true
+            }
+        })
+
+        console.log('页面输出元素的内容会跟着数据自动变：')
+        reactiveWithView.name = '李四'  // 页面自动更新
+        reactiveWithView.age = 30      // 页面自动更新
+
+        console.log('\n═══════════════════════════════════════')
+        console.log('第4步：Proxy vs Vue 2 的 Object.defineProperty')
+        console.log('═══════════════════════════════════════')
+
+        // Vue 2 的方式：必须逐个属性定义拦截
+        const vue2Obj = { name: '张三' }
+        Object.defineProperty(vue2Obj, 'name', {
+            get() { console.log('Vue2 get'); return '张三' },
+            set(v) { console.log('Vue2 set', v) }
+        })
+        console.log('Vue 2 的问题：新增属性无法被检测到')
+        console.log('vue2Obj.age = 25 → 不会触发任何拦截')
+
+        // Vue 3 的 Proxy：拦截整个对象，新增属性也能检测
+        console.log('\nVue 3 的 Proxy：新增属性也能拦截！')
+        console.log('这就是为什么 Vue 3 不需要 $set')
+
+        console.log('\n═══════════════════════════════════════')
+        console.log('总结：')
+        console.log('1. Proxy 是 JS 原生特性（ES6），不是 Vue 发明的')
+        console.log('2. Vue 3 用 Proxy 拦截对象的读写')
+        console.log('3. 当 set 被触发 → Vue 通知用到这个数据的组件更新')
+        console.log('4. ref() 内部也是用 Proxy 包了一层对象 { value: xxx }')
+        console.log('═══════════════════════════════════════')
+    </script>
+
+    <p id="output">张三，25 岁</p>
+</body>
+</html>

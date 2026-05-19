@@ -10,19 +10,19 @@
 在开始之前，先完成环境搭建：
 
 - [ ] 安装 Node.js 20 LTS
-- [ ] 安装 VS Code（必装插件：ES7+ React snippets, Prettier, Thunder Client, Prisma）
+- [ ] 安装 VS Code（必装插件：Vue - Official, Prettier, Thunder Client, Prisma）
 - [ ] 安装 Git，配置 GitHub 账号 + SSH Key
 - [ ] 注册 Vercel 账号（前端部署）
 - [ ] 注册 Railway 或 Render 账号（后端部署）
-- [ ] 安装 Chrome 浏览器 + React DevTools 扩展
+- [ ] 安装 Chrome 浏览器 + Vue.js DevTools 扩展
 - [ ] 在 GitHub 创建学习仓库 `fullstack-journey`，每天 push 代码
 
 ---
 
-## 第 1 周：Web 基础 + React 起步
+## 第 1 周：Web 基础 + Vue 3 起步
 
 ### 目标
-建立对前端的基本认知，能看懂和修改 React 组件，完成第一个上线项目。
+建立对前端的基本认知，能看懂和修改 Vue 3 组件，完成第一个上线项目。
 
 ### Day 1 — HTML + CSS 速通
 
@@ -60,31 +60,31 @@
 
 **产出：** 用户列表页（从 API 获取数据，加载中/错误/空数据三种状态）
 
-### Day 5 — 你的第一个 React 项目
+### Day 5 — 你的第一个 Vue 3 项目
 
 | 时段 | 内容 | 方式 |
 |---|---|---|
-| 上午 2h | React 是什么（声明式/组件化/单向数据流）、Vite 创建项目、JSX 语法、函数组件、props 传参 | AI 搭建脚手架并逐行解释每个文件的作用 |
+| 上午 2h | Vue 3 是什么（声明式/组件化/响应式数据）、Vite + create-vue 创建项目、模板语法、SFC 单文件组件（template/script/style）、ref/reactive、props 传参 | AI 搭建脚手架并逐行解释每个文件的作用 |
 | 下午 2h | 理解组件树结构，学会拆分组件（页面 → 区块 → 元素） | AI 生成天气查询应用代码，你逐行读懂后改造成查多个城市 |
 
 **核心概念检查（必须能口头解释清楚）：**
 - [ ] 什么是组件？为什么要把页面拆成组件？
 - [ ] props 是什么？和 HTML 属性有什么区别？
-- [ ] JSX 是什么？和 HTML 有什么区别？
+- [ ] Vue 的模板语法和 HTML 有什么区别？
 
 **产出：** 天气查询应用（输入城市名 → 查询 → 展示温度/湿度/天气描述）
 
-### Day 6 — React 状态管理
+### Day 6 — Vue 3 响应式与生命周期
 
 | 时段 | 内容 | 方式 |
 |---|---|---|
-| 上午 2h | useState 深入：状态不可变性、状态更新是异步的、受控组件（input/select 的值由 state 控制） | 改造天气应用，加入搜索历史列表 |
-| 下午 2h | useEffect：副作用概念、依赖数组（空数组/有依赖/无依赖的区别）、清理函数 | 加入页面标题同步、localStorage 持久化搜索历史 |
+| 上午 2h | ref/reactive 深入：响应式原理（Proxy）、.value 的使用场景、受控组件（input/select 的值由 ref 控制） | 改造天气应用，加入搜索历史列表 |
+| 下午 2h | watch/watchEffect：副作用概念、watch 的依赖指定、watchEffect 自动追踪、onMounted/onUnmounted 生命周期 | 加入页面标题同步、localStorage 持久化搜索历史 |
 
 **核心概念检查：**
-- [ ] useState 为什么要返回数组？为什么不能用 `state = newValue`？
-- [ ] useEffect 的依赖数组不同写法分别代表什么执行时机？
-- [ ] 什么情况下需要在 useEffect 里 return 一个清理函数？
+- [ ] ref 和 reactive 的区别？什么时候用哪个？
+- [ ] watch 和 watchEffect 的执行时机有什么不同？
+- [ ] 什么情况下需要在 onUnmounted 里做清理？
 
 **产出：** 天气应用升级版（多城市切换 + 搜索历史持久化）
 
@@ -98,15 +98,15 @@
 **第一周检查点：**
 - [ ] GitHub 上有 4+ 个仓库，每个都有 README
 - [ ] 能口头解释：HTML/CSS/JS 各自负责什么
-- [ ] 能口头解释：React 组件、props、useState、useEffect 是什么
-- [ ] 能独立创建一个 React 项目并写一个简单组件
+- [ ] 能口头解释：Vue 3 组件、props、ref/reactive、computed、watch 是什么
+- [ ] 能独立创建一个 Vue 3 项目并写一个简单组件
 
 ---
 
-## 第 2 周：JavaScript 内功 + React 深入
+## 第 2 周：JavaScript 内功 + Vue 3 深入
 
 ### 目标
-深入理解 JS 核心机制和 React 原理，能独立开发中等复杂度前端应用。开始接触 TypeScript。
+深入理解 JS 核心机制和 Vue 3 原理，能独立开发中等复杂度前端应用。开始接触 TypeScript。
 
 ### Day 8 — 闭包与作用域
 
@@ -140,28 +140,28 @@
 
 **产出：** 5 道自编的异步顺序题（带答案和解析），证明你真正理解了
 
-### Day 11 — React 原理（一）：Hooks 本质
+### Day 11 — Vue 3 原理（一）：响应式系统
 
 | 时段 | 内容 |
 |---|---|
-| 上午 2h | Hooks 规则（只在顶层调用/只在函数组件中调用）、为什么需要这个规则（链表存储 state） |
-| 下午 2h | AI 带你从零实现一个迷你 useState + useEffect（约 30 行代码），理解闭包 + 链表如何驱动 Hooks |
+| 上午 2h | Vue 3 响应式原理：Proxy vs Object.defineProperty、ref 和 reactive 的内部实现、依赖收集（track）与触发更新（trigger） |
+| 下午 2h | AI 带你从零实现一个迷你响应式系统（reactive + effect），理解 Proxy + 发布订阅如何驱动视图更新 |
 
-**产出：** 一份手写 useState 源码 + 流程图，能口头讲清楚 Hooks 的存储和更新机制
+**产出：** 一份手写 reactive 源码 + 流程图，能口头讲清楚 Vue 3 响应式的存储和更新机制
 
-### Day 12 — React 原理（二）：渲染机制
+### Day 12 — Vue 3 原理（二）：渲染机制
 
 | 时段 | 内容 |
 |---|---|
-| 上午 2h | 虚拟 DOM 是什么、为什么需要它、diff 算法思想（同层比较/key 的作用）、Fiber 架构概念 |
-| 下午 2h | React.memo、useMemo、useCallback 的使用场景与滥用陷阱 |
+| 上午 2h | 虚拟 DOM 是什么、为什么需要它、diff 算法思想（同层比较/key 的作用）、编译器优化（静态提升/补丁标记） |
+| 下午 2h | computed 的缓存原理、watch 的调度机制、nextTick 的使用场景 |
 
 **核心概念检查：**
 - [ ] 虚拟 DOM 比真实 DOM 快在哪里？什么情况下不一定快？
 - [ ] key 为什么不能用 index？什么情况下可以用 index？
-- [ ] useMemo 和 useCallback 的区别？什么时候用？
+- [ ] computed 和 methods 的区别？什么时候用 computed？
 
-**产出：** 一篇技术笔记《React 在什么时候会重新渲染？如何避免不必要渲染？》
+**产出：** 一篇技术笔记《Vue 3 在什么时候会重新渲染？computed 和 watch 如何选择？》
 
 ### Day 13 — TypeScript 速通（一）
 
@@ -176,14 +176,14 @@
 
 | 时段 | 内容 |
 |---|---|
-| 上午 2h | TS + React 实战：把上周的天气应用用 TypeScript 重写（组件 props 类型、API 返回类型、事件类型） |
+| 上午 2h | TS + Vue 3 实战：把上周的天气应用用 TypeScript 重写（`<script setup lang="ts">`、组件 props 类型、API 返回类型、事件类型） |
 | 下午 2h | Week 2 知识图谱 + 本周所有代码整理推 GitHub |
 
 **第二周检查点：**
 - [ ] 能口头解释闭包、this、事件循环
 - [ ] 能手写 call/apply/bind/new 的简易实现
-- [ ] 能口头解释 React 渲染机制和 Hooks 原理
-- [ ] 能用 TypeScript 写一个 React 组件并正确定义所有类型
+- [ ] 能口头解释 Vue 3 响应式原理和虚拟 DOM 渲染机制
+- [ ] 能用 TypeScript 写一个 Vue 3 组件并正确定义所有类型
 
 ---
 
@@ -192,21 +192,21 @@
 ### 目标
 掌握现代前端工程化工具链和状态管理，完成一个复杂前端项目。
 
-### Day 15 — React Router + 多页面应用
+### Day 15 — Vue Router + 多页面应用
 
 | 时段 | 内容 |
 |---|---|
-| 上午 2h | React Router v6：BrowserRouter、Routes/Route、Link/NavLink、useParams/useNavigate/useLocation、嵌套路由 |
-| 下午 2h | 路由守卫（登录检查）、404 页面、懒加载（React.lazy + Suspense） |
+| 上午 2h | Vue Router 4：createRouter、RouterView/RouterLink、useRoute/useRouter、嵌套路由、编程式导航 |
+| 下午 2h | 路由守卫（beforeEach 登录检查）、404 页面、懒加载（defineAsyncComponent） |
 
 **产出：** 一个多页面博客前端框架（首页/文章列表/文章详情/关于页面），带路由导航
 
-### Day 16 — 状态管理（Zustand）
+### Day 16 — 状态管理（Pinia）
 
 | 时段 | 内容 |
 |---|---|
-| 上午 2h | 为什么需要全局状态管理（props drilling 问题）、Zustand 核心 API（create/set/get/subscribe）、devtools 中间件 |
-| 下午 2h | 实战：用 Zustand 管理用户登录状态、主题切换、购物车 |
+| 上午 2h | 为什么需要全局状态管理（props drilling 问题）、Pinia 核心 API（defineStore/state/getters/actions）、devtools 支持 |
+| 下午 2h | 实战：用 Pinia 管理用户登录状态、主题切换、购物车 |
 
 **产出：** 一个带登录状态管理 + 主题切换 + 购物车的电商前端壳
 
@@ -215,26 +215,26 @@
 | 时段 | 内容 |
 |---|---|
 | 上午 2h | Tailwind CSS：工具类思想、响应式断点、暗色模式、自定义主题 |
-| 下午 2h | Ant Design 或 shadcn/ui：表单、表格、弹窗、通知、骨架屏 |
+| 下午 2h | Element Plus 或 Naive UI：表单、表格、弹窗、通知、骨架屏 |
 
-**产出：** 用 Tailwind + shadcn/ui 搭建一个仪表盘页面（侧边栏 + 数据卡片 + 表格 + 图表占位）
+**产出：** 用 Tailwind + Element Plus 搭建一个仪表盘页面（侧边栏 + 数据卡片 + 表格 + 图表占位）
 
 ### Day 18-19 — 前端综合项目：任务管理看板（Kanban）
 
 | 时段 | 内容 |
 |---|---|
-| Day 18 全天 | 项目搭建（Vite + React + TS + Tailwind + Zustand + React Router） |
-|   | 看板核心：列管理（待办/进行中/已完成）、卡片拖拽（react-beautiful-dnd 或 @dnd-kit）、卡片 CRUD |
+| Day 18 全天 | 项目搭建（Vite + Vue 3 + TS + Tailwind + Pinia + Vue Router） |
+|   | 看板核心：列管理（待办/进行中/已完成）、卡片拖拽（vue-draggable-plus 或 @vueuse/gesture）、卡片 CRUD |
 | Day 19 全天 | 完善功能：搜索过滤（按标题/标签/优先级）、localStorage 持久化、深色模式 |
 
 **产出：** 一个功能完整的看板应用（这是你的第一个「能写进简历」的项目）
 
-### Day 20 — React 性能优化
+### Day 20 — Vue 3 性能优化
 
 | 时段 | 内容 |
 |---|---|
-| 上午 2h | 性能分析工具：React DevTools Profiler、Lighthouse、代码分割、图片懒加载 |
-| 下午 2h | 对看板项目做性能审计和优化（状态下沉、合理使用 memo、虚拟列表概念） |
+| 上午 2h | 性能分析工具：Vue DevTools、Lighthouse、代码分割、图片懒加载 |
+| 下午 2h | 对看板项目做性能审计和优化（computed 合理使用、shallowRef/shallowReactive、虚拟列表概念） |
 
 ### Day 21 — 第三周复盘 + 简历初稿
 
@@ -244,8 +244,8 @@
 |   | 撰写简历第一版（个人信息/技能清单/项目经历/教育背景），AI 帮你润色 |
 
 **第三周检查点：**
-- [ ] 能独立搭建 React + TS + Tailwind + Router + Zustand 的项目
-- [ ] 能口头解释：前端路由原理（Hash vs History）、状态管理方案对比
+- [ ] 能独立搭建 Vue 3 + TS + Tailwind + Vue Router + Pinia 的项目
+- [ ] 能口头解释：前端路由原理（Hash vs History）、状态管理方案对比（Pinia vs Vuex）
 - [ ] 有一个完整的前端项目（Kanban），README 完善
 - [ ] 简历初稿完成
 
@@ -316,7 +316,7 @@
 | 时段 | 内容 |
 |---|---|
 | 上午 2h | CORS 配置、axios 实例封装（baseURL/interceptors/错误统一处理）、环境变量管理（.env 区分开发/生产） |
-| 下午 2h | React 前端对接后端：注册/登录页面、文章列表/详情/新建/编辑页面、JWT 存储与请求拦截 |
+| 下午 2h | Vue 3 前端对接后端：注册/登录页面、文章列表/详情/新建/编辑页面、JWT 存储与路由守卫 |
 
 **本周重点：** 最晚 Day 26 开始投递简历，用看板项目 + 博客项目作为项目经历
 
@@ -457,25 +457,26 @@
 
 **产出：** 15 道题的逐题讲解笔记（你自己的话），每天 AI 模拟面试抽查 5 道
 
-### Day 45-46 — React 深度面试题
+### Day 45-46 — Vue 3 深度面试题
 
 | # | 问题 |
 |---|---|
-| 1 | React 的虚拟 DOM 是什么？diff 算法原理？key 的作用？ |
-| 2 | 函数组件 vs 类组件？为什么现在都用函数组件？ |
-| 3 | useState 的原理？为什么 Hook 不能放在条件语句中？ |
-| 4 | useEffect 的执行时机？依赖数组的不同情况？ |
-| 5 | useMemo/useCallback/React.memo 的使用场景与区别？ |
-| 6 | Context 的性能问题？如何优化？ |
-| 7 | React 18 的新特性？并发模式（Concurrent Mode）是什么？ |
-| 8 | 受控组件 vs 非受控组件？ref 的使用场景？ |
-| 9 | 状态提升？组件通信方式（props/context/状态管理/事件总线）？ |
-| 10 | React 性能优化手段有哪些？ |
-| 11 | 自定义 Hook 的设计原则？你写过哪些自定义 Hook？ |
-| 12 | 错误边界（Error Boundary）？Suspense？ |
-| 13 | 服务端渲染（SSR）概念？Next.js 解决了什么问题？ |
+| 1 | Vue 3 的虚拟 DOM 是什么？diff 算法原理？key 的作用？ |
+| 2 | Options API vs Composition API？为什么现在推荐 Composition API？ |
+| 3 | ref 和 reactive 的区别？为什么 ref 需要 .value？ |
+| 4 | computed 和 watch 的区别？各自适用什么场景？ |
+| 5 | watchEffect 的执行时机？和 watch 有什么不同？ |
+| 6 | Vue 3 响应式原理（Proxy vs Object.defineProperty）？ |
+| 7 | Vue 3 的编译优化（静态提升/补丁标记/Block Tree）？ |
+| 8 | 组件通信方式（props/emit/provide-inject/Pinia/事件总线）？ |
+| 9 | v-if vs v-show 的区别？使用场景？ |
+| 10 | Vue 3 性能优化手段有哪些？ |
+| 11 | 自定义 Hook（composables）的设计原则？你写过哪些？ |
+| 12 | `<script setup>` 的优势？和普通 setup() 有什么区别？ |
+| 13 | 服务端渲染（SSR）概念？Nuxt.js 解决了什么问题？ |
+| 14 | nextTick 的原理和使用场景？ |
 
-**产出：** 13 道题的逐题讲解笔记，AI 模拟面试抽查
+**产出：** 14 道题的逐题讲解笔记，AI 模拟面试抽查
 
 ### Day 47 — 网络 + 浏览器面试题
 
@@ -580,7 +581,7 @@
 **流程：**
 1. 自我介绍（3 分钟）
 2. 项目深挖（15 分钟）— AI 针对你的项目追问
-3. 技术问答（15 分钟）— JS/React/网络/数据库各抽 3 题
+3. 技术问答（15 分钟）— JS/Vue 3/网络/数据库各抽 3 题
 4. 算法题（10 分钟）— 共享屏幕手写代码
 5. 反问环节（5 分钟）
 
@@ -606,12 +607,12 @@
 
 | 周 | 项目 | 技术栈 | 部署 |
 |---|---|---|---|
-| 1 | 个人主页 + 天气应用 + 待办事项 | HTML/CSS/JS/React | GitHub Pages / Vercel |
-| 2 | TypeScript 天气应用 | React + TS | Vercel |
-| 3 | 看板应用（Kanban） | React + TS + Tailwind + Zustand + Router | Vercel |
-| 4 | 博客系统（全栈 #1） | React + TS + Express + Prisma + MySQL | Vercel + Railway |
-| 5 | 面试题库（全栈 #2） | React + TS + Express + Prisma + MySQL | Vercel + Railway |
-| 6 | 聊天应用/云盘（全栈 #3） | React + TS + Express + Socket.IO + Prisma | Vercel + Railway |
+| 1 | 个人主页 + 天气应用 + 待办事项 | HTML/CSS/JS/Vue 3 | GitHub Pages / Vercel |
+| 2 | TypeScript 天气应用 | Vue 3 + TS | Vercel |
+| 3 | 看板应用（Kanban） | Vue 3 + TS + Tailwind + Pinia + Vue Router | Vercel |
+| 4 | 博客系统（全栈 #1） | Vue 3 + TS + Express + Prisma + MySQL | Vercel + Railway |
+| 5 | 面试题库（全栈 #2） | Vue 3 + TS + Express + Prisma + MySQL | Vercel + Railway |
+| 6 | 聊天应用/云盘（全栈 #3） | Vue 3 + TS + Express + Socket.IO + Prisma | Vercel + Railway |
 | 7-8 | 面试准备 | — | — |
 
 ---
@@ -647,7 +648,7 @@
 | 类型 | 资源 |
 |---|---|
 | JS 参考 | MDN Web Docs（developer.mozilla.org）、《你不知道的 JavaScript》上卷 |
-| React | React 官方文档（react.dev）、Dan Abramov 的博客 |
+| Vue 3 | Vue 3 官方文档（vuejs.org）、Vue Mastery 免费课程 |
 | TypeScript | TypeScript 官方 Handbook、type-challenges（GitHub） |
 | Node.js | Node.js 官方文档、Express 官方指南 |
 | 数据库 | Prisma 官方文档、SQLZoo（在线练习 SQL） |

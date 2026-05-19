@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>11-watch</title>
+    <script type="module">
+        import { createApp, ref, watch } from './vue.esm-browser.js'
+        createApp({
+            setup() {
+                const keyword = ref('')
+                const oldVal = ref('')
+                const newVal = ref('')
+                const changeCount = ref(0)
+                // watch(监听源, (新值, 旧值) => { ... })
+                // 需明确指定监听谁，能拿到旧值，默认首次不执行
+                watch(keyword, (newValue, oldValue) => {
+                    oldVal.value = oldValue
+                    newVal.value = newValue
+                    changeCount.value++
+                })
+                return { keyword, oldVal, newVal, changeCount }
+            }
+        }).mount('#app')
+    </script>
+</head>
+<body>
+    <div id="app">
+        <input v-model="keyword" placeholder="输入关键词..." />
+        <p>旧值 → 新值：{{ oldVal }} → {{ newVal }}</p>
+        <p>变化次数：{{ changeCount }}</p>
+    </div>
+</body>
+</html>

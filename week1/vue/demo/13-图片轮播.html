@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>13-图片轮播</title>
+    <script type="module">
+        import { createApp, ref } from './vue.esm-browser.js'
+        createApp({
+            setup() {
+                // 三张图片路径数组
+                const imgs = ['./1.png', './2.png', './3.png']
+                // 当前显示第几张（索引从 0 开始）
+                const currentIndex = ref(0)
+                // 上一张：到第一张时回到最后一张（循环）
+                const prev = () => {
+                    currentIndex.value = currentIndex.value === 0 ? imgs.length - 1 : currentIndex.value - 1
+                }
+                // 下一张：到最后一张时回到第一张（循环）
+                const next = () => {
+                    currentIndex.value = currentIndex.value === imgs.length - 1 ? 0 : currentIndex.value + 1
+                }
+                // 点击圆点直接跳到对应图片
+                const goTo = (i) => {
+                    currentIndex.value = i
+                }
+                return { imgs, currentIndex, prev, next, goTo }
+            }
+        }).mount('#app')
+    </script>
+</head>
+<body>
+    <div id="app">
+        <p>图片轮播（当前第 {{ currentIndex + 1 }} / {{ imgs.length }} 张）</p>
+        <!-- :src 动态绑定当前显示的图片路径 -->
+        <img :src="imgs[currentIndex]" style="width:300px; display:block;" />
+        <button @click="prev">上一张</button>
+        <button @click="next">下一张</button>
+        <!-- 用 v-for 渲染圆点指示器，点击跳转对应图片 -->
+        <p>
+            <span v-for="(img, i) in imgs" :key="i" @click="goTo(i)" style="cursor:pointer; margin:0 4px;">
+                {{ i === currentIndex ? '●' : '○' }}
+            </span>
+        </p>
+    </div>
+</body>
+</html>

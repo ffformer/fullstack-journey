@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>vue入门</title>
+    <!-- 加载 Vue 主逻辑，type="module" 支持 import/export 语法 -->
+    <script type="module" src="./vue.js"></script>
+</head>
+<body>
+    <!-- Vue 挂载点，所有模板语法都写在这个 div 内 -->
+    <div id="app">
+        <!-- 插值表达式 {{ }}：直接在页面显示数据 -->
+        {{ msg }}
+        <h1>{{ web.title }}</h1>
+        <p>{{ web.url }}</p>
+        <h3>{{ number }}</h3>
+        <!-- @click 事件绑定：点击按钮触发 edit 方法 -->
+        <button @click="edit">Edit</button>
+
+        <hr />
+        <!-- v-show：切换 CSS display，元素始终在 DOM 中 -->
+        <p v-show="show">v-show 控制的文字，点击按钮切换显示/隐藏</p>
+        <button @click="toggle">Toggle v-show</button>
+
+        <!-- v-if：条件为 true 时元素才存在于 DOM 中，false 时完全移除 -->
+        <p v-if="show2">v-if 控制的文字，点击按钮切换显示/隐藏</p>
+        <button @click="toggle2">Toggle v-if</button>
+
+        <hr />
+        <!-- v-if / v-else-if / v-else：多条件分支，必须紧挨着写 -->
+        <p>当前等级：{{ level }}</p>
+        <p v-if="level === 0">v-if: 等级 0 - 普通用户</p>
+        <p v-else-if="level === 1">v-else-if: 等级 1 - VIP用户</p>
+        <p v-else>v-else: 等级 2 - 管理员</p>
+        <button @click="nextLevel">切换等级</button>
+
+        <hr />
+        <p>动态属性绑定 v-bind（简写 :）</p>
+        <!-- v-bind:href 完整写法：动态绑定链接地址 -->
+        <a v-bind:href="link.url">v-bind:href 完整写法</a><br />
+        <!-- :href 简写（推荐）：冒号代替 v-bind: -->
+        <a :href="link.url">:href 简写（推荐）</a><br />
+        <!-- :disabled 动态控制按钮是否禁用 -->
+        <button :disabled="!canClick">:disabled - {{ canClick ? '可点击' : '已禁用' }}</button><br />
+        <button @click="toggleDisabled">切换按钮状态</button>
+
+        <hr />
+        <p>v-for 列表渲染</p>
+        <ul>
+            <!-- v-for="(元素, 索引) in 数组" :key 必须有唯一值帮助 Vue 追踪 -->
+            <li v-for="(item, index) in list" :key="index">
+                {{ index }} - {{ item }}
+            </li>
+        </ul>
+        <button @click="addItem">添加一项</button>
+        <button @click="removeItem">删除最后一项</button>
+
+        <hr />
+        <p>v-model 双向绑定</p>
+        <!-- v-model 文本框：输入什么下面实时显示什么 -->
+        <input v-model="text" placeholder="输入文字..." />
+        <p>输入的内容：{{ text }}</p>
+
+        <!-- v-model 单选框：同一组 radio 用同一个 v-model，绑定字符串，选中存 value -->
+        <p>单选框（选中的值：{{ gender }}）</p>
+        <label><input type="radio" v-model="gender" value="男" /> 男</label>
+        <label><input type="radio" v-model="gender" value="女" /> 女</label>
+
+        <!-- v-model 复选框组：同一组 checkbox 用同一个 v-model，绑定数组，选中多个存多个 value -->
+        <p>复选框（选中的值：{{ hobbies }}</p>
+        <label><input type="checkbox" v-model="hobbies" value="篮球" /> 篮球</label>
+        <label><input type="checkbox" v-model="hobbies" value="足球" /> 足球</label>
+        <label><input type="checkbox" v-model="hobbies" value="游泳" /> 游泳</label>
+
+        <!-- v-model 修饰符 -->
+        <p>v-model 修饰符</p>
+        <!-- .lazy：默认实时同步，加 .lazy 后失去焦点才更新 -->
+        <p>.lazy — 失去焦点才更新：{{ lazyText }}</p>
+        <input v-model.lazy="lazyText" placeholder="输入后点别处试试..." />
+
+        <!-- .number：输入值是字符串，加 .number 自动转数字类型 -->
+        <p>.number — 自动转数字：{{ num }}（类型：{{ typeof num }}）</p>
+        <input v-model.number="num" placeholder="输入数字..." />
+
+        <!-- .trim：自动去除首尾空格 -->
+        <p>.trim — 自动去首尾空格："{{ trimText }}"</p>
+        <input v-model.trim="trimText" placeholder="前后加空格试试..." />
+
+        <hr />
+        <!-- v-text：设置文本内容，等于 {{ }}；v-html：渲染 HTML 标签（有 XSS 风险，仅用于可信内容） -->
+        <p>v-text 与 v-html</p>
+        <p v-text="rawText"></p>
+        <p v-html="rawHtml"></p>
+
+        <hr />
+        <!-- computed：计算属性，依赖不变则走缓存，不会重复计算 -->
+        <p>computed 计算属性</p>
+        <p>单价：<input v-model.number="price" /></p>
+        <p>数量：<input v-model.number="count" /></p>
+        <p>总价（computed）：{{ total }}</p>
+
+        <hr />
+        <!-- watch：明确指定监听源，数据变化时执行副作用，能拿到新旧值 -->
+        <p>watch 监听器</p>
+        <input v-model="keyword" placeholder="输入关键词搜索..." />
+        <p>旧值 → 新值：{{ oldVal }} → {{ newVal }}</p>
+        <p>变化次数：{{ changeCount }}</p>
+
+        <!-- watchEffect：自动追踪回调里的所有依赖，立即执行一次，拿不到旧值 -->
+        <p>watchEffect 自动追踪（无需指定监听源）</p>
+        <input v-model="firstName" placeholder="姓" />
+        <input v-model="lastName" placeholder="名" />
+        <p>全名：{{ fullName }}</p>
+
+        <hr />
+        <!-- 图片轮播：dynamic src + 手动切换 + 圆点指示器 -->
+        <p>图片轮播（当前第 {{ currentIndex  }} / {{ imgs.length }} 张）</p>
+        <!-- :src 动态绑定当前显示的图片路径 -->
+        <img :src="imgs[currentIndex]" style="width:300px; display:block;" />
+        <button @click="prev">上一张</button>
+        <button @click="next">下一张</button>
+        <p>
+            <!-- 用 v-for 渲染圆点，点击跳转对应图片 -->
+            <span v-for="(img, i) in imgs" :key="i" @click="goTo(i)" style="cursor:pointer; margin:0 4px;">
+                {{ i === currentIndex ? '●' : '○' }}
+            </span>
+        </p>
+
+        <hr />
+        <!-- 笔记本：综合运用 v-model、v-for、v-if、computed、:style -->
+        <p>笔记本（{{ doneCount }} / {{ notes.length }} 已完成）</p>
+        <input v-model="noteContent" placeholder="输入笔记内容..." />
+        <!-- 空内容时按钮禁用 -->
+        <button @click="addNote" :disabled="!noteContent">添加笔记</button>
+        <ul>
+            <li v-for="(note, i) in notes" :key="i">
+                <input type="checkbox" v-model="note.done" />
+                <!-- 完成的笔记加删除线 -->
+                <span :style="{ textDecoration: note.done ? 'line-through' : 'none' }">{{ note.content }}</span>
+                <button @click="removeNote(i)">删除</button>
+            </li>
+        </ul>
+        <!-- 没有笔记时显示提示 -->
+        <p v-if="notes.length === 0">暂无笔记</p>
+
+        <hr />
+        <!-- 购物车：综合案例，涉及 v-for、computed、watch、reactive、事件、条件渲染 -->
+        <h3>商品列表</h3>
+        <ul>
+            <!-- 遍历所有商品，显示名称、单价和"加入购物车"按钮 -->
+            <li v-for="goods in goodsList" :key="goods.id">
+                {{ goods.name }} - ￥{{ goods.price }}
+                <button @click="addToCart(goods)">加入购物车</button>
+            </li>
+        </ul>
+
+        <h3>我的购物车（{{ cartCount }} 件，选中 {{ checkedCount }} 件）</h3>
+        <!-- 购物车为空时显示提示 -->
+        <p v-if="cart.length === 0">购物车空空如也~</p>
+        <div v-else>
+            <!-- 全选：用 computed 的 get/set 实现，勾选则全选，取消则全不选 -->
+            <label>
+                <input type="checkbox" v-model="allChecked" /> 全选
+            </label>
+            <ul>
+                <li v-for="(item, i) in cart" :key="item.id">
+                    <!-- 单个商品选中 -->
+                    <input type="checkbox" v-model="item.checked" />
+                    {{ item.name }} - ￥{{ item.price }} × {{ item.qty }}
+                    <!-- 数量 +/- 按钮 -->
+                    <button @click="changeQty(i, -1)" :disabled="item.qty <= 1">-</button>
+                    {{ item.qty }}
+                    <button @click="changeQty(i, 1)">+</button>
+                    <!-- 小计金额 -->
+                    小计：￥{{ item.price * item.qty }}
+                    <!-- 删除当前商品 -->
+                    <button @click="removeFromCart(i)">删除</button>
+                </li>
+            </ul>
+            <!-- 批量操作按钮 -->
+            <p>
+                <button @click="removeChecked">删除选中</button>
+                <button @click="clearCart">清空购物车</button>
+            </p>
+            <!-- 只计算选中商品的总金额 -->
+            <p>总金额：<strong>￥{{ cartTotal }}</strong></p>
+        </div>
+    </div>
+</body>
+</html>

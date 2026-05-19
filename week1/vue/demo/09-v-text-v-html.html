@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>09-v-text-v-html</title>
+    <script type="module">
+        import { createApp, ref } from './vue.esm-browser.js'
+        createApp({
+            setup() {
+                // 两段相同的 HTML 字符串，演示 v-text 和 v-html 的区别
+                const rawText = ref('<strong>我是粗体吗？</strong>')
+                const rawHtml = ref('<strong>我才是真正的粗体</strong>')
+                return { rawText, rawHtml }
+            }
+        }).mount('#app')
+    </script>
+</head>
+<body>
+    <div id="app">
+        <!-- v-text：原样输出，标签当字符串显示  -->
+        <p v-text="rawText"></p>
+        <!-- v-html：真正渲染成 HTML（⚠️ 有 XSS 风险，仅用于可信内容） -->
+        <p v-html="rawHtml"></p>
+    </div>
+</body>
+</html>

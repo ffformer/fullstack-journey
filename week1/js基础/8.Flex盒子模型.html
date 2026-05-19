@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flex 弹性盒子模型</title>
+    <style>
+        /* ========== 通用样式 ========== */
+        body { font-family: "Microsoft YaHei", sans-serif; padding: 20px; }
+        h2 { border-bottom: 2px solid #333; padding-bottom: 6px; margin-top: 40px; }
+        .section { margin-bottom: 30px; }
+        .label { font-size: 14px; color: #666; margin-bottom: 6px; }
+
+        /* ========== 演示容器 ========== */
+        .flex-container {
+            display: flex;
+            background-color: #e8f4f8;
+            border: 2px dashed #2196F3;
+            border-radius: 6px;
+            padding: 10px;
+            min-height: 60px;
+            gap: 8px;
+        }
+        .flex-item {
+            background-color: #2196F3;
+            color: white;
+            padding: 16px 20px;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        /* ========== 控件样式 ========== */
+        .controls {
+            display: flex; gap: 10px; flex-wrap: wrap;
+            margin: 10px 0;
+        }
+        .controls button {
+            padding: 6px 16px;
+            border: 1px solid #bbb;
+            border-radius: 4px;
+            background: #fff;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .controls button:hover { background: #e3f2fd; border-color: #2196F3; }
+        .controls button.active { background: #2196F3; color: #fff; border-color: #2196F3; }
+    </style>
+</head>
+<body>
+
+<h1>Flex 弹性盒子模型</h1>
+<p><strong>核心思想：</strong>给<em>容器</em>设置 <code>display: flex</code>，容器里的<em>子元素</em>会自动变成弹性项目，沿主轴排列。</p>
+<p>记住两个概念：<b>容器</b>（父元素）= 设置 flex 的人 · <b>项目</b>（子元素）= 被排列的人</p>
+
+<!-- ==================== 1. flex-direction ==================== -->
+<h2>1. flex-direction — 主轴方向</h2>
+<p>决定子元素<em>沿哪个方向</em>排列。</p>
+
+<div class="section">
+    <div class="label">flex-direction:</div>
+    <div class="controls">
+        <button onclick="changeDirection('row')" class="active" id="dir-row">row（默认→）</button>
+        <button onclick="changeDirection('row-reverse')" id="dir-row-reverse">row-reverse（←）</button>
+        <button onclick="changeDirection('column')" id="dir-column">column（↓）</button>
+        <button onclick="changeDirection('column-reverse')" id="dir-column-reverse">column-reverse（↑）</button>
+    </div>
+    <div class="flex-container" id="demo-direction">
+        <div class="flex-item">1️⃣</div>
+        <div class="flex-item">2️⃣</div>
+        <div class="flex-item">3️⃣</div>
+    </div>
+</div>
+
+<!-- ==================== 2. justify-content ==================== -->
+<h2>2. justify-content — 主轴对齐</h2>
+<p>控制子元素在<em>主轴方向</em>上的分布方式。</p>
+
+<div class="section">
+    <div class="label">justify-content:</div>
+    <div class="controls">
+        <button onclick="changeJustify('flex-start')" class="active" id="jc-start">flex-start（起始）</button>
+        <button onclick="changeJustify('center')" id="jc-center">center（居中）</button>
+        <button onclick="changeJustify('flex-end')" id="jc-end">flex-end（末尾）</button>
+        <button onclick="changeJustify('space-between')" id="jc-between">space-between（两端）</button>
+        <button onclick="changeJustify('space-around')" id="jc-around">space-around（环绕）</button>
+        <button onclick="changeJustify('space-evenly')" id="jc-evenly">space-evenly（均分）</button>
+    </div>
+    <div class="flex-container" id="demo-justify">
+        <div class="flex-item">A</div>
+        <div class="flex-item">B</div>
+        <div class="flex-item">C</div>
+    </div>
+</div>
+
+<!-- ==================== 3. align-items ==================== -->
+<h2>3. align-items — 交叉轴对齐</h2>
+<p>控制子元素在<em>交叉轴方向</em>上怎么对齐（交叉轴 = 和主轴垂直的方向）。</p>
+<p>切换主轴方向看看交叉轴的变化👇</p>
+
+<div class="section">
+    <div class="label">align-items:</div>
+    <div class="controls">
+        <button onclick="changeAlignItems('stretch')" class="active" id="ai-stretch">stretch（拉伸填满·默认）</button>
+        <button onclick="changeAlignItems('flex-start')" id="ai-start">flex-start（起始）</button>
+        <button onclick="changeAlignItems('center')" id="ai-center">center（居中）</button>
+        <button onclick="changeAlignItems('flex-end')" id="ai-end">flex-end（末尾）</button>
+        <button onclick="changeAlignItems('baseline')" id="ai-baseline">baseline（文字基线）</button>
+    </div>
+    <div class="flex-container" id="demo-align-items" style="height: 120px;">
+        <div class="flex-item" style="padding:8px 20px; font-size:12px;">小字</div>
+        <div class="flex-item" style="padding:24px 20px; font-size:24px;">大字</div>
+        <div class="flex-item" style="padding:16px 20px;">中字</div>
+    </div>
+</div>
+
+<!-- ==================== 4. flex-wrap ==================== -->
+<h2>4. flex-wrap — 是否换行</h2>
+<p>默认不换行（<code>nowrap</code>），子元素多了会被挤扁。设 <code>wrap</code> 后放不下就自动换行。</p>
+
+<div class="section">
+    <div class="label">flex-wrap:</div>
+    <div class="controls">
+        <button onclick="changeWrap('nowrap')" class="active" id="fw-nowrap">nowrap（不换行）</button>
+        <button onclick="changeWrap('wrap')" id="fw-wrap">wrap（换行）</button>
+        <button onclick="changeWrap('wrap-reverse')" id="fw-wrap-reverse">wrap-reverse（反向换行）</button>
+    </div>
+    <div class="flex-container" id="demo-wrap">
+        <div class="flex-item" style="width:120px;">项目1</div>
+        <div class="flex-item" style="width:120px;">项目2</div>
+        <div class="flex-item" style="width:120px;">项目3</div>
+        <div class="flex-item" style="width:120px;">项目4</div>
+        <div class="flex-item" style="width:120px;">项目5</div>
+        <div class="flex-item" style="width:120px;">项目6</div>
+    </div>
+</div>
+
+<!-- ==================== 5. align-content ==================== -->
+<h2>5. align-content — 多行时的交叉轴分布</h2>
+<p>只有 <em>多行</em>（flex-wrap: wrap）时才生效，控制行与行之间的间距。</p>
+
+<div class="section">
+    <div class="label">align-content:</div>
+    <div class="controls">
+        <button onclick="changeAlignContent('stretch')" class="active" id="ac-stretch">stretch（默认）</button>
+        <button onclick="changeAlignContent('flex-start')" id="ac-start">flex-start</button>
+        <button onclick="changeAlignContent('center')" id="ac-center">center</button>
+        <button onclick="changeAlignContent('flex-end')" id="ac-end">flex-end</button>
+        <button onclick="changeAlignContent('space-between')" id="ac-between">space-between</button>
+        <button onclick="changeAlignContent('space-around')" id="ac-around">space-around</button>
+    </div>
+    <div class="flex-container" id="demo-align-content" style="flex-wrap: wrap; height: 160px;">
+        <div class="flex-item" style="width:100px;">1</div>
+        <div class="flex-item" style="width:100px;">2</div>
+        <div class="flex-item" style="width:100px;">3</div>
+        <div class="flex-item" style="width:100px;">4</div>
+        <div class="flex-item" style="width:100px;">5</div>
+        <div class="flex-item" style="width:100px;">6</div>
+        <div class="flex-item" style="width:100px;">7</div>
+        <div class="flex-item" style="width:100px;">8</div>
+    </div>
+</div>
+
+<!-- ==================== 6. flex 项目属性 ==================== -->
+<h2>6. flex-grow — 子元素瓜分剩余空间</h2>
+<p>默认 0（不拉伸）。值越大，分到的剩余空间越多。</p>
+
+<div class="section">
+    <div class="flex-container" id="demo-grow">
+        <div class="flex-item" style="flex-grow:0;">grow:0</div>
+        <div class="flex-item" style="flex-grow:1;">grow:1</div>
+        <div class="flex-item" style="flex-grow:2;">grow:2</div>
+    </div>
+</div>
+
+<h2>7. align-self — 某个子元素单独做交叉轴对齐</h2>
+<p>可以打破 <code>align-items</code> 的规则，让<em>某一个</em>子元素单独对齐。</p>
+
+<div class="section">
+    <div class="flex-container" style="align-items: center; height:100px;">
+        <div class="flex-item">默认居中</div>
+        <div class="flex-item" style="align-self: flex-start;">align-self: flex-start</div>
+        <div class="flex-item" style="align-self: flex-end;">align-self: flex-end</div>
+        <div class="flex-item" style="align-self: stretch;">align-self: stretch</div>
+    </div>
+</div>
+
+<h2>8. order — 调整子元素显示顺序</h2>
+<p>默认都是 0，值越小越靠前。可以用纯 CSS 改顺序，不用动 HTML。</p>
+
+<div class="section">
+    <div class="flex-container">
+        <div class="flex-item" style="order:3;">order:3 → 排第3</div>
+        <div class="flex-item" style="order:1;">order:1 → 排第1</div>
+        <div class="flex-item" style="order:2;">order:2 → 排第2</div>
+    </div>
+</div>
+
+<!-- ==================== 总结 ==================== -->
+<h2>速查表</h2>
+<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%; max-width: 700px;">
+    <tr style="background:#e3f2fd;">
+        <th>属性</th><th>作用对象</th><th>一句话解释</th>
+    </tr>
+    <tr><td><code>display: flex</code></td><td>容器</td><td>开启弹性布局</td></tr>
+    <tr><td><code>flex-direction</code></td><td>容器</td><td>主轴方向（row / column）</td></tr>
+    <tr><td><code>justify-content</code></td><td>容器</td><td>主轴上的对齐/分布</td></tr>
+    <tr><td><code>align-items</code></td><td>容器</td><td>交叉轴上的对齐（单行）</td></tr>
+    <tr><td><code>flex-wrap</code></td><td>容器</td><td>是否换行</td></tr>
+    <tr><td><code>align-content</code></td><td>容器</td><td>多行时行与行的分布</td></tr>
+    <tr><td><code>gap</code></td><td>容器</td><td>子元素之间的间距</td></tr>
+    <tr><td><code>flex-grow</code></td><td>项目</td><td>瓜分剩余空间的比例</td></tr>
+    <tr><td><code>flex-shrink</code></td><td>项目</td><td>空间不足时缩小的比例</td></tr>
+    <tr><td><code>align-self</code></td><td>项目</td><td>单个项目的交叉轴对齐</td></tr>
+    <tr><td><code>order</code></td><td>项目</td><td>排序（值越小越靠前）</td></tr>
+</table>
+
+<p style="margin-top:30px; color:#999;">提示：打开浏览器开发者工具（F12），在 Elements 面板选中 .flex-container，可以直接看到 flex 的可视化标注。</p>
+
+<script>
+    // ========== 1. flex-direction 切换 ==========
+    function changeDirection(value) {
+        document.getElementById('demo-direction').style.flexDirection = value;
+        document.querySelectorAll('#demo-direction ~ .controls button, [onclick^="changeDirection"]').forEach(b => b.classList.remove('active'));
+        document.getElementById('dir-' + value).classList.add('active');
+    }
+
+    // ========== 2. justify-content 切换 ==========
+    function changeJustify(value) {
+        document.getElementById('demo-justify').style.justifyContent = value;
+        document.querySelectorAll('[onclick^="changeJustify"]').forEach(b => b.classList.remove('active'));
+        var jcId = 'jc-' + value.replace('space-','').replace('flex-','');
+        document.getElementById(jcId).classList.add('active');
+    }
+
+    // ========== 3. align-items 切换 ==========
+    function changeAlignItems(value) {
+        document.getElementById('demo-align-items').style.alignItems = value;
+        document.querySelectorAll('[onclick^="changeAlignItems"]').forEach(b => b.classList.remove('active'));
+        document.getElementById('ai-' + value).classList.add('active');
+    }
+
+    // ========== 4. flex-wrap 切换 ==========
+    function changeWrap(value) {
+        document.getElementById('demo-wrap').style.flexWrap = value;
+        document.querySelectorAll('[onclick^="changeWrap"]').forEach(b => b.classList.remove('active'));
+        document.getElementById('fw-' + value).classList.add('active');
+    }
+
+    // ========== 5. align-content 切换 ==========
+    function changeAlignContent(value) {
+        document.getElementById('demo-align-content').style.alignContent = value;
+        document.querySelectorAll('[onclick^="changeAlignContent"]').forEach(b => b.classList.remove('active'));
+        document.getElementById('ac-' + value).classList.add('active');
+    }
+</script>
+
+</body>
+</html>

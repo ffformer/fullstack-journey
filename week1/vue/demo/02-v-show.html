@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>02-v-show</title>
+    <script type="module">
+        import { createApp, ref } from './vue.esm-browser.js'
+        createApp({
+            setup() {
+                // ref 控制显示/隐藏状态
+                const show = ref(true)
+                const toggle = () => {
+                    show.value = !show.value
+                }
+                return { show, toggle }
+            }
+        }).mount('#app')
+    </script>
+</head>
+<body>
+    <div id="app">
+        <!-- v-show：切换 CSS display:none，元素始终在 DOM 中 -->
+        <p v-show="show">这段文字受 v-show 控制</p>
+        <button @click="toggle">切换显示/隐藏</button>
+    </div>
+</body>
+</html>

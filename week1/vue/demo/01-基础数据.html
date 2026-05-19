@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>01-基础数据</title>
+    <script type="module">
+        // 从 Vue 按需导入 API
+        import { createApp, reactive, ref } from './vue.esm-browser.js'
+
+        createApp({
+            setup() {
+                // ref() 包装基本类型，通过 .value 读写
+                const number = ref(987)
+                const msg = ref('hello vue3')
+
+                // reactive() 包装对象，直接读写属性，不需要 .value
+                const web = reactive({
+                    title: 'former',
+                    url: 'https://www.former.com'
+                })
+
+                // 方法：修改数据
+                const edit = () => {
+                    web.title = 'vue3.2'
+                    web.url = 'https://www.vue3.com'
+                    number.value = 456
+                }
+
+                // setup 必须 return，模板中才能使用
+                return { msg, web, number, edit }
+            }
+        }).mount('#app')
+    </script>
+</head>
+<body>
+    <div id="app">
+        <!-- 插值表达式 {{ }}：直接显示数据 -->
+        <p>{{ msg }}</p>
+        <h1>{{ web.title }}</h1>
+        <p>{{ web.url }}</p>
+        <h3>{{ number }}</h3>
+        <!-- @click 事件绑定 -->
+        <button @click="edit">修改数据</button>
+    </div>
+</body>
+</html>

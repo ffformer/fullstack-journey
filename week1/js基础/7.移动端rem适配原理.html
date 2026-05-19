@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>移动端rem适配原理</title>
+    <style>
+        /* html {
+            font-size; /* 根元素字体大小 */
+        } */
+        .box-px {
+            width: 200px;
+            height: 200px;
+            background-color: lightcoral;
+           
+        }
+
+        .box-rem {
+            width: 5rem; /* 10 * 根元素字体大小 */
+            height: 5rem; /* 10 * 根元素字体大小 */
+            background-color: lightseagreen;
+            top: 30px;
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <div class="box-px"></div>
+    <div class="box-rem"></div>
+    <script>
+        function resetFontSize() {
+            document.documentElement.style.fontSize = screen.width / 10 + 'px';
+        }
+        resetFontSize();
+        window.onreset = resetFontSize;
+        console.log('当前根元素字体大小：', getComputedStyle(document.documentElement).fontSize);
+    </script>
+</body>
+</html>

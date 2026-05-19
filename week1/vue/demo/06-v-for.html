@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>06-v-for</title>
+    <script type="module">
+        import { createApp, reactive } from './vue.esm-browser.js'
+        createApp({
+            setup() {
+                // reactive 包装数组，push/pop 自动触发视图更新
+                const list = reactive(['苹果', '香蕉', '橘子'])
+                const addItem = () => {
+                    list.push('新水果' + (list.length + 1))
+                }
+                const removeItem = () => {
+                    list.pop()
+                }
+                return { list, addItem, removeItem }
+            }
+        }).mount('#app')
+    </script>
+</head>
+<body>
+    <div id="app">
+        <ul>
+            <!-- v-for="(元素, 索引) in 数组" :key 必须有唯一值 -->
+            <li v-for="(item, index) in list" :key="index">
+                {{ index }} - {{ item }}
+            </li>
+        </ul>
+        <button @click="addItem">添加一项</button>
+        <button @click="removeItem">删除最后一项</button>
+    </div>
+</body>
+</html>

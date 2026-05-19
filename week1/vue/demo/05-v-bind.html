@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>05-v-bind</title>
+    <script type="module">
+        import { createApp, reactive, ref } from './vue.esm-browser.js'
+        createApp({
+            setup() {
+                const link = reactive({ url: 'https://www.vue3.com' })
+                const canClick = ref(true)
+                const toggleDisabled = () => {
+                    canClick.value = !canClick.value
+                }
+                return { link, canClick, toggleDisabled }
+            }
+        }).mount('#app')
+    </script>
+</head>
+<body>
+    <div id="app">
+        <!-- v-bind:href 完整写法 -->
+        <a v-bind:href="link.url">v-bind:href 完整写法</a><br />
+        <!-- :href 简写（推荐） -->
+        <a :href="link.url">:href 简写（推荐）</a><br />
+        <!-- :disabled 动态控制按钮状态 -->
+        <button :disabled="!canClick">:disabled - {{ canClick ? '可点击' : '已禁用' }}</button><br />
+        <button @click="toggleDisabled">切换按钮状态</button>
+    </div>
+</body>
+</html>

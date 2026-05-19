@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>03-v-if</title>
+    <script type="module">
+        import { createApp, ref } from './vue.esm-browser.js'
+        createApp({
+            setup() {
+                const show = ref(true)
+                const toggle = () => {
+                    show.value = !show.value
+                }
+                return { show, toggle }
+            }
+        }).mount('#app')
+    </script>
+</head>
+<body>
+    <div id="app">
+        <!-- v-if：条件 false 时元素完全从 DOM 中移除（不是隐藏） -->
+        <p v-if="show">这段文字受 v-if 控制</p>
+        <button @click="toggle">切换显示/隐藏</button>
+        <hr />
+        <p>打开 F12 观察 DOM：v-if 为 false 时元素会消失；v-show 仅为 display:none</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>14-笔记本</title>
+    <script type="module">
+        import { createApp, reactive, ref, computed } from './vue.esm-browser.js'
+        createApp({
+            setup() {
+                // 笔记数组，每项 { content: 内容, done: 是否完成 }
+                const notes = reactive([])
+                const noteContent = ref('')
+                // 添加笔记：push 后清空输入框
+                const addNote = () => {
+                    if (!noteContent.value) return
+                    notes.push({ content: noteContent.value, done: false })
+                    noteContent.value = ''
+                }
+                // 按索引删除笔记
+                const removeNote = (i) => {
+                    notes.splice(i, 1)
+                }
+                // computed 自动统计已完成数量
+                const doneCount = computed(() => {
+                    return notes.filter(n => n.done).length
+                })
+                return { notes, noteContent, addNote, removeNote, doneCount }
+            }
+        }).mount('#app')
+    </script>
+</head>
+<body>
+    <div id="app">
+        <p>笔记本（{{ doneCount }} / {{ notes.length }} 已完成）</p>
+        <!-- v-model 输入框 + 空内容时按钮禁用 -->
+        <input v-model="noteContent" placeholder="输入笔记内容..." />
+        <button @click="addNote" :disabled="!noteContent">添加笔记</button>
+        <ul>
+            <!-- v-for 渲染笔记列表 -->
+            <li v-for="(note, i) in notes" :key="i">
+                <!-- 复选框勾选标记完成 -->
+                <input type="checkbox" v-model="note.done" />
+                <!-- 完成的笔记加删除线 -->
+                <span :style="{ textDecoration: note.done ? 'line-through' : 'none' }">{{ note.content }}</span>
+                <button @click="removeNote(i)">删除</button>
+            </li>
+        </ul>
+        <!-- 没有笔记时显示提示 -->
+        <p v-if="notes.length === 0">暂无笔记</p>
+    </div>
+</body>
+</html>

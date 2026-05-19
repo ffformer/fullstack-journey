@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>10-computed</title>
+    <script type="module">
+        import { createApp, ref, computed } from './vue.esm-browser.js'
+        createApp({
+            setup() {
+                const price = ref(10)
+                const count = ref(2)
+                // computed 有缓存，price 或 count 不变时不会重复计算
+                const total = computed(() => {
+                    return price.value * count.value
+                })
+                return { price, count, total }
+            }
+        }).mount('#app')
+    </script>
+</head>
+<body>
+    <div id="app">
+        <p>单价：<input v-model.number="price" /></p>
+        <p>数量：<input v-model.number="count" /></p>
+        <!-- computed 计算属性，依赖变了自动更新 -->
+        <p>总价（computed）：{{ total }}</p>
+    </div>
+</body>
+</html>

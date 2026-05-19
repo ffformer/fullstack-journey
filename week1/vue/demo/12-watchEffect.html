@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>12-watchEffect</title>
+    <script type="module">
+        import { createApp, ref, watchEffect } from './vue.esm-browser.js'
+        createApp({
+            setup() {
+                const firstName = ref('张')
+                const lastName = ref('三')
+                const fullName = ref('')
+                // watchEffect：自动追踪回调里的所有响应式数据
+                // 立即执行一次（不用等数据变化），拿不到旧值
+                watchEffect(() => {
+                    fullName.value = firstName.value + lastName.value
+                })
+                return { firstName, lastName, fullName }
+            }
+        }).mount('#app')
+    </script>
+</head>
+<body>
+    <div id="app">
+        <input v-model="firstName" placeholder="姓" />
+        <input v-model="lastName" placeholder="名" />
+        <!-- 页面打开就有值，因为 watchEffect 立即执行 -->
+        <p>全名：{{ fullName }}</p>
+    </div>
+</body>
+</html>

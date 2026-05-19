@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>15-购物车</title>
+    <script type="module">
+        import { createApp, reactive, ref, computed, watchEffect } from './vue.esm-browser.js'
+        createApp({
+            setup() {
+                // ---- 商品数据（通常来自后端，这里写死做演示） ----
+                const goodsList = reactive([
+                    { id: 1, name: '笔记本电脑', price: 5999 },
+                    { id: 2, name: '无线鼠标', price: 99 },
+                    { id: 3, name: '机械键盘', price: 399 }
+                ])
+
+                // ---- 购物车：从 localStorage 恢复数据（持久化） ----
+                const savedCart = localStorage.getItem('cart')
+                const cart = reactive(savedCart ? JSON.parse(savedCart) : [])
+
+                // 加入购物车：已存在则 qty+1，否则新增，默认勾选
+                const addToCart = (goods) => {
+                    const item = cart.find(c => c.id === goods.id)
+                    if (item) {
+                        item.qty++
+                        item.checked = true
+                    } else {
+                        cart.push({ ...goods, qty: 1, checked: true })
+                    }
+                }
+                // 修改数量：delta 为 1 加一件，-1 减一件
+                const changeQty = (i, delta) => {
+                    cart[i].qty += delta
+                    if (cart[i].qty <= 0) cart.splice(i, 1)
+                }
+                // 删除单个
+                const removeFromCart = (i) => { cart.splice(i, 1) }
+                // 批量删除选中的商品（倒序遍历避免索引错乱）
+                const removeChecked = () => {
+                    for (let i = cart.length - 1; i >= 0; i--) {
+                        if (cart[i].checked) cart.splice(i, 1)
+                    }
+                }
+                // 清空购物车
+                const clearCart = () => { cart.splice(0, cart.length) }
+
+                // watchEffect 自动追踪 cart 变化，写入 localStorage
+                watchEffect(() => {
+                    localStorage.setItem('cart', JSON.stringify(cart))
+                })
+
+                // ---- computed ----
+                // 全选/全不选（get/set 写法）
+                const allChecked = computed({
+                    get() {
+                        return cart.length > 0 && cart.every(item => item.checked)
+                    },
+                    set(val) {
+                        cart.forEach(item => { item.checked = val })
+                    }
+                })
+                // 选中商品总金额
+                const cartTotal = computed(() => {
+                    return cart.reduce((sum, item) => item.checked ? sum + item.price * item.qty : sum, 0)
+                })
+                // 选中商品总件数
+                const cartCount = computed(() => {
+                    return cart.reduce((sum, item) => item.checked ? sum + item.qty : sum, 0)
+                })
+                // 选中商品种类数
+                const checkedCount = computed(() => cart.filter(item => item.checked).length)
+
+                return {
+                    goodsList, cart, addToCart, changeQty, removeFromCart,
+                    removeChecked, clearCart, allChecked, cartTotal, cartCount, checkedCount
+                }
+            }
+        }).mount('#app')
+    </script>
+</head>
+<body>
+    <div id="app">
+        <!-- 商品列表 -->
+        <h3>商品列表</h3>
+        <ul>
+            <li v-for="goods in goodsList" :key="goods.id">
+                {{ goods.name }} - ￥{{ goods.price }}
+                <button @click="addToCart(goods)">加入购物车</button>
+            </li>
+        </ul>
+
+        <!-- 购物车 -->
+        <h3>我的购物车（{{ cartCount }} 件，选中 {{ checkedCount }} 种）</h3>
+        <p v-if="cart.length === 0">购物车空空如也~</p>
+        <div v-else>
+            <!-- 全选 -->
+            <label><input type="checkbox" v-model="allChecked" /> 全选</label>
+            <ul>
+                <li v-for="(item, i) in cart" :key="item.id">
+                    <input type="checkbox" v-model="item.checked" />
+                    {{ item.name }} - ￥{{ item.price }} × {{ item.qty }}
+                    <button @click="changeQty(i, -1)" :disabled="item.qty <= 1">-</button>
+                    {{ item.qty }}
+                    <button @click="changeQty(i, 1)">+</button>
+                    小计：￥{{ item.price * item.qty }}
+                    <button @click="removeFromCart(i)">删除</button>
+                </li>
+            </ul>
+            <p>
+                <button @click="removeChecked">删除选中</button>
+                <button @click="clearCart">清空购物车</button>
+            </p>
+            <p>总金额：<strong>￥{{ cartTotal }}</strong></p>
+        </div>
+    </div>
+</body>
+</html>

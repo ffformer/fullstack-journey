@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>08-v-model修饰符</title>
+    <script type="module">
+        import { createApp, ref } from './vue.esm-browser.js'
+        createApp({
+            setup() {
+                const lazyText = ref('')
+                const num = ref(0)
+                const trimText = ref('')
+                return { lazyText, num, trimText }
+            }
+        }).mount('#app')
+    </script>
+</head>
+<body>
+    <div id="app">
+        <!-- .lazy：失去焦点时才更新数据 -->
+        <p>.lazy — 失去焦点才更新：{{ lazyText }}</p>
+        <input v-model.lazy="lazyText" placeholder="输入后点别处试试..." />
+
+        <!-- .number：自动将输入转为数字类型 -->
+        <p>.number — 自动转数字：{{ num }}（类型：{{ typeof num }}）</p>
+        <input v-model.number="num" placeholder="输入数字..." />
+
+        <!-- .trim：自动去除首尾空格 -->
+        <p>.trim — 自动去首尾空格："{{ trimText }}"</p>
+        <input v-model.trim="trimText" placeholder="前后加空格试试..." />
+    </div>
+</body>
+</html>

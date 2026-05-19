@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>07-v-model</title>
+    <script type="module">
+        import { createApp, ref } from './vue.esm-browser.js'
+        createApp({
+            setup() {
+                // 文本框绑定字符串
+                const text = ref('')
+                // 单选框绑定字符串，同一个 v-model 互斥
+                const gender = ref('男')
+                // 复选框组绑定数组，选中多个存多个 value
+                const hobbies = ref([])
+                return { text, gender, hobbies }
+            }
+        }).mount('#app')
+    </script>
+</head>
+<body>
+    <div id="app">
+        <!-- v-model 文本框：双向绑定，输入即更新 -->
+        <input v-model="text" placeholder="输入文字..." />
+        <p>输入的内容：{{ text }}</p>
+
+        <!-- v-model 单选框：同一组绑同一个变量 -->
+        <p>选中的性别：{{ gender }}</p>
+        <label><input type="radio" v-model="gender" value="男" /> 男</label>
+        <label><input type="radio" v-model="gender" value="女" /> 女</label>
+
+        <!-- v-model 复选框组：绑数组，多选多存 -->
+        <p>选中的爱好：{{ hobbies }}</p>
+        <label><input type="checkbox" v-model="hobbies" value="篮球" /> 篮球</label>
+        <label><input type="checkbox" v-model="hobbies" value="足球" /> 足球</label>
+        <label><input type="checkbox" v-model="hobbies" value="游泳" /> 游泳</label>
+    </div>
+</body>
+</html>
