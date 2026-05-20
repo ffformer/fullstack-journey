@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>02 - 变量提升与暂时性死区（TDZ）</title>
+  <style>
+    body { font-family: 'Microsoft YaHei', sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; line-height: 1.8; background: #1e1e1e; color: #d4d4d4; }
+    h1 { color: #4ec9b0; border-bottom: 2px solid #4ec9b0; padding-bottom: 10px; }
+    h2 { color: #569cd6; margin-top: 30px; }
+    h3 { color: #dcdcaa; }
+    code { background: #333; padding: 2px 6px; border-radius: 3px; color: #ce9178; font-family: 'Fira Code', 'Consolas', monospace; }
+    pre { background: #252526; padding: 15px; border-radius: 8px; overflow-x: auto; border-left: 3px solid #4ec9b0; }
+    .demo-box { background: #252526; border: 1px solid #444; border-radius: 8px; padding: 15px; margin: 15px 0; }
+    button { background: #0e639c; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; }
+    button:hover { background: #1177bb; }
+    .output { background: #1a1a1a; color: #6a9955; padding: 10px; border-radius: 4px; margin-top: 10px; min-height: 20px; font-family: 'Fira Code', 'Consolas', monospace; }
+    .warn { color: #f48771; }
+  </style>
+</head>
+<body>
+  <h1>02 — 变量提升（Hoisting）与暂时性死区（TDZ）</h1>
+
+  <h2>一、什么是变量提升？</h2>
+  <p>JS 引擎在执行代码之前，会先把<strong>所有 <code>var</code> 声明和函数声明</strong>提到当前作用域的顶部。这个过程叫"提升"。</p>
+  <p>注意：<strong>只提升声明，不提升赋值</strong>。</p>
+
+  <div class="demo-box">
+    <h3>示例：var 的提升</h3>
+    <pre>console.log(a);  // undefined（不是报错！因为 var 声明被提升了）
+var a = 10;
+console.log(a);  // 10
+
+// 上面代码等价于：
+// var a;          ← 声明被提升到顶部
+// console.log(a); → undefined（声明了但还没赋值）
+// a = 10;         ← 赋值留在原地
+// console.log(a); → 10</pre>
+    <button onclick="demoVarHoisting()">运行演示</button>
+    <div class="output" id="output1"></div>
+  </div>
+
+  <h2>二、函数的提升</h2>
+  <p><code>function</code> 声明的函数会<strong>整体提升</strong>（声明 + 函数体一起提升），可以在声明前调用。</p>
+
+  <div class="demo-box">
+    <h3>示例：函数提升 vs 函数表达式不提升</h3>
+    <pre>sayHi(); // ✅ "Hello!" — 函数声明整体提升
+
+function sayHi() {
+  console.log('Hello!');
+}
+
+sayBye(); // ❌ TypeError: sayBye is not a function
+var sayBye = function() {
+  console.log('Bye!');
+};
+// var sayBye 被提升 = undefined，undefined() 报错</pre>
+    <button onclick="demoFuncHoisting()">运行演示</button>
+    <div class="output" id="output2"></div>
+  </div>
+
+  <h2>三、let 和 const 的"暂时性死区"（TDZ）</h2>
+  <p><code>let</code> 和 <code>const</code> <strong>也会提升</strong>，但提升后的行为不同：</p>
+  <ul>
+    <li><code>var</code> 提升后初始化为 <code>undefined</code>，可以访问</li>
+    <li><code>let</code>/<code>const</code> 提升后<strong>不初始化</strong>，从块开始到实际声明行之间的区域称为"暂时性死区"（Temporal Dead Zone）</li>
+    <li>在 TDZ 中访问变量会报 <code>ReferenceError</code></li>
+  </ul>
+
+  <div class="demo-box">
+    <h3>示例：TDZ 演示</h3>
+    <pre>// === TDZ 开始 ===
+console.log(name); // ❌ ReferenceError: Cannot access 'name' before initialization
+// === TDZ 结束 ===
+let name = '张三';
+console.log(name); // ✅ "张三"
+
+// typeof 在 TDZ 中也不安全：
+console.log(typeof x); // ❌ ReferenceError（TDZ 内的 let x）
+let x = 1;</pre>
+    <button onclick="demoTDZ()">运行演示</button>
+    <div class="output" id="output3"></div>
+  </div>
+
+  <h2>四、var / let / const 对比总结</h2>
+  <div class="demo-box">
+    <table style="width:100%; border-collapse:collapse; text-align:left;">
+      <tr style="background:#333;">
+        <th style="padding:8px; border:1px solid #555;">特性</th>
+        <th style="padding:8px; border:1px solid #555;">var</th>
+        <th style="padding:8px; border:1px solid #555;">let</th>
+        <th style="padding:8px; border:1px solid #555;">const</th>
+      </tr>
+      <tr>
+        <td style="padding:8px; border:1px solid #555;">作用域</td>
+        <td style="padding:8px; border:1px solid #555;">函数作用域</td>
+        <td style="padding:8px; border:1px solid #555;">块级作用域</td>
+        <td style="padding:8px; border:1px solid #555;">块级作用域</td>
+      </tr>
+      <tr>
+        <td style="padding:8px; border:1px solid #555;">提升后初始值</td>
+        <td style="padding:8px; border:1px solid #555;">undefined</td>
+        <td style="padding:8px; border:1px solid #555;">未初始化（TDZ）</td>
+        <td style="padding:8px; border:1px solid #555;">未初始化（TDZ）</td>
+      </tr>
+      <tr>
+        <td style="padding:8px; border:1px solid #555;">可重复声明</td>
+        <td style="padding:8px; border:1px solid #555;">✅ 可以</td>
+        <td style="padding:8px; border:1px solid #555;">❌ 不可以</td>
+        <td style="padding:8px; border:1px solid #555;">❌ 不可以</td>
+      </tr>
+      <tr>
+        <td style="padding:8px; border:1px solid #555;">可重新赋值</td>
+        <td style="padding:8px; border:1px solid #555;">✅ 可以</td>
+        <td style="padding:8px; border:1px solid #555;">✅ 可以</td>
+        <td style="padding:8px; border:1px solid #555;">❌ 不可以</td>
+      </tr>
+      <tr>
+        <td style="padding:8px; border:1px solid #555;">声明前访问</td>
+        <td style="padding:8px; border:1px solid #555;">undefined</td>
+        <td style="padding:8px; border:1px solid #555;">报错（TDZ）</td>
+        <td style="padding:8px; border:1px solid #555;">报错（TDZ）</td>
+      </tr>
+    </table>
+  </div>
+
+  <h2>五、实战：变量提升造成的经典 bug</h2>
+  <div class="demo-box">
+    <h3>示例：if 条件中 var 导致的迷惑行为</h3>
+    <pre>var count = 100;
+
+if (true) {
+  console.log(count); // 你以为是 100？实际是 undefined！
+  var count = 1;      // 这个 var 被提升到函数/全局顶部，覆盖了外部的访问
+  console.log(count); // 1
+}
+
+// 用 let 就不会有这个问题：
+let total = 100;
+if (true) {
+  // console.log(total); ← 如果取消注释会报错 TDZ
+  let total = 1;  // 这是块内的新变量，不影响外部的 total
+  console.log(total); // 1
+}</pre>
+    <button onclick="demoBug()">运行演示</button>
+    <div class="output" id="output4"></div>
+  </div>
+
+  <script>
+    // ========== 示例1：var 提升 ==========
+    function demoVarHoisting() {
+      const out = document.getElementById('output1');
+      out.innerHTML = '';
+      console.log('[示例1] 第一次 console.log(a) =', 'undefined（var 声明提升但未赋值）');
+      var a;
+      console.log('[示例1] 第二次 console.log(a) =', 'undefined（声明了）');
+      a = 10;
+      console.log('[示例1] 第三次 console.log(a) =', '10（赋值完成）');
+      out.innerHTML = 'var a 声明被提升 → 第一次访问 = undefined<br>';
+      out.innerHTML += '赋值 a = 10 留在原位 → 第二次访问 = 10';
+    }
+
+    // ========== 示例2：函数提升 ==========
+    function demoFuncHoisting() {
+      const out = document.getElementById('output2');
+      out.innerHTML = '';
+      // 函数声明：可以提前调用
+      try {
+        sayHi();
+        function sayHi() {
+          out.innerHTML += '✅ sayHi() 成功 — 函数声明整体提升<br>';
+        }
+      } catch (e) {
+        out.innerHTML += '❌ ' + e.message + '<br>';
+      }
+      // 函数表达式：var 提升为 undefined，调用报错
+      try {
+        sayBye();
+      } catch (e) {
+        out.innerHTML += '❌ sayBye() 报错 — ' + e.message + '（var sayBye 提升为 undefined）';
+      }
+    }
+
+    // ========== 示例3：TDZ ==========
+    function demoTDZ() {
+      const out = document.getElementById('output3');
+      out.innerHTML = '';
+      try {
+        out.innerHTML += '尝试在声明前访问 name...<br>';
+        let name = '张三'; // 不会执行到，上面就报错了
+      } catch (e) {
+        out.innerHTML += '❌ ' + e.message + '<br>';
+        out.innerHTML += '这就是 TDZ：let/const 声明前不能访问<br>';
+      }
+      let name = '张三';
+      out.innerHTML += '✅ 声明后访问 name = ' + name;
+    }
+
+    // ========== 示例4：var 提升 bug ==========
+    function demoBug() {
+      const out = document.getElementById('output4');
+      out.innerHTML = '';
+      var count = 100;
+      if (true) {
+        out.innerHTML += 'if 块内第一次 console.log(count) = ' + count + '（因为块内 var count 被提升覆盖）<br>';
+        var count = 1;
+        out.innerHTML += '赋值后 count = ' + count;
+      }
+    }
+  </script>
+</body>
+</html>

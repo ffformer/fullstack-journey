@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>01 - 作用域链</title>
+  <style>
+    body { font-family: 'Microsoft YaHei', sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; line-height: 1.8; background: #1e1e1e; color: #d4d4d4; }
+    h1 { color: #4ec9b0; border-bottom: 2px solid #4ec9b0; padding-bottom: 10px; }
+    h2 { color: #569cd6; margin-top: 30px; }
+    h3 { color: #dcdcaa; }
+    code { background: #333; padding: 2px 6px; border-radius: 3px; color: #ce9178; font-family: 'Fira Code', 'Consolas', monospace; }
+    pre { background: #252526; padding: 15px; border-radius: 8px; overflow-x: auto; border-left: 3px solid #4ec9b0; }
+    .demo-box { background: #252526; border: 1px solid #444; border-radius: 8px; padding: 15px; margin: 15px 0; }
+    .demo-box p { margin: 5px 0; }
+    button { background: #0e639c; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; }
+    button:hover { background: #1177bb; }
+    .output { background: #1a1a1a; color: #6a9955; padding: 10px; border-radius: 4px; margin-top: 10px; min-height: 20px; font-family: 'Fira Code', 'Consolas', monospace; }
+    .highlight { color: #f48771; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>01 — 作用域链（Scope Chain）</h1>
+
+  <h2>一、什么是作用域？</h2>
+  <p>作用域决定了<strong>在代码的哪个位置可以访问某个变量</strong>。JS 有三种作用域：</p>
+  <ul>
+    <li><strong>全局作用域</strong>：在任何函数外部声明的变量，所有代码都能访问</li>
+    <li><strong>函数作用域</strong>：在函数内部声明的变量，只有函数内部能访问</li>
+    <li><strong>块级作用域</strong>：用 <code>let</code>/<code>const</code> 声明的变量，只在 <code>{ }</code> 块内有效</li>
+  </ul>
+
+  <h2>二、全局作用域 vs 函数作用域</h2>
+  <div class="demo-box">
+    <h3>示例：内外访问规则</h3>
+    <pre>var outer = '我在全局'; // 全局作用域 — 处处可访问
+
+function showScope() {
+  var inner = '我在函数内'; // 函数作用域 — 只有 showScope 内能访问
+  console.log('函数内访问 outer：' + outer);   // ✅ 可以访问全局变量
+  console.log('函数内访问 inner：' + inner);    // ✅ 可以访问自己的变量
+}
+
+showScope();
+console.log('全局访问 inner：' + inner);  // ❌ ReferenceError: inner is not defined</pre>
+    <button onclick="demoGlobalVsFunction()">运行演示</button>
+    <div class="output" id="output1"></div>
+  </div>
+
+  <h2>三、块级作用域（let / const）</h2>
+  <p><code>var</code> 没有块级作用域，只有函数作用域。而 <code>let</code> 和 <code>const</code> 尊重 <code>{ }</code> 块边界。</p>
+  <div class="demo-box">
+    <h3>示例：var vs let 在块中的表现</h3>
+    <pre>if (true) {
+  var a = 'var 声明';    // 无视块边界，在函数/全局生效
+  let b = 'let 声明';    // 只在当前 {} 块内有效
+}
+console.log(a);  // ✅ 能访问到
+console.log(b);  // ❌ ReferenceError: b is not defined</pre>
+    <button onclick="demoBlockScope()">运行演示</button>
+    <div class="output" id="output2"></div>
+  </div>
+
+  <h2>四、作用域链 — 查找规则</h2>
+  <p>当代码访问一个变量时，JS 引擎按以下顺序查找：</p>
+  <ol>
+    <li>当前块作用域</li>
+    <li>外层函数作用域（如果有）</li>
+    <li>再外层函数作用域...</li>
+    <li>全局作用域</li>
+    <li>找不到 → <code>ReferenceError</code></li>
+  </ol>
+  <p>这个由内到外的查找链路，就是<strong>作用域链</strong>。</p>
+
+  <div class="demo-box">
+    <h3>示例：三层嵌套的作用域链</h3>
+    <pre>const global = '🌍 全局';
+
+function outer() {
+  const outerVar = '📦 outer';
+
+  function inner() {
+    const innerVar = '🎯 inner';
+    // 从内到外逐层查找：自己的 innerVar → 外层的 outerVar → 全局的 global
+    console.log(innerVar + ' → ' + outerVar + ' → ' + global);
+  }
+
+  inner();
+}
+outer();</pre>
+    <button onclick="demoScopeChain()">运行演示</button>
+    <div class="output" id="output3"></div>
+  </div>
+
+  <h2>五、容易踩的坑</h2>
+  <div class="demo-box">
+    <h3>坑1：循环中的 var</h3>
+    <pre>for (var i = 0; i < 3; i++) {
+  setTimeout(() => console.log('var i =', i), 100); // 输出 3, 3, 3 而非 0, 1, 2
+}
+// 原因：var 没有块作用域，所有回调共享同一个 i，循环结束时 i = 3
+
+for (let j = 0; j < 3; j++) {
+  setTimeout(() => console.log('let j =', j), 100); // 输出 0, 1, 2 ✅
+}
+// 原因：let 有块作用域，每次迭代都是一个新的 j 绑定</pre>
+    <button onclick="demoLoopBug()">运行演示</button>
+    <div class="output" id="output4"></div>
+  </div>
+
+  <div class="demo-box">
+    <h3>坑2：未声明直接赋值 = 隐式全局变量</h3>
+    <pre>function oops() {
+  x = '我没有被声明！'; // 没有 var/let/const → JS 自动创建全局变量 x
+}
+oops();
+console.log(x); // 😱 能访问到！这是 bug 的来源</pre>
+    <button onclick="demoImplicitGlobal()">运行演示</button>
+    <div class="output" id="output5"></div>
+  </div>
+
+  <script>
+    // ========== 示例1：全局 vs 函数作用域 ==========
+    function demoGlobalVsFunction() {
+      const out = document.getElementById('output1');
+      out.innerHTML = '';
+      try {
+        var outer = '我在全局';
+        function showScope() {
+          var inner = '我在函数内';
+          out.innerHTML += '✅ 函数内访问 outer：' + outer + '<br>';
+          out.innerHTML += '✅ 函数内访问 inner：' + inner + '<br>';
+        }
+        showScope();
+        // 注意：inner 在函数外部不可访问，下面这行会报错，所以用 try-catch
+        out.innerHTML += '❌ 全局访问 inner：ReferenceError: inner is not defined';
+      } catch (e) {
+        out.innerHTML += '<br>（inner 在函数外确实无法访问）';
+      }
+    }
+
+    // ========== 示例2：块级作用域 ==========
+    function demoBlockScope() {
+      const out = document.getElementById('output2');
+      out.innerHTML = '';
+      try {
+        if (true) {
+          var a = 'var 声明';
+          let b = 'let 声明';
+        }
+        out.innerHTML += '✅ console.log(a) → ' + a + '<br>';
+        out.innerHTML += '❌ console.log(b) → ReferenceError: b is not defined';
+      } catch (e) {
+        out.innerHTML += '<br>（b 在块外确实无法访问）';
+      }
+    }
+
+    // ========== 示例3：作用域链 ==========
+    function demoScopeChain() {
+      const out = document.getElementById('output3');
+      out.innerHTML = '';
+      const global = '🌍 全局';
+      function outer() {
+        const outerVar = '📦 outer';
+        function inner() {
+          const innerVar = '🎯 inner';
+          out.innerHTML = innerVar + ' → ' + outerVar + ' → ' + global + '<br>';
+          out.innerHTML += '查找路径：自己作用域 → outer作用域 → 全局作用域';
+        }
+        inner();
+      }
+      outer();
+    }
+
+    // ========== 示例4：循环中的 var vs let ==========
+    function demoLoopBug() {
+      const out = document.getElementById('output4');
+      out.innerHTML = '等待 150ms 后输出结果...<br>';
+
+      // var 版本
+      for (var i = 0; i < 3; i++) {
+        setTimeout(() => { out.innerHTML += 'var i = ' + i + ' ← 全是 3！（共享同一个变量）<br>'; }, 150);
+      }
+
+      // let 版本
+      for (let j = 0; j < 3; j++) {
+        setTimeout(() => { out.innerHTML += 'let j = ' + j + ' ← 正确！每次迭代独立绑定<br>'; }, 200);
+      }
+    }
+
+    // ========== 示例5：隐式全局变量 ==========
+    function demoImplicitGlobal() {
+      const out = document.getElementById('output5');
+      out.innerHTML = '';
+      function oops() {
+        x = '我被隐式创建为全局变量！'; // 没有声明关键字
+      }
+      oops();
+      out.innerHTML = '😱 函数内未声明的 x，在全局竟然能访问：<br>';
+      out.innerHTML += 'x = ' + x;
+      // 清理
+      delete window.x;
+    }
+  </script>
+</body>
+</html>

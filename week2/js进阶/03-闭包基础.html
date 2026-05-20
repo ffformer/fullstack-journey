@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>03 - 闭包基础</title>
+  <style>
+    body { font-family: 'Microsoft YaHei', sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; line-height: 1.8; background: #1e1e1e; color: #d4d4d4; }
+    h1 { color: #4ec9b0; border-bottom: 2px solid #4ec9b0; padding-bottom: 10px; }
+    h2 { color: #569cd6; margin-top: 30px; }
+    h3 { color: #dcdcaa; }
+    code { background: #333; padding: 2px 6px; border-radius: 3px; color: #ce9178; font-family: 'Fira Code', 'Consolas', monospace; }
+    pre { background: #252526; padding: 15px; border-radius: 8px; overflow-x: auto; border-left: 3px solid #4ec9b0; }
+    .demo-box { background: #252526; border: 1px solid #444; border-radius: 8px; padding: 15px; margin: 15px 0; }
+    button { background: #0e639c; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; }
+    button:hover { background: #1177bb; }
+    .output { background: #1a1a1a; color: #6a9955; padding: 10px; border-radius: 4px; margin-top: 10px; min-height: 20px; font-family: 'Fira Code', 'Consolas', monospace; }
+    .key { background: #f48771; color: #fff; padding: 2px 8px; border-radius: 10px; font-size: 12px; margin-right: 5px; }
+  </style>
+</head>
+<body>
+  <h1>03 — 闭包基础（Closure）</h1>
+
+  <h2>一、什么是闭包？</h2>
+  <p><strong>闭包 = 函数 + 函数定义时的词法环境（它能访问的外部变量）</strong></p>
+  <p>当一个函数"记住"了它被创建时所在的作用域中的变量，即使这个作用域已经"销毁"，它依然能访问那些变量——这就是闭包。</p>
+
+  <div class="demo-box">
+    <h3>示例：最简单的闭包</h3>
+    <pre>function createCounter() {
+  let count = 0;           // ← 这个变量在 createCounter 内部
+
+  return function() {      // ← 返回的函数"记住"了 count
+    count++;               // 即使 createCounter 执行完了
+    console.log(count);    // 这个函数依然能访问 count
+  };
+}
+
+const counter = createCounter(); // createCounter() 执行完毕了
+counter(); // 1 ← count 没有被销毁！
+counter(); // 2 ← 还在累加！
+counter(); // 3 ← 这就是闭包的力量</pre>
+    <button onclick="demoBasicClosure()">运行演示</button>
+    <div class="output" id="output1"></div>
+  </div>
+
+  <h2>二、为什么需要闭包？</h2>
+  <p>JS 中，函数每次执行完，内部的局部变量通常会被垃圾回收。但闭包让这些变量<strong>"活"了下来</strong>，因为返回的函数还引用着它们。</p>
+  <p>这给了我们三个关键能力：</p>
+  <ol>
+    <li><strong>私有变量</strong> — 外部无法直接修改内部数据</li>
+    <li><strong>状态保持</strong> — 函数调用之间记住上一次的状态</li>
+    <li><strong>函数工厂</strong> — 批量生产功能相似的函数</li>
+  </ol>
+
+  <h2>三、闭包的三个经典应用</h2>
+
+  <div class="demo-box">
+    <h3>应用1：私有变量（数据隐藏）</h3>
+    <pre>function createBank() {
+  let money = 1000; // 私有变量，外部无法直接访问
+
+  return {
+    getMoney() { return money; },    // 只读访问
+    deposit(n)  { money += n; },     // 受控修改
+    withdraw(n) {
+      if (n > money) return '余额不足';
+      money -= n;
+      return '取款成功';
+    }
+  };
+}
+const bank = createBank();
+console.log(bank.money);       // undefined — 外面拿不到
+console.log(bank.getMoney());  // 1000 — 只能通过提供的方法访问</pre>
+    <button onclick="demoPrivateVar()">运行演示</button>
+    <div class="output" id="output2"></div>
+  </div>
+
+  <div class="demo-box">
+    <h3>应用2：状态保持（记忆）</h3>
+    <pre>// 记录函数被调用了多少次
+function createCallTracker() {
+  let count = 0;
+  return function(label) {
+    count++;
+    return label + ' 是第 ' + count + ' 次调用';
+  };
+}
+const track = createCallTracker();
+track('点击'); // "点击 是第 1 次调用"
+track('提交'); // "提交 是第 2 次调用"
+track('保存'); // "保存 是第 3 次调用"</pre>
+    <button onclick="demoMemo()">运行演示</button>
+    <div class="output" id="output3"></div>
+  </div>
+
+  <div class="demo-box">
+    <h3>应用3：函数工厂（批量生产）</h3>
+    <pre>// 根据倍率生成不同的乘法器
+function createMultiplier(n) {
+  return function(x) {
+    return x * n; // "记住"了参数 n
+  };
+}
+const double  = createMultiplier(2);
+const triple  = createMultiplier(3);
+const tenTimes = createMultiplier(10);
+
+double(5);   // 10
+triple(5);   // 15
+tenTimes(5); // 50</pre>
+    <button onclick="demoFactory()">运行演示</button>
+    <div class="output" id="output4"></div>
+  </div>
+
+  <h2>四、经典面试题：循环中的闭包</h2>
+  <div class="demo-box">
+    <h3>问题：以下代码输出什么？为什么？</h3>
+    <pre>for (var i = 1; i <= 5; i++) {
+  setTimeout(function() {
+    console.log(i);
+  }, i * 100);
+}
+// 输出：6 6 6 6 6（不是 1 2 3 4 5！）</pre>
+    <p>原因：<code>var i</code> 是函数作用域，循环结束后只有一个 <code>i</code>，值是 <code>6</code>。所有回调共享同一个 <code>i</code>。</p>
+    <p><strong>解法1：用 let 创建块作用域</strong></p>
+    <pre>for (let i = 1; i <= 5; i++) { ... } // let 每次迭代绑定新值</pre>
+    <p><strong>解法2：用闭包 + IIFE 创建独立作用域</strong></p>
+    <pre>for (var i = 1; i <= 5; i++) {
+  (function(j) {           // IIFE — 立即执行函数表达式
+    setTimeout(function() {
+      console.log(j);      // j 是每次迭代的独立副本
+    }, j * 100);
+  })(i);                   // 把当前 i 传进去
+}</pre>
+    <button onclick="demoLoopClosure()">运行演示</button>
+    <div class="output" id="output5"></div>
+  </div>
+
+  <h2>五、闭包的潜在问题 — 内存泄漏</h2>
+  <div class="demo-box">
+    <p>闭包会阻止垃圾回收，因为它引用的变量不能被释放。</p>
+    <p>如果不需要了，<strong>把引用设为 <code>null</code></strong>：</p>
+    <pre>let heavy = createBigClosure(); // 占用大量内存
+// ... 使用完毕 ...
+heavy = null; // 解除引用，让 GC 回收</pre>
+    <p style="color:#6a9955;">提示：绝大多数场景不需要担心，只有在 DOM 引用 + 闭包组合时才容易出问题。</p>
+  </div>
+
+  <script>
+    // ========== 示例1：最简单闭包 ==========
+    function demoBasicClosure() {
+      const out = document.getElementById('output1');
+      out.innerHTML = '';
+      function createCounter() {
+        let count = 0;
+        return function() {
+          count++;
+          out.innerHTML += 'counter() → ' + count + '<br>';
+        };
+      }
+      const counter = createCounter();
+      counter(); // 1
+      counter(); // 2
+      counter(); // 3
+    }
+
+    // ========== 示例2：私有变量 ==========
+    function demoPrivateVar() {
+      const out = document.getElementById('output2');
+      out.innerHTML = '';
+      function createBank() {
+        let money = 1000;
+        return {
+          getMoney() { return money; },
+          deposit(n) { money += n; },
+          withdraw(n) {
+            if (n > money) return '余额不足';
+            money -= n;
+            return '取款成功，剩余 ' + money;
+          }
+        };
+      }
+      const bank = createBank();
+      out.innerHTML += 'bank.money = ' + bank.money + '（undefined，私有变量无法直接访问）<br>';
+      out.innerHTML += 'bank.getMoney() = ' + bank.getMoney() + '<br>';
+      out.innerHTML += 'bank.deposit(500) → 余额变为 ' + (bank.getMoney() + 0) + '<br>';
+      // 先查询再取款展示
+      out.innerHTML += 'bank.getMoney() = ' + bank.getMoney() + '<br>';
+      out.innerHTML += 'bank.withdraw(200): ' + bank.withdraw(200) + '<br>';
+      out.innerHTML += 'bank.withdraw(10000): ' + bank.withdraw(10000);
+    }
+
+    // ========== 示例3：状态保持 ==========
+    function demoMemo() {
+      const out = document.getElementById('output3');
+      out.innerHTML = '';
+      function createCallTracker() {
+        let count = 0;
+        return function(label) {
+          count++;
+          out.innerHTML += '"' + label + '" 是第 ' + count + ' 次调用<br>';
+        };
+      }
+      const track = createCallTracker();
+      track('点击按钮');
+      track('提交表单');
+      track('保存数据');
+    }
+
+    // ========== 示例4：函数工厂 ==========
+    function demoFactory() {
+      const out = document.getElementById('output4');
+      out.innerHTML = '';
+      function createMultiplier(n) {
+        return function(x) { return x * n; };
+      }
+      const double = createMultiplier(2);
+      const triple = createMultiplier(3);
+      const tenTimes = createMultiplier(10);
+      out.innerHTML += 'double(5) = ' + double(5) + '<br>';
+      out.innerHTML += 'triple(5) = ' + triple(5) + '<br>';
+      out.innerHTML += 'tenTimes(5) = ' + tenTimes(5) + '<br>';
+      out.innerHTML += '<br>每个函数的 n 是独立的：<br>';
+      out.innerHTML += 'double 的 n = 2, triple 的 n = 3, tenTimes 的 n = 10';
+    }
+
+    // ========== 示例5：循环中的闭包 ==========
+    function demoLoopClosure() {
+      const out = document.getElementById('output5');
+      out.innerHTML = 'var 版本输出（等待 600ms）...<br>';
+
+      // var 版本 — 输出 6,6,6,6,6
+      for (var i = 1; i <= 5; i++) {
+        setTimeout(() => {
+          out.innerHTML += 'var i=' + i + ' ';
+        }, i * 100);
+      }
+
+      // let 版本 — 输出 1,2,3,4,5
+      setTimeout(() => { out.innerHTML += '<br>let 版本输出（等待 800ms）...<br>'; }, 700);
+      for (let j = 1; j <= 5; j++) {
+        setTimeout(() => {
+          out.innerHTML += 'let j=' + j + ' ';
+        }, 800 + j * 50);
+      }
+
+      // IIFE 版本 — 输出 1,2,3,4,5
+      setTimeout(() => { out.innerHTML += '<br>IIFE 版本输出（等待 1200ms）...<br>'; }, 1100);
+      for (var k = 1; k <= 5; k++) {
+        (function(val) {
+          setTimeout(() => {
+            out.innerHTML += 'IIFE k=' + val + ' ';
+          }, 1200 + val * 50);
+        })(k);
+      }
+
+      setTimeout(() => {
+        out.innerHTML += '<br><br>总结：var → 全是6 | let → 1-5正确 | IIFE闭包 → 1-5正确';
+      }, 1600);
+    }
+  </script>
+</body>
+</html>

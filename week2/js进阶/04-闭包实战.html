@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>04 - 闭包实战：防抖、节流、柯里化</title>
+  <style>
+    body { font-family: 'Microsoft YaHei', sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; line-height: 1.8; background: #1e1e1e; color: #d4d4d4; }
+    h1 { color: #4ec9b0; border-bottom: 2px solid #4ec9b0; padding-bottom: 10px; }
+    h2 { color: #569cd6; margin-top: 30px; }
+    h3 { color: #dcdcaa; }
+    code { background: #333; padding: 2px 6px; border-radius: 3px; color: #ce9178; font-family: 'Fira Code', 'Consolas', monospace; }
+    pre { background: #252526; padding: 15px; border-radius: 8px; overflow-x: auto; border-left: 3px solid #4ec9b0; }
+    .demo-box { background: #252526; border: 1px solid #444; border-radius: 8px; padding: 15px; margin: 15px 0; }
+    button { background: #0e639c; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; margin: 3px; }
+    button:hover { background: #1177bb; }
+    button.warn { background: #c53030; }
+    button.warn:hover { background: #e53e3e; }
+    .output { background: #1a1a1a; color: #6a9955; padding: 10px; border-radius: 4px; margin-top: 10px; min-height: 20px; font-family: 'Fira Code', 'Consolas', monospace; }
+    input { background: #333; color: #d4d4d4; border: 1px solid #555; padding: 8px 12px; border-radius: 4px; font-size: 14px; width: 250px; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 12px; margin: 0 4px; }
+    .badge-green { background: #4ec9b0; color: #1e1e1e; }
+    .badge-orange { background: #ce9178; color: #1e1e1e; }
+  </style>
+</head>
+<body>
+  <h1>04 — 闭包实战：防抖、节流、柯里化</h1>
+  <p>这三个是面试最高频的闭包应用题，必须能手写。</p>
+
+  <!-- ============ 防抖 ============ -->
+  <h2>一、防抖（Debounce）</h2>
+  <p><strong>概念：</strong>持续触发时不执行，<strong>等停止触发后 N 毫秒才执行一次</strong>。如果又在 N 毫秒内触发，重新计时。</p>
+  <p><strong>场景：</strong>搜索框输入（等用户打完字再发请求）、窗口 resize、按钮防连点</p>
+
+  <div class="demo-box">
+    <h3>手写防抖源码</h3>
+    <pre>function debounce(fn, delay) {
+  let timer = null; // 闭包变量 — 保存定时器 ID
+
+  return function(...args) {
+    // 每次调用，先清除上一次的定时器
+    clearTimeout(timer);
+    // 重新设置定时器
+    timer = setTimeout(() => {
+      fn.apply(this, args); // 执行函数，保持 this 和参数
+    }, delay);
+  };
+}</pre>
+    <h3>在线体验</h3>
+    <input id="debounceInput" type="text" placeholder="输入文字试试（300ms 防抖）..." />
+    <span>实际执行次数：<strong id="debounceCount">0</strong></span>
+    <button onclick="resetDebounce()">重置</button>
+    <div class="output" id="output1"></div>
+  </div>
+
+  <!-- ============ 节流 ============ -->
+  <h2>二、节流（Throttle）</h2>
+  <p><strong>概念：</strong>持续触发时，<strong>每隔 N 毫秒固定执行一次</strong>。不管你触发多快，频率不变。</p>
+  <p><strong>场景：</strong>滚动事件、鼠标移动、游戏帧率控制</p>
+
+  <div class="demo-box">
+    <h3>手写节流源码（时间戳版）</h3>
+    <pre>function throttle(fn, delay) {
+  let lastTime = 0; // 闭包变量 — 记录上次执行时间
+
+  return function(...args) {
+    const now = Date.now();
+    // 距离上次执行超过 delay 毫秒，才执行
+    if (now - lastTime >= delay) {
+      lastTime = now;
+      fn.apply(this, args);
+    }
+  };
+}</pre>
+    <h3>在线体验</h3>
+    <p>快速移动鼠标看效果（每 500ms 最多触发一次）：</p>
+    <div style="background:#333; padding:60px 20px; border-radius:8px; text-align:center; cursor:crosshair;" id="throttleBox">
+      <span>在这里快速移动鼠标 🖱</span>
+    </div>
+    <span>实际执行次数：<strong id="throttleCount">0</strong></span>
+    <button onclick="resetThrottle()">重置</button>
+    <div class="output" id="output2"></div>
+  </div>
+
+  <!-- ============ 柯里化 ============ -->
+  <h2>三、柯里化（Currying）</h2>
+  <p><strong>概念：</strong>把一个多参数函数，转换成一系列单参数函数。每次只传一个参数，返回一个等待下一个参数的新函数。</p>
+  <p><strong>场景：</strong>参数复用、延迟执行、函数组合</p>
+
+  <div class="demo-box">
+    <h3>手写柯里化源码</h3>
+    <pre>// 普通函数
+function add(a, b, c) { return a + b + c; }
+
+// 柯里化版本
+function curry(fn) {
+  return function curried(...args) {
+    // 参数够了就执行，不够就返回新函数继续收集
+    if (args.length >= fn.length) {
+      return fn.apply(this, args);
+    }
+    return function(...args2) {
+      return curried.apply(this, args.concat(args2));
+    };
+  };
+}
+const curriedAdd = curry(add);
+curriedAdd(1)(2)(3); // 6
+curriedAdd(1, 2)(3); // 6 — 也可以一次传多个</pre>
+    <button onclick="demoCurry()">运行演示</button>
+    <div class="output" id="output3"></div>
+  </div>
+
+  <!-- ============ 单例模式 ============ -->
+  <h2>四、单例模式（Singleton）</h2>
+  <p><strong>概念：</strong>用闭包保证一个类只有一个实例，多次调用返回同一个对象。</p>
+  <p><strong>场景：</strong>全局状态管理器、数据库连接、日志收集器</p>
+
+  <div class="demo-box">
+    <h3>手写单例模式源码</h3>
+    <pre>function createSingleton(Constructor) {
+  let instance = null; // 闭包变量 — 保存唯一实例
+
+  return function(...args) {
+    if (!instance) {
+      instance = new Constructor(...args); // 第一次调用才创建
+    }
+    return instance; // 之后都返回同一个
+  };
+}
+
+function Logger(name) {
+  this.name = name;
+  this.logs = [];
+}
+const getLogger = createSingleton(Logger);
+const a = getLogger('A');
+const b = getLogger('B');
+console.log(a === b); // true — 同一个实例！
+console.log(a.name);  // "A" — name 是第一次创建时设置的</pre>
+    <button onclick="demoSingleton()">运行演示</button>
+    <div class="output" id="output4"></div>
+  </div>
+
+  <!-- ============ 内存泄漏 ============ -->
+  <h2>五、闭包的注意事项</h2>
+  <div class="demo-box">
+    <h3>经典内存泄漏场景</h3>
+    <pre>// ❌ 错误：闭包引用了不再需要的 DOM 元素
+function bindEvent() {
+  const bigData = new Array(1000000).fill('*'); // 大对象
+  const btn = document.getElementById('myBtn');
+
+  btn.addEventListener('click', function() {
+    // 这个闭包引用了 bigData，即使你只用 btn，bigData 也释放不了
+    console.log(btn.textContent);
+  });
+  // 即使 btn 被移除，只要事件监听器还在，bigData 就占据内存
+}
+
+// ✅ 正确：用完就解除引用
+function bindEventSafe() {
+  let bigData = new Array(1000000).fill('*');
+  const btn = document.getElementById('myBtn');
+
+  btn.addEventListener('click', function() {
+    console.log(btn.textContent);
+  });
+
+  bigData = null; // 显式解除引用
+}</pre>
+    <button onclick="demoMemory()">运行演示</button>
+    <div class="output" id="output5"></div>
+  </div>
+
+  <script>
+    // ========== 防抖实现与演示 ==========
+    function debounce(fn, delay) {
+      let timer = null;
+      return function(...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          fn.apply(this, args);
+        }, delay);
+      };
+    }
+
+    let debounceExecCount = 0;
+    const debounceInput = document.getElementById('debounceInput');
+    const debounceCountEl = document.getElementById('debounceCount');
+    const output1 = document.getElementById('output1');
+
+    const handleInput = debounce(function(e) {
+      debounceExecCount++;
+      debounceCountEl.textContent = debounceExecCount;
+      output1.innerHTML += '🔍 搜索: "' + e.target.value + '"<br>';
+      if (output1.children.length > 5) output1.removeChild(output1.firstChild);
+    }, 300);
+
+    debounceInput.addEventListener('input', handleInput);
+
+    function resetDebounce() {
+      debounceExecCount = 0;
+      debounceCountEl.textContent = 0;
+      output1.innerHTML = '';
+      debounceInput.value = '';
+    }
+
+    // ========== 节流实现与演示 ==========
+    function throttle(fn, delay) {
+      let lastTime = 0;
+      return function(...args) {
+        const now = Date.now();
+        if (now - lastTime >= delay) {
+          lastTime = now;
+          fn.apply(this, args);
+        }
+      };
+    }
+
+    let throttleExecCount = 0;
+    const throttleBox = document.getElementById('throttleBox');
+    const throttleCountEl = document.getElementById('throttleCount');
+    const output2 = document.getElementById('output2');
+
+    const handleMove = throttle(function(e) {
+      throttleExecCount++;
+      throttleCountEl.textContent = throttleExecCount;
+      const rect = throttleBox.getBoundingClientRect();
+      output2.innerHTML = 'x=' + Math.round(e.clientX - rect.left) + ' y=' + Math.round(e.clientY - rect.top);
+    }, 500);
+
+    throttleBox.addEventListener('mousemove', handleMove);
+
+    function resetThrottle() {
+      throttleExecCount = 0;
+      throttleCountEl.textContent = 0;
+      output2.innerHTML = '';
+    }
+
+    // ========== 柯里化演示 ==========
+    function curry(fn) {
+      return function curried(...args) {
+        if (args.length >= fn.length) {
+          return fn.apply(this, args);
+        }
+        return function(...args2) {
+          return curried.apply(this, args.concat(args2));
+        };
+      };
+    }
+
+    function demoCurry() {
+      const out = document.getElementById('output3');
+      out.innerHTML = '';
+
+      function add(a, b, c) { return a + b + c; }
+      const curriedAdd = curry(add);
+
+      out.innerHTML += 'curriedAdd(1)(2)(3) = ' + curriedAdd(1)(2)(3) + '<br>';
+      out.innerHTML += 'curriedAdd(10, 20)(30) = ' + curriedAdd(10, 20)(30) + '<br>';
+      out.innerHTML += 'curriedAdd(100)(200, 300) = ' + curriedAdd(100)(200, 300) + '<br>';
+
+      // 实战：创建预填充的 URL 生成器
+      function buildUrl(protocol, domain, path) {
+        return protocol + '://' + domain + '/' + path;
+      }
+      const curriedUrl = curry(buildUrl);
+      const httpsSite = curriedUrl('https'); // 固定协议
+      const githubUrl = httpsSite('github.com'); // 固定域名
+
+      out.innerHTML += '<br>柯里化实战 — URL 生成器：<br>';
+      out.innerHTML += 'httpsSite("github.com", "ffformer/repo") = ' + httpsSite('github.com', 'ffformer/repo') + '<br>';
+      out.innerHTML += 'githubUrl("issues") = ' + githubUrl('issues') + '<br>';
+    }
+
+    // ========== 单例模式演示 ==========
+    function demoSingleton() {
+      const out = document.getElementById('output4');
+      out.innerHTML = '';
+
+      function Logger(name) {
+        this.name = name;
+        this.logs = [];
+        this.write = function(msg) { this.logs.push(msg); };
+      }
+
+      function createSingleton(Constructor) {
+        let instance = null;
+        return function(...args) {
+          if (!instance) {
+            instance = new Constructor(...args);
+            out.innerHTML += '🆕 第一次调用，创建实例<br>';
+          } else {
+            out.innerHTML += '♻️ 后续调用，返回已有实例<br>';
+          }
+          return instance;
+        };
+      }
+
+      const getLogger = createSingleton(Logger);
+      const loggerA = getLogger('日志器A');
+      const loggerB = getLogger('日志器B');
+
+      out.innerHTML += 'loggerA === loggerB → ' + (loggerA === loggerB) + '<br>';
+      out.innerHTML += 'loggerA.name = "' + loggerA.name + '"（第一次创建时设置的名字）<br>';
+      out.innerHTML += 'loggerB.name = "' + loggerB.name + '"（和 loggerA 是同一个对象！）<br>';
+    }
+
+    // ========== 内存泄漏演示 ==========
+    function demoMemory() {
+      const out = document.getElementById('output5');
+      out.innerHTML = '';
+      out.innerHTML += '打开浏览器 DevTools → Memory 面板<br>';
+      out.innerHTML += '闭包会导致变量无法被 GC 回收<br>';
+      out.innerHTML += '原则：不再需要的引用，手动设为 null';
+    }
+  </script>
+</body>
+</html>
