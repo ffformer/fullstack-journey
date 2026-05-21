@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>06 - 手写 call / apply / bind / new</title>
+  <style>
+    body { font-family: 'Microsoft YaHei', sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; line-height: 1.8; background: #1e1e1e; color: #d4d4d4; }
+    h1 { color: #4ec9b0; border-bottom: 2px solid #4ec9b0; padding-bottom: 10px; }
+    h2 { color: #569cd6; margin-top: 30px; }
+    h3 { color: #dcdcaa; }
+    code { background: #333; padding: 2px 6px; border-radius: 3px; color: #ce9178; font-family: 'Fira Code', 'Consolas', monospace; }
+    pre { background: #252526; padding: 15px; border-radius: 8px; overflow-x: auto; border-left: 3px solid #4ec9b0; }
+    .demo-box { background: #252526; border: 1px solid #444; border-radius: 8px; padding: 15px; margin: 15px 0; }
+    button { background: #0e639c; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; margin: 3px; }
+    button:hover { background: #1177bb; }
+    .output { background: #1a1a1a; color: #6a9955; padding: 10px; border-radius: 4px; margin-top: 10px; min-height: 20px; font-family: 'Fira Code', 'Consolas', monospace; }
+    .pass { color: #4ec9b0; }
+    .fail { color: #f48771; }
+  </style>
+</head>
+<body>
+  <h1>06 — 手写 call / apply / bind / new</h1>
+  <p>这四个是面试最高频的手写题。核心思路：<strong>把函数临时挂到目标对象上，通过对象调用，this 就自动指向目标了</strong>。</p>
+
+  <!-- ============ call ============ -->
+  <h2>一、手写 call</h2>
+  <div class="demo-box">
+    <h3>源码</h3>
+    <pre>// myCall(thisArg, arg1, arg2, ...)
+Function.prototype.myCall = function(context, ...args) {
+  // 如果 context 是 null/undefined，指向 window（非严格模式兼容）
+  context = context || window;
+  // 生成一个唯一的临时 key，防止覆盖对象原有属性
+  const key = Symbol('fn');
+  // 把当前函数（this）临时挂到 context 对象上
+  context[key] = this;
+  // 通过 context 调用 = this 指向 context
+  const result = context[key](...args);
+  // 执行完删除临时属性
+  delete context[key];
+  return result;
+};</pre>
+    <h3>验证</h3>
+    <button onclick="demoMyCall()">运行测试</button>
+    <div class="output" id="output1"></div>
+  </div>
+
+  <!-- ============ apply ============ -->
+  <h2>二、手写 apply</h2>
+  <div class="demo-box">
+    <h3>源码（和 call 几乎一样，只是参数用数组接收）</h3>
+    <pre>// myApply(thisArg, [arg1, arg2, ...])
+Function.prototype.myApply = function(context, argsArray) {
+  context = context || window;
+  const key = Symbol('fn');
+  context[key] = this;
+  // argsArray 可能是 undefined/null（不传参数的情况）
+  const result = context[key](...(argsArray || []));
+  delete context[key];
+  return result;
+};</pre>
+    <h3>验证</h3>
+    <button onclick="demoMyApply()">运行测试</button>
+    <div class="output" id="output2"></div>
+  </div>
+
+  <!-- ============ bind ============ -->
+  <h2>三、手写 bind</h2>
+  <div class="demo-box">
+    <h3>源码 — bind 比 call/apply 复杂，因为要处理预置参数 + new 调用</h3>
+    <pre>// myBind(thisArg, arg1, arg2, ...)
+Function.prototype.myBind = function(context, ...presetArgs) {
+  const originalFn = this; // 保存原始函数
+
+  function boundFn(...callArgs) {
+    // 判断是否通过 new 调用
+    // new boundFn() → this instanceof boundFn = true
+    const isNewCall = this instanceof boundFn;
+    const finalCtx = isNewCall ? this : context;
+    // 合并预置参数和实际调用时的参数
+    return originalFn.apply(finalCtx, [...presetArgs, ...callArgs]);
+  }
+
+  // 维护原型链 — new 时能访问原函数的 prototype
+  boundFn.prototype = Object.create(originalFn.prototype);
+  return boundFn;
+};</pre>
+    <h3>验证（含 new 调用场景）</h3>
+    <button onclick="demoMyBind()">运行测试</button>
+    <div class="output" id="output3"></div>
+  </div>
+
+  <!-- ============ new ============ -->
+  <h2>四、手写 new</h2>
+  <div class="demo-box">
+    <h3>源码</h3>
+    <pre>// myNew(构造函数, ...参数)
+function myNew(Constructor, ...args) {
+  // 1. 创建一个新对象，原型指向 Constructor.prototype
+  const obj = Object.create(Constructor.prototype);
+  // 2. 执行构造函数，把 this 绑定到新对象
+  const result = Constructor.apply(obj, args);
+  // 3. 如果构造函数返回了对象（或函数），用它的返回值；否则用新对象
+  return (result !== null && typeof result === 'object') ? result : obj;
+}</pre>
+    <h3>验证</h3>
+    <button onclick="demoMyNew()">运行测试</button>
+    <div class="output" id="output4"></div>
+  </div>
+
+  <!-- ============ 全部对比测试 ============ -->
+  <h2>五、与原生 API 对比验证</h2>
+  <div class="demo-box">
+    <button onclick="demoFullTest()">运行全部对比测试</button>
+    <div class="output" id="output5"></div>
+  </div>
+
+  <script>
+    // ========== myCall ==========
+    Function.prototype.myCall = function(context, ...args) {
+      context = context || window;
+      const key = Symbol('fn');
+      context[key] = this;
+      const result = context[key](...args);
+      delete context[key];
+      return result;
+    };
+
+    function demoMyCall() {
+      const out = document.getElementById('output1');
+      out.innerHTML = '';
+      function say(greeting) { return greeting + ', ' + this.name; }
+      const user = { name: '张三' };
+
+      const native = say.call(user, '你好');
+      const mine = say.myCall(user, '你好');
+      out.innerHTML += '原生 call: ' + native + '<br>';
+      out.innerHTML += '手写 myCall: ' + mine + '<br>';
+      out.innerHTML += '结果一致: ' + (native === mine ? '<span class="pass">✅ 通过</span>' : '<span class="fail">❌ 失败</span>');
+    }
+
+    // ========== myApply ==========
+    Function.prototype.myApply = function(context, argsArray) {
+      context = context || window;
+      const key = Symbol('fn');
+      context[key] = this;
+      const result = context[key](...(argsArray || []));
+      delete context[key];
+      return result;
+    };
+
+    function demoMyApply() {
+      const out = document.getElementById('output2');
+      out.innerHTML = '';
+      function sum(a, b, c) { return a + b + c; }
+
+      const native = sum.apply(null, [1, 2, 3]);
+      const mine = sum.myApply(null, [1, 2, 3]);
+      out.innerHTML += '原生 apply: ' + native + '<br>';
+      out.innerHTML += '手写 myApply: ' + mine + '<br>';
+      out.innerHTML += '结果一致: ' + (native === mine ? '<span class="pass">✅ 通过</span>' : '<span class="fail">❌ 失败</span>');
+    }
+
+    // ========== myBind ==========
+    Function.prototype.myBind = function(context, ...presetArgs) {
+      const originalFn = this;
+      function boundFn(...callArgs) {
+        const isNewCall = this instanceof boundFn;
+        const finalCtx = isNewCall ? this : context;
+        return originalFn.apply(finalCtx, [...presetArgs, ...callArgs]);
+      }
+      boundFn.prototype = Object.create(originalFn.prototype);
+      return boundFn;
+    };
+
+    function demoMyBind() {
+      const out = document.getElementById('output3');
+      out.innerHTML = '';
+
+      // 测试1：普通绑定
+      function greet(greeting, name) {
+        return greeting + ', ' + name + '! My city is ' + this.city;
+      }
+      const obj = { city: '北京' };
+      const nativeBound = greet.bind(obj, 'Hello');
+      const myBound = greet.myBind(obj, 'Hello');
+
+      out.innerHTML += '原生 bind: ' + nativeBound('张三') + '<br>';
+      out.innerHTML += '手写 myBind: ' + myBound('张三') + '<br>';
+      out.innerHTML += '普通调用一致: ' + (nativeBound('A') === myBound('A') ? '<span class="pass">✅ 通过</span>' : '<span class="fail">❌ 失败</span>') + '<br>';
+
+      // 测试2：new 调用（原型链）
+      function Person(name, age) {
+        this.name = name;
+        this.age = age;
+      }
+      Person.prototype.sayHi = function() { return 'Hi, ' + this.name; };
+
+      const BoundPerson = Person.myBind(null, '李四');
+      const p = new BoundPerson(25);
+      out.innerHTML += '<br>new 调用：p.name=' + p.name + ', p.age=' + p.age + '<br>';
+      out.innerHTML += 'p.sayHi(): ' + p.sayHi() + '<br>';
+      out.innerHTML += 'p instanceof Person: ' + (p instanceof Person) + '<br>';
+      out.innerHTML += 'new 原型链: ' + (p instanceof Person ? '<span class="pass">✅ 通过</span>' : '<span class="fail">❌ 失败</span>');
+    }
+
+    // ========== myNew ==========
+    function myNew(Constructor, ...args) {
+      const obj = Object.create(Constructor.prototype);
+      const result = Constructor.apply(obj, args);
+      return (result !== null && typeof result === 'object') ? result : obj;
+    }
+
+    function demoMyNew() {
+      const out = document.getElementById('output4');
+      out.innerHTML = '';
+
+      function Student(name, age) {
+        this.name = name;
+        this.age = age;
+      }
+      Student.prototype.intro = function() {
+        return this.name + ', ' + this.age + '岁';
+      };
+
+      const native = new Student('王五', 20);
+      const mine = myNew(Student, '王五', 20);
+
+      out.innerHTML += '原生 new: ' + native.intro() + '<br>';
+      out.innerHTML += '手写 myNew: ' + mine.intro() + '<br>';
+      out.innerHTML += 'mine instanceof Student: ' + (mine instanceof Student) + '<br>';
+      out.innerHTML += '结果一致: ' + (native.intro() === mine.intro() ? '<span class="pass">✅ 通过</span>' : '<span class="fail">❌ 失败</span>');
+
+      // 测试构造函数返回对象的情况
+      function WithReturn(name) {
+        this.name = name;
+        return { override: true, name: '被覆盖' };
+      }
+      const nr = myNew(WithReturn, '测试');
+      out.innerHTML += '<br>构造函数返回对象时：' + JSON.stringify(nr) + '<br>';
+      out.innerHTML += '返回的是构造函数的返回值: ' + (nr.override ? '<span class="pass">✅ 正确</span>' : '<span class="fail">❌ 错误</span>');
+    }
+
+    // ========== 全量对比 ==========
+    function demoFullTest() {
+      const out = document.getElementById('output5');
+      out.innerHTML = '';
+
+      function add(a, b) { return a + b; }
+      const obj = { multiplier: 10 };
+
+      // call
+      const c1 = add.call(null, 1, 2);
+      const c2 = add.myCall(null, 1, 2);
+      out.innerHTML += 'call:  原生=' + c1 + ' | 手写=' + c2 + ' → ' + (c1 === c2 ? '<span class="pass">✅</span>' : '<span class="fail">❌</span>') + '<br>';
+
+      // apply
+      const a1 = add.apply(null, [3, 4]);
+      const a2 = add.myApply(null, [3, 4]);
+      out.innerHTML += 'apply: 原生=' + a1 + ' | 手写=' + a2 + ' → ' + (a1 === a2 ? '<span class="pass">✅</span>' : '<span class="fail">❌</span>') + '<br>';
+
+      // bind
+      function getInfo(city) { return this.name + '-' + city; }
+      const user = { name: '测试' };
+      const b1 = getInfo.bind(user, '上海')();
+      const b2 = getInfo.myBind(user, '上海')();
+      out.innerHTML += 'bind:  原生=' + b1 + ' | 手写=' + b2 + ' → ' + (b1 === b2 ? '<span class="pass">✅</span>' : '<span class="fail">❌</span>') + '<br>';
+
+      // new
+      function Cat(name) { this.name = name; }
+      const n1 = new Cat('喵喵');
+      const n2 = myNew(Cat, '喵喵');
+      out.innerHTML += 'new:   原生=' + n1.name + ' | 手写=' + n2.name + ' → ' + (n1 instanceof Cat && n2 instanceof Cat ? '<span class="pass">✅</span>' : '<span class="fail">❌</span>') + '<br>';
+
+      out.innerHTML += '<br>全部通过的话，这四个手写题面试稳了 💪';
+    }
+  </script>
+</body>
+</html>

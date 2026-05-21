@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>05 - this 指向规则</title>
+  <style>
+    body { font-family: 'Microsoft YaHei', sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; line-height: 1.8; background: #1e1e1e; color: #d4d4d4; }
+    h1 { color: #4ec9b0; border-bottom: 2px solid #4ec9b0; padding-bottom: 10px; }
+    h2 { color: #569cd6; margin-top: 30px; }
+    h3 { color: #dcdcaa; }
+    code { background: #333; padding: 2px 6px; border-radius: 3px; color: #ce9178; font-family: 'Fira Code', 'Consolas', monospace; }
+    pre { background: #252526; padding: 15px; border-radius: 8px; overflow-x: auto; border-left: 3px solid #4ec9b0; }
+    .demo-box { background: #252526; border: 1px solid #444; border-radius: 8px; padding: 15px; margin: 15px 0; }
+    button { background: #0e639c; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; margin: 3px; }
+    button:hover { background: #1177bb; }
+    .output { background: #1a1a1a; color: #6a9955; padding: 10px; border-radius: 4px; margin-top: 10px; min-height: 20px; font-family: 'Fira Code', 'Consolas', monospace; }
+    table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+    th, td { padding: 8px 12px; border: 1px solid #555; text-align: left; }
+    th { background: #333; color: #dcdcaa; }
+    .important { color: #f48771; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>05 — this 指向规则</h1>
+  <p>JS 的 <code>this</code> 不是在定义时确定的，而是在<strong>函数被调用时</strong>动态绑定的。一共 5 种规则。</p>
+
+  <h2>一、五种绑定规则速查</h2>
+  <table>
+    <tr><th>优先级</th><th>规则</th><th>this 指向</th><th>示例</th></tr>
+    <tr><td>1（最高）</td><td><strong>new 绑定</strong></td><td>new 创建的实例对象</td><td><code>new Foo()</code> → this = 新对象</td></tr>
+    <tr><td>2</td><td><strong>显式绑定</strong></td><td>call/apply/bind 指定的对象</td><td><code>fn.call(obj)</code> → this = obj</td></tr>
+    <tr><td>3</td><td><strong>隐式绑定</strong></td><td>调用时 . 前面的对象</td><td><code>obj.fn()</code> → this = obj</td></tr>
+    <tr><td>4</td><td><strong>默认绑定</strong></td><td>undefined（严格模式）或 window</td><td><code>fn()</code> → this = undefined</td></tr>
+    <tr><td>—（特殊）</td><td><strong>箭头函数</strong></td><td>定义时外层作用域的 this</td><td><code>() => {}</code> → this 固定不变</td></tr>
+  </table>
+
+  <h2>二、规则1：默认绑定</h2>
+  <div class="demo-box">
+    <h3>独立函数调用 — this = undefined（严格模式）/ window（非严格）</h3>
+    <pre>function sayHi() {
+  console.log(this); // undefined（严格模式）或 window（非严格）
+}
+sayHi(); // ← 没有 . 没有 call 没有 new，走默认绑定</pre>
+    <button onclick="demoDefault()">运行演示</button>
+    <div class="output" id="output1"></div>
+  </div>
+
+  <h2>三、规则2：隐式绑定</h2>
+  <div class="demo-box">
+    <h3>通过对象调用 — this = . 前面的对象</h3>
+    <pre>const user = {
+  name: '张三',
+  greet() { console.log(this.name); }
+};
+user.greet(); // this = user → "张三"
+
+// ⚠️ 坑：方法被赋值后丢失 this
+const fn = user.greet;
+fn(); // this = undefined → 报错！（this.name 读取失败）</pre>
+    <button onclick="demoImplicit()">运行演示</button>
+    <div class="output" id="output2"></div>
+  </div>
+
+  <h2>四、规则3：显式绑定（call / apply / bind）</h2>
+  <div class="demo-box">
+    <h3>自己指定 this — call/apply 立即执行，bind 返回新函数</h3>
+    <pre>function greet(greeting, punctuation) {
+  console.log(greeting + ', ' + this.name + punctuation);
+}
+
+const person = { name: '李四' };
+
+greet.call(person, '你好', '!');   // this=person, 参数逐个传
+greet.apply(person, ['嗨', '~']);  // this=person, 参数用数组传
+const bound = greet.bind(person, 'Hello'); // 返回新函数，预设 this 和部分参数
+bound('!!!'); // "Hello, 李四!!!"</pre>
+    <button onclick="demoExplicit()">运行演示</button>
+    <div class="output" id="output3"></div>
+  </div>
+
+  <h2>五、规则4：new 绑定</h2>
+  <div class="demo-box">
+    <h3>new 运算符 — this = 新创建的实例对象</h3>
+    <pre>function Person(name) {
+  // new 调用时，this 绑定到新创建的空对象
+  this.name = name;
+}
+const p = new Person('王五');
+console.log(p.name); // "王五" — this 指向 p 这个实例</pre>
+    <p><code>new</code> 做了 4 件事（Day 9 下午会手写）：</p>
+    <ol>
+      <li>创建一个空对象 <code>{}</code></li>
+      <li>把这个对象的 <code>__proto__</code> 指向构造函数的 <code>prototype</code></li>
+      <li>把构造函数的 <code>this</code> 绑定到这个对象</li>
+      <li>返回这个对象（除非构造函数自己 return 了引用类型）</li>
+    </ol>
+    <button onclick="demoNew()">运行演示</button>
+    <div class="output" id="output4"></div>
+  </div>
+
+  <h2>六、箭头函数 — 没有自己的 this</h2>
+  <div class="demo-box">
+    <h3>箭头函数的 this 在定义时"捕获"外层作用域的 this，之后永不改变</h3>
+    <pre>const user = {
+  name: '赵六',
+  greet() {
+    // 普通函数 — this 取决于调用方式
+    setTimeout(function() {
+      console.log('普通函数 this.name:', this.name); // undefined
+    }, 10);
+
+    // 箭头函数 — this 继承外层 greet() 中的 this
+    setTimeout(() => {
+      console.log('箭头函数 this.name:', this.name); // "赵六"
+    }, 10);
+  }
+};
+user.greet();</pre>
+    <button onclick="demoArrow()">运行演示</button>
+    <div class="output" id="output5"></div>
+  </div>
+
+  <h2>七、综合练习：判断 this 指向</h2>
+  <div class="demo-box">
+    <h3>以下代码中的 this 分别指向谁？</h3>
+    <pre>const obj = {
+  name: 'obj',
+  show() {
+    console.log('1:', this);        // ?
+    function inner() {
+      console.log('2:', this);      // ?
+    }
+    inner();
+    const arrow = () => console.log('3:', this); // ?
+    arrow();
+  }
+};
+obj.show();</pre>
+    <button onclick="demoQuiz()">运行演示</button>
+    <div class="output" id="output6"></div>
+  </div>
+
+  <script>
+    function demoDefault() {
+      const out = document.getElementById('output1');
+      out.innerHTML = '';
+      function showThis() {
+        out.innerHTML += 'this = ' + String(this) + '<br>';
+        out.innerHTML += '在严格模式下（ES6 模块默认严格），this 为 undefined';
+      }
+      showThis();
+    }
+
+    function demoImplicit() {
+      const out = document.getElementById('output2');
+      out.innerHTML = '';
+      const user = {
+        name: '张三',
+        greet() { out.innerHTML += '✅ 方法调用 this.name = ' + this.name + '<br>'; }
+      };
+      user.greet();
+
+      const fn = user.greet;
+      try {
+        fn();
+      } catch (e) {
+        out.innerHTML += '❌ 赋值后独立调用 → ' + e.message.split(':')[0] + '<br>';
+        out.innerHTML += '原因：丢失了 . 前面的对象，this 变成 undefined';
+      }
+    }
+
+    function demoExplicit() {
+      const out = document.getElementById('output3');
+      out.innerHTML = '';
+      function greet(greeting, punctuation) {
+        out.innerHTML += greeting + ', ' + this.name + punctuation + '<br>';
+      }
+      const person = { name: '李四' };
+      greet.call(person, '你好', '!');
+      greet.apply(person, ['嗨', '~']);
+      const bound = greet.bind(person, 'Hello');
+      bound('!!!');
+      out.innerHTML += '<br>区别总结：call=逐个传参 | apply=数组传参 | bind=返回新函数，可预设参数';
+    }
+
+    function demoNew() {
+      const out = document.getElementById('output4');
+      out.innerHTML = '';
+      function Person(name) {
+        this.name = name;
+        out.innerHTML += '构造函数执行：this = ' + JSON.stringify(this) + '<br>';
+      }
+      const p = new Person('王五');
+      out.innerHTML += 'p.name = "' + p.name + '"<br>';
+      out.innerHTML += 'p instanceof Person = ' + (p instanceof Person);
+    }
+
+    function demoArrow() {
+      const out = document.getElementById('output5');
+      out.innerHTML = '等待 50ms...<br>';
+      const user = {
+        name: '赵六',
+        greet() {
+          setTimeout(function() {
+            out.innerHTML += '普通函数：this.name = ' + (this.name || 'undefined（丢失了）') + '<br>';
+          }, 10);
+          setTimeout(() => {
+            out.innerHTML += '箭头函数：this.name = ' + this.name + '（继承外层 this）<br>';
+          }, 30);
+          setTimeout(() => {
+            out.innerHTML += '<br>结论：箭头函数没有自己的 this，看定义时外层的 this';
+          }, 50);
+        }
+      };
+      user.greet();
+    }
+
+    function demoQuiz() {
+      const out = document.getElementById('output6');
+      out.innerHTML = '';
+      const obj = {
+        name: 'obj',
+        show() {
+          out.innerHTML += '1: this = ' + (this && this.name) + '（隐式绑定 — . 前面的 obj）<br>';
+          function inner() {
+            out.innerHTML += '2: this = ' + String(this && this.name || 'undefined') + '（默认绑定 — 独立函数调用）<br>';
+          }
+          inner();
+          const arrow = () => {
+            out.innerHTML += '3: this = ' + (this && this.name) + '（箭头函数 — 继承外层 show 的 this）<br>';
+          };
+          arrow();
+        }
+      };
+      obj.show();
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>08 - class 语法糖与继承</title>
+  <style>
+    body { font-family: 'Microsoft YaHei', sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; line-height: 1.8; background: #1e1e1e; color: #d4d4d4; }
+    h1 { color: #4ec9b0; border-bottom: 2px solid #4ec9b0; padding-bottom: 10px; }
+    h2 { color: #569cd6; margin-top: 30px; }
+    h3 { color: #dcdcaa; }
+    code { background: #333; padding: 2px 6px; border-radius: 3px; color: #ce9178; font-family: 'Fira Code', 'Consolas', monospace; }
+    pre { background: #252526; padding: 15px; border-radius: 8px; overflow-x: auto; border-left: 3px solid #4ec9b0; }
+    .demo-box { background: #252526; border: 1px solid #444; border-radius: 8px; padding: 15px; margin: 15px 0; }
+    button { background: #0e639c; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; margin: 3px; }
+    button:hover { background: #1177bb; }
+    .output { background: #1a1a1a; color: #6a9955; padding: 10px; border-radius: 4px; margin-top: 10px; min-height: 20px; font-family: 'Fira Code', 'Consolas', monospace; }
+    .highlight { background: #f48771; color: #fff; padding: 2px 8px; border-radius: 10px; font-size: 11px; }
+  </style>
+</head>
+<body>
+  <h1>08 — class 语法糖与继承</h1>
+  <p><code>class</code> 本质上就是<strong>构造函数 + 原型链的语法糖</strong>。下面把 class 写法和等价的构造函数写法对比来看。</p>
+
+  <h2>一、class 基本语法 vs 构造函数</h2>
+  <div class="demo-box">
+    <h3>class 写法</h3>
+    <pre>class Person {
+  constructor(name, age) {
+    this.name = name;
+    this.age = age;
+  }
+  // 方法自动挂到 Person.prototype 上
+  sayHi() {
+    return this.name + ' 你好，' + this.age + ' 岁';
+  }
+  // static = 类自身的属性/方法，不在实例上
+  static species = '人类';
+}</pre>
+    <h3>等价的构造函数写法</h3>
+    <pre>function Person(name, age) {
+  this.name = name;
+  this.age = age;
+}
+Person.prototype.sayHi = function() {
+  return this.name + ' 你好，' + this.age + ' 岁';
+};
+Person.species = '人类';</pre>
+    <button onclick="demoBasic()">运行演示</button>
+    <div class="output" id="output1"></div>
+  </div>
+
+  <h2>二、extends 继承 vs 原型继承</h2>
+  <div class="demo-box">
+    <h3>class extends 写法（现代写法）</h3>
+    <pre>class Animal {
+  constructor(name) { this.name = name; }
+  eat() { return this.name + ' 在吃东西'; }
+}
+
+class Dog extends Animal {
+  constructor(name, breed) {
+    super(name); // ← 必须调用 super() 且在使用 this 之前
+    this.breed = breed;
+  }
+  bark() { return this.name + ' 汪汪叫'; }
+  // 可以覆盖父类方法
+  eat() { return super.eat() + '（吃狗粮）'; }
+}
+
+const d = new Dog('旺财', '金毛');
+d.eat();  // "旺财 在吃东西（吃狗粮）"
+d.bark(); // "旺财 汪汪叫"
+d instanceof Dog;    // true
+d instanceof Animal; // true</pre>
+    <button onclick="demoExtends()">运行演示</button>
+    <div class="output" id="output2"></div>
+  </div>
+
+  <h2>三、getter / setter — 计算属性</h2>
+  <div class="demo-box">
+    <h3>用 get/set 创建像属性一样调用的方法</h3>
+    <pre>class Temperature {
+  constructor(celsius) {
+    this._celsius = celsius; // _ 开头约定为"私有"
+  }
+  get celsius() { return this._celsius; }
+  set celsius(val) {
+    if (val < -273.15) throw new Error('低于绝对零度！');
+    this._celsius = val;
+  }
+  get fahrenheit() {
+    return this._celsius * 9 / 5 + 32; // 计算属性，不用存
+  }
+}
+
+const t = new Temperature(25);
+console.log(t.fahrenheit); // 77 — 像属性一样访问，实际在计算方法
+t.celsius = 100;           // 像赋值一样，实际在调用 setter</pre>
+    <button onclick="demoGetter()">运行演示</button>
+    <div class="output" id="output3"></div>
+  </div>
+
+  <h2>四、私有字段（#）— 真正的私有</h2>
+  <div class="demo-box">
+    <h3>用 <code>#</code> 声明的字段，外部完全无法访问</h3>
+    <pre>class BankAccount {
+  #balance = 0; // 私有字段，外部 bank.#balance 会报语法错误
+
+  constructor(initial) { this.#balance = initial; }
+
+  deposit(n) { this.#balance += n; }
+  getBalance() { return this.#balance; }
+}
+
+const bank = new BankAccount(1000);
+bank.deposit(500);
+console.log(bank.getBalance()); // 1500
+console.log(bank.#balance);     // ❌ SyntaxError — 外部访问不到</pre>
+    <button onclick="demoPrivate()">运行演示</button>
+    <div class="output" id="output4"></div>
+  </div>
+
+  <h2>五、class 方法的 this 绑定问题</h2>
+  <div class="demo-box">
+    <h3>class 方法内部的 this 也会丢失（与普通函数一样）</h3>
+    <pre>class Counter {
+  constructor() { this.count = 0; }
+  increment() { this.count++; }
+}
+const c = new Counter();
+
+// ❌ 方法被赋值后 this 丢失
+const fn = c.increment;
+fn(); // TypeError: Cannot read properties of undefined
+
+// ✅ 解决方案1：bind
+const boundFn = c.increment.bind(c);
+// ✅ 解决方案2：箭头函数在 class field 中
+class CounterFixed {
+  count = 0;
+  increment = () => { this.count++; }; // 自动绑定 this
+}</pre>
+    <button onclick="demoThisIssue()">运行演示</button>
+    <div class="output" id="output5"></div>
+  </div>
+
+  <script>
+    function demoBasic() {
+      const out = document.getElementById('output1');
+      out.innerHTML = '';
+
+      class Person {
+        constructor(name, age) {
+          this.name = name;
+          this.age = age;
+        }
+        sayHi() { return this.name + ' 你好，' + this.age + ' 岁'; }
+        static species = '人类';
+      }
+
+      const p = new Person('张三', 25);
+      out.innerHTML += 'p.sayHi() = ' + p.sayHi() + '<br>';
+      out.innerHTML += 'typeof Person = ' + typeof Person + '（class 本质是函数）<br>';
+      out.innerHTML += "Person.prototype.sayHi 是否存在 = " + (typeof Person.prototype.sayHi === 'function') + '<br>';
+      out.innerHTML += 'p.sayHi === Person.prototype.sayHi = ' + (p.sayHi === Person.prototype.sayHi) + '<br>';
+      out.innerHTML += "Person.species = '" + Person.species + "'（static 属性在类本身上，不在实例上）<br>";
+      out.innerHTML += 'p.species = ' + p.species;
+    }
+
+    function demoExtends() {
+      const out = document.getElementById('output2');
+      out.innerHTML = '';
+
+      class Animal {
+        constructor(name) { this.name = name; }
+        eat() { return this.name + ' 在吃东西'; }
+      }
+
+      class Dog extends Animal {
+        constructor(name, breed) {
+          super(name);
+          this.breed = breed;
+        }
+        bark() { return this.name + '（' + this.breed + '）汪汪叫'; }
+        eat() { return super.eat() + '（吃狗粮）'; }
+      }
+
+      const d = new Dog('旺财', '金毛');
+      out.innerHTML += 'd.eat() = ' + d.eat() + '<br>';
+      out.innerHTML += 'd.bark() = ' + d.bark() + '<br>';
+      out.innerHTML += 'd instanceof Dog = ' + (d instanceof Dog) + '<br>';
+      out.innerHTML += 'd instanceof Animal = ' + (d instanceof Animal) + '<br>';
+      out.innerHTML += '<br>底层真相：<br>';
+      out.innerHTML += 'Dog.prototype.__proto__ === Animal.prototype: ' + (Object.getPrototypeOf(Dog.prototype) === Animal.prototype);
+    }
+
+    function demoGetter() {
+      const out = document.getElementById('output3');
+      out.innerHTML = '';
+
+      class Temperature {
+        constructor(celsius) { this._celsius = celsius; }
+        get celsius() { return this._celsius; }
+        set celsius(val) {
+          out.innerHTML += 'setter 被调用：' + val + '℃<br>';
+          this._celsius = val;
+        }
+        get fahrenheit() {
+          return this._celsius * 9 / 5 + 32;
+        }
+      }
+
+      const t = new Temperature(25);
+      out.innerHTML += 't.fahrenheit = ' + t.fahrenheit + '°F（计算属性，不需要存）<br>';
+      t.celsius = 100;
+      out.innerHTML += 't.celsius = ' + t.celsius + '℃<br>';
+      out.innerHTML += 't.fahrenheit = ' + t.fahrenheit + '°F（自动更新）';
+    }
+
+    function demoPrivate() {
+      const out = document.getElementById('output4');
+      out.innerHTML = '';
+
+      class BankAccount {
+        #balance = 0;
+        constructor(initial) { this.#balance = initial; }
+        deposit(n) { this.#balance += n; }
+        getBalance() { return this.#balance; }
+      }
+
+      const bank = new BankAccount(1000);
+      bank.deposit(500);
+      out.innerHTML += 'bank.getBalance() = ' + bank.getBalance() + '<br>';
+      try {
+        out.innerHTML += 'bank.#balance = ' + eval('bank.#balance');
+      } catch (e) {
+        out.innerHTML += '访问 bank.#balance → SyntaxError（私有字段外部不可见）';
+      }
+    }
+
+    function demoThisIssue() {
+      const out = document.getElementById('output5');
+      out.innerHTML = '';
+
+      class Counter {
+        constructor() { this.count = 0; }
+        increment() { this.count++; }
+      }
+      const c = new Counter();
+      const fn = c.increment;
+      try {
+        fn();
+      } catch (e) {
+        out.innerHTML += '❌ 赋值后调用报错：' + e.message.split('.')[0] + '<br>';
+        out.innerHTML += '原因：class 方法内部的 this 默认不绑定<br>';
+      }
+
+      // 解决方案
+      class CounterFixed {
+        count = 0;
+        increment = () => { this.count++; };
+      }
+      const c2 = new CounterFixed();
+      const fn2 = c2.increment;
+      fn2(); // OK
+      out.innerHTML += '✅ 用箭头函数 class field：fn2() 执行成功，count=' + c2.count;
+    }
+  </script>
+</body>
+</html>

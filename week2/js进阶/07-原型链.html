@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>07 - 原型链</title>
+  <style>
+    body { font-family: 'Microsoft YaHei', sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; line-height: 1.8; background: #1e1e1e; color: #d4d4d4; }
+    h1 { color: #4ec9b0; border-bottom: 2px solid #4ec9b0; padding-bottom: 10px; }
+    h2 { color: #569cd6; margin-top: 30px; }
+    h3 { color: #dcdcaa; }
+    code { background: #333; padding: 2px 6px; border-radius: 3px; color: #ce9178; font-family: 'Fira Code', 'Consolas', monospace; }
+    pre { background: #252526; padding: 15px; border-radius: 8px; overflow-x: auto; border-left: 3px solid #4ec9b0; }
+    .demo-box { background: #252526; border: 1px solid #444; border-radius: 8px; padding: 15px; margin: 15px 0; }
+    button { background: #0e639c; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; margin: 3px; }
+    button:hover { background: #1177bb; }
+    .output { background: #1a1a1a; color: #6a9955; padding: 10px; border-radius: 4px; margin-top: 10px; min-height: 20px; font-family: 'Fira Code', 'Consolas', monospace; }
+    .diagram { background: #1a1a1a; padding: 20px; border-radius: 8px; margin: 15px 0; text-align: center; line-height: 2.2; font-family: 'Fira Code', 'Consolas', monospace; }
+    .diagram .arrow { color: #569cd6; }
+    .diagram .prop { color: #dcdcaa; }
+    .diagram .obj { color: #4ec9b0; }
+    .diagram .val { color: #ce9178; }
+  </style>
+</head>
+<body>
+  <h1>07 — 原型链（Prototype Chain）</h1>
+
+  <h2>一、三个关键属性</h2>
+  <table>
+    <tr><th>属性</th><th>属于谁</th><th>指向什么</th><th>通俗理解</th></tr>
+    <tr><td><code>prototype</code></td><td>构造函数（函数才有）</td><td>原型对象</td><td>"我创建的实例长什么样"</td></tr>
+    <tr><td><code>__proto__</code></td><td>所有对象</td><td>构造函数的 prototype</td><td>"我的模板是谁"</td></tr>
+    <tr><td><code>constructor</code></td><td>原型对象</td><td>构造函数本身</td><td>"谁创建了我"</td></tr>
+  </table>
+
+  <h2>二、三角关系图</h2>
+  <div class="diagram">
+<pre style="display:inline-block; text-align:left; background:none; border:none; padding:10px;">
+<span class="obj">person 实例</span>
+    │
+    │ <span class="arrow">.__proto__</span> ─────────┐
+    │                          ▼
+    │              <span class="obj">Person.prototype</span>（原型对象）
+    │                          │
+    │                          │ <span class="arrow">.constructor</span> ──┐
+    │                          │                  │
+    │                          ▼                  ▼
+    │              <span class="obj">Person</span>（构造函数）
+    │                          │
+    │                          │ <span class="arrow">.prototype</span> ─────┘
+    │                          │
+    └──────────────────────────┘
+      <span class="arrow">person.__proto__ === Person.prototype</span> ✅
+
+继续向上：
+<span class="obj">Person.prototype</span>
+    │
+    │ <span class="arrow">.__proto__</span> ──────────▶ <span class="obj">Object.prototype</span>
+    │                                       │
+    │                                       │ <span class="arrow">.__proto__</span> ──▶ <span class="val">null</span>（终点）
+    │                                       │
+    └───────────────────────────────────────┘
+</pre>
+  </div>
+  <p>这个 <code>__proto__</code> 一条线串起来的链路，就是<strong>原型链</strong>。JS 通过它实现<strong>属性的继承查找</strong>。</p>
+
+  <h2>三、原型链让属性查找可以"向上走"</h2>
+  <div class="demo-box">
+    <h3>当读取 person.name 时，JS 引擎的查找顺序：</h3>
+    <pre>function Person(name) {
+  this.name = name; // 实例自身属性
+}
+Person.prototype.species = '人类'; // 原型上的共享属性
+
+const p = new Person('张三');
+
+console.log(p.name);     // "张三" — 自己的属性，直接找到
+console.log(p.species);  // "人类" — 自己没有 → 上溯到 Person.prototype 找到
+console.log(p.toString());// [object Object] — 继续上溯到 Object.prototype 找到
+console.log(p.xxx);      // undefined — 一直找到 null 都没有</pre>
+    <button onclick="demoLookup()">运行演示</button>
+    <div class="output" id="output1"></div>
+  </div>
+
+  <h2>四、原型继承：让一个"类"继承另一个</h2>
+  <div class="demo-box">
+    <h3>寄生组合继承（面试标准答案）</h3>
+    <pre>// 父类
+function Animal(name) {
+  this.name = name;
+}
+Animal.prototype.eat = function() {
+  console.log(this.name + ' 在吃东西');
+};
+
+// 子类
+function Dog(name, breed) {
+  Animal.call(this, name); // 1. 继承父类的实例属性
+  this.breed = breed;
+}
+// 2. 继承父类的原型方法 — Object.create 切断引用
+Dog.prototype = Object.create(Animal.prototype);
+// 3. 修正 constructor 指向
+Dog.prototype.constructor = Dog;
+// 4. 在子类原型上添加自己的方法
+Dog.prototype.bark = function() {
+  console.log(this.name + ' 汪汪叫');
+};
+
+const d = new Dog('旺财', '金毛');
+d.eat();  // "旺财 在吃东西" — 从 Animal.prototype 继承
+d.bark(); // "旺财 汪汪叫" — Dog 自己的方法</pre>
+    <button onclick="demoInherit()">运行演示</button>
+    <div class="output" id="output2"></div>
+  </div>
+
+  <h2>五、instanceof 原理</h2>
+  <div class="demo-box">
+    <h3><code>obj instanceof Constructor</code> 做了什么？</h3>
+    <p>顺着 <code>obj.__proto__</code> 链一直向上找，看能不能找到 <code>Constructor.prototype</code>。</p>
+    <pre>function myInstanceOf(obj, Constructor) {
+  let proto = Object.getPrototypeOf(obj); // 等于 obj.__proto__
+
+  while (proto) {
+    if (proto === Constructor.prototype) return true;
+    proto = Object.getPrototypeOf(proto); // 继续向上
+  }
+  return false;
+}
+
+const d = new Dog('旺财', '金毛');
+myInstanceOf(d, Dog);     // true
+myInstanceOf(d, Animal);  // true（原型链向上找到了！）
+myInstanceOf(d, Object);  // true（再往上）
+myInstanceOf(d, Array);   // false</pre>
+    <button onclick="demoInstanceof()">运行演示</button>
+    <div class="output" id="output3"></div>
+  </div>
+
+  <script>
+    function demoLookup() {
+      const out = document.getElementById('output1');
+      out.innerHTML = '';
+      function Person(name) { this.name = name; }
+      Person.prototype.species = '人类';
+
+      const p = new Person('张三');
+      out.innerHTML += 'p.name = ' + p.name + '（自身属性）<br>';
+      out.innerHTML += 'p.species = ' + p.species + '（Person.prototype 上的）<br>';
+      out.innerHTML += 'p.toString = ' + p.toString.toString().substring(0, 30) + '...（Object.prototype 上的）<br>';
+      out.innerHTML += 'p.xxx = ' + p.xxx + '（原型链到头都没找到）<br>';
+      out.innerHTML += '<br>查找路径：p 自身 → Person.prototype → Object.prototype → null';
+    }
+
+    function demoInherit() {
+      const out = document.getElementById('output2');
+      out.innerHTML = '';
+
+      function Animal(name) { this.name = name; }
+      Animal.prototype.eat = function() { out.innerHTML += this.name + ' 在吃东西<br>'; };
+
+      function Dog(name, breed) {
+        Animal.call(this, name);
+        this.breed = breed;
+      }
+      Dog.prototype = Object.create(Animal.prototype);
+      Dog.prototype.constructor = Dog;
+      Dog.prototype.bark = function() { out.innerHTML += this.name + '（' + this.breed + '）汪汪叫<br>'; };
+
+      const d = new Dog('旺财', '金毛');
+      d.eat();
+      d.bark();
+      out.innerHTML += '<br>d 的原型链：<br>';
+      out.innerHTML += 'd.__proto__ === Dog.prototype: ' + (Object.getPrototypeOf(d) === Dog.prototype) + '<br>';
+      out.innerHTML += 'Dog.prototype.__proto__ === Animal.prototype: ' + (Object.getPrototypeOf(Dog.prototype) === Animal.prototype) + '<br>';
+      out.innerHTML += 'Animal.prototype.__proto__ === Object.prototype: ' + (Object.getPrototypeOf(Animal.prototype) === Object.prototype);
+    }
+
+    function demoInstanceof() {
+      const out = document.getElementById('output3');
+      out.innerHTML = '';
+
+      function myInstanceOf(obj, Constructor) {
+        let proto = Object.getPrototypeOf(obj);
+        while (proto) {
+          if (proto === Constructor.prototype) return true;
+          proto = Object.getPrototypeOf(proto);
+        }
+        return false;
+      }
+
+      // 借用 demoInherit 中定义的 Dog 和 Animal
+      function Animal(name) { this.name = name; }
+      function Dog(name, breed) { Animal.call(this, name); this.breed = breed; }
+      Dog.prototype = Object.create(Animal.prototype);
+      Dog.prototype.constructor = Dog;
+
+      const d = new Dog('旺财', '金毛');
+
+      out.innerHTML += 'myInstanceOf(d, Dog) = ' + myInstanceOf(d, Dog) + '（Dog.prototype 在链上）<br>';
+      out.innerHTML += 'myInstanceOf(d, Animal) = ' + myInstanceOf(d, Animal) + '（Animal.prototype 也在链上）<br>';
+      out.innerHTML += 'myInstanceOf(d, Object) = ' + myInstanceOf(d, Object) + '（Object.prototype 还在链上）<br>';
+      out.innerHTML += 'myInstanceOf(d, Array) = ' + myInstanceOf(d, Array) + '（Array.prototype 不在链上）<br>';
+      out.innerHTML += 'myInstanceOf(d, Function) = ' + myInstanceOf(d, Function) + '（Function.prototype 也不在链上）<br>';
+      out.innerHTML += '<br>与原生 instanceof 对比：全部一致 ✅';
+    }
+  </script>
+</body>
+</html>
