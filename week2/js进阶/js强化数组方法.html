@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript 数组方法大全</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f172a; color: #e2e8f0; padding: 24px; }
+        h1 { text-align: center; margin-bottom: 8px; font-size: 28px; color: #facc15; }
+        .subtitle { text-align: center; color: #94a3b8; margin-bottom: 32px; font-size: 14px; }
+        .legend { text-align: center; margin-bottom: 24px; font-size: 13px; }
+        .legend span { margin: 0 12px; }
+        .legend .mutate { color: #f87171; }
+        .legend .immutable { color: #34d399; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(460px, 1fr)); gap: 20px; }
+        .card { background: #1e293b; border-radius: 12px; padding: 20px; border: 1px solid #334155; }
+        .card h2 { font-size: 18px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #334155; }
+        .card h2 .badge { font-size: 12px; padding: 2px 8px; border-radius: 99px; margin-left: 8px; vertical-align: middle; }
+        .badge.mutate { background: #7f1d1d; color: #fca5a5; }
+        .badge.immutable { background: #14532d; color: #86efac; }
+        .badge.neutral { background: #475569; color: #cbd5e1; }
+        .example { background: #0f172a; border-radius: 8px; padding: 12px 16px; margin-bottom: 10px; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 13px; }
+        .example .code { color: #f8fafc; margin-bottom: 2px; }
+        .example .code .kw { color: #c084fc; }
+        .example .code .str { color: #34d399; }
+        .example .code .fn { color: #38bdf8; }
+        .example .code .cm { color: #64748b; }
+        .example .code .num { color: #fb923c; }
+        .example .result { color: #fbbf24; margin-top: 6px; padding-top: 6px; border-top: 1px dashed #334155; }
+        .note { font-size: 12px; color: #94a3b8; margin-top: 4px; font-style: italic; }
+    </style>
+</head>
+<body>
+    <h1>JavaScript 数组方法大全</h1>
+    <p class="subtitle">打开控制台（F12）查看完整运行结果 | 页面上为精选示例</p>
+    <p class="legend">
+        <span class="mutate">■ 红色标签 = 改变原数组</span>
+        <span class="immutable">■ 绿色标签 = 不改变原数组</span>
+        <span>■ 灰色标签 = 静态方法</span>
+    </p>
+
+    <!-- ========== 遍历类 ========== -->
+    <div class="grid">
+
+        <!-- forEach -->
+        <div class="card">
+            <h2>1. forEach <span class="badge immutable">不改变原数组</span></h2>
+            <p class="note">遍历每个元素，无返回值（返回 undefined），不能中途 break</p>
+            <div class="example">
+                <div class="code"><span class="kw">const</span> arr = [<span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>]</div>
+                <div class="code">arr.<span class="fn">forEach</span>((item, index) => {</div>
+                <div class="code">&nbsp;&nbsp;console.<span class="fn">log</span>(<span class="str">`索引${index}: ${item}`</span>)</div>
+                <div class="code">})</div>
+                <div class="result">→ 索引0: 10 / 索引1: 20 / 索引2: 30</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 与 for...of 对比：for...of 可用 break</span></div>
+                <div class="code"><span class="kw">for</span> (<span class="kw">const</span> item <span class="kw">of</span> arr) { <span class="kw">if</span> (item > <span class="num">15</span>) <span class="kw">break</span> }</div>
+            </div>
+        </div>
+
+        <!-- map -->
+        <div class="card">
+            <h2>2. map <span class="badge immutable">不改变原数组</span></h2>
+            <p class="note">遍历并返回新数组，每个元素经回调处理，数组长度不变</p>
+            <div class="example">
+                <div class="code"><span class="kw">const</span> nums = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>]</div>
+                <div class="code">nums.<span class="fn">map</span>(n => n * <span class="num">2</span>)</div>
+                <div class="result">→ [2, 4, 6]</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 实战：提取对象数组中的某个字段</span></div>
+                <div class="code"><span class="kw">const</span> users = [{<span class="kw">name</span>:<span class="str">'张三'</span>, <span class="kw">age</span>:<span class="num">20</span>}, {<span class="kw">name</span>:<span class="str">'李四'</span>, <span class="kw">age</span>:<span class="num">25</span>}]</div>
+                <div class="code">users.<span class="fn">map</span>(u => u.name)</div>
+                <div class="result">→ ["张三", "李四"]</div>
+            </div>
+        </div>
+
+        <!-- filter -->
+        <div class="card">
+            <h2>3. filter <span class="badge immutable">不改变原数组</span></h2>
+            <p class="note">筛选符合条件的元素，返回新数组，长度 ≤ 原数组</p>
+            <div class="example">
+                <div class="code"><span class="kw">const</span> nums = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>]</div>
+                <div class="code">nums.<span class="fn">filter</span>(n => n > <span class="num">3</span>)</div>
+                <div class="result">→ [4, 5]</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 实战：去除 falsy 值（最常用）</span></div>
+                <div class="code">[<span class="num">0</span>, <span class="str">'hello'</span>, <span class="kw">null</span>, <span class="str">''</span>, <span class="num">42</span>, <span class="kw">undefined</span>].<span class="fn">filter</span>(Boolean)</div>
+                <div class="result">→ ["hello", 42]</div>
+            </div>
+        </div>
+
+        <!-- find -->
+        <div class="card">
+            <h2>4. find / findIndex <span class="badge immutable">不改变原数组</span></h2>
+            <p class="note">find 返回第一个符合条件的元素，findIndex 返回其索引，找不到返回 undefined / -1</p>
+            <div class="example">
+                <div class="code"><span class="kw">const</span> users = [{<span class="kw">id</span>:<span class="num">1</span>,<span class="kw">name</span>:<span class="str">'A'</span>},{<span class="kw">id</span>:<span class="num">2</span>,<span class="kw">name</span>:<span class="str">'B'</span>},{<span class="kw">id</span>:<span class="num">3</span>,<span class="kw">name</span>:<span class="str">'A'</span>}]</div>
+                <div class="code">users.<span class="fn">find</span>(u => u.name === <span class="str">'A'</span>)</div>
+                <div class="result">→ { id: 1, name: "A" } (只返回第一个)</div>
+            </div>
+            <div class="example">
+                <div class="code">users.<span class="fn">findIndex</span>(u => u.name === <span class="str">'A'</span>)</div>
+                <div class="result">→ 0</div>
+            </div>
+            <div class="example">
+                <div class="code">users.<span class="fn">find</span>(u => u.id === <span class="num">999</span>)</div>
+                <div class="result">→ undefined (找不到)</div>
+            </div>
+        </div>
+
+        <!-- some / every -->
+        <div class="card">
+            <h2>5. some / every <span class="badge immutable">不改变原数组</span></h2>
+            <p class="note">some "有一项满足即 true"，every "全部满足才 true"</p>
+            <div class="example">
+                <div class="code"><span class="kw">const</span> nums = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>]</div>
+                <div class="code">nums.<span class="fn">some</span>(n => n > <span class="num">3</span>)</div>
+                <div class="result">→ true (有大于3的)</div>
+            </div>
+            <div class="example">
+                <div class="code">nums.<span class="fn">every</span>(n => n > <span class="num">0</span>)</div>
+                <div class="result">→ true (全部都大于0)</div>
+            </div>
+            <div class="example">
+                <div class="code">nums.<span class="fn">every</span>(n => n > <span class="num">3</span>)</div>
+                <div class="result">→ false (不是全都大于3)</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 实战：验证数组中是否有空值</span></div>
+                <div class="code">[<span class="str">'a'</span>, <span class="str">'b'</span>, <span class="str">''</span>].<span class="fn">some</span>(item => !item)</div>
+                <div class="result">→ true (有空字符串)</div>
+            </div>
+        </div>
+
+        <!-- reduce -->
+        <div class="card">
+            <h2>6. reduce <span class="badge immutable">不改变原数组</span></h2>
+            <p class="note">万能方法：累加、去重、分组、扁平化都能做。<br>reduce((累计值, 当前值) => ..., 初始值)</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 求和（最常见）</span></div>
+                <div class="code">[<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>].<span class="fn">reduce</span>((sum, n) => sum + n, <span class="num">0</span>)</div>
+                <div class="result">→ 10</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 数组去重（面试常考）</span></div>
+                <div class="code">[<span class="num">1</span>,<span class="num">2</span>,<span class="num">2</span>,<span class="num">3</span>].<span class="fn">reduce</span>((acc, n) => {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">if</span> (!acc.<span class="fn">includes</span>(n)) acc.<span class="fn">push</span>(n)</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">return</span> acc</div>
+                <div class="code">}, [])</div>
+                <div class="result">→ [1, 2, 3]</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 分组：按年龄分组</span></div>
+                <div class="code">[{<span class="kw">n</span>:<span class="str">'A'</span>,<span class="kw">a</span>:<span class="num">20</span>},{<span class="kw">n</span>:<span class="str">'B'</span>,<span class="kw">a</span>:<span class="num">20</span>},{<span class="kw">n</span>:<span class="str">'C'</span>,<span class="kw">a</span>:<span class="num">30</span>}].<span class="fn">reduce</span>((acc, p) => {</div>
+                <div class="code">&nbsp;&nbsp;(acc[p.a] ??= []).<span class="fn">push</span>(p)</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">return</span> acc</div>
+                <div class="code">}, {})</div>
+                <div class="result">→ {20: [{n:"A",a:20},{n:"B",a:20}], 30: [{n:"C",a:30}]}</div>
+            </div>
+        </div>
+
+        <!-- ========== 增删改类 ========== -->
+
+        <!-- push / pop -->
+        <div class="card">
+            <h2>7. push / pop <span class="badge mutate">改变原数组</span></h2>
+            <p class="note">push 尾部添加(返回新长度)，pop 尾部删除(返回被删元素)。栈结构</p>
+            <div class="example">
+                <div class="code"><span class="kw">const</span> arr = [<span class="num">1</span>, <span class="num">2</span>]</div>
+                <div class="code">arr.<span class="fn">push</span>(<span class="num">3</span>, <span class="num">4</span>)</div>
+                <div class="result">→ 返回 4, arr 变为 [1, 2, 3, 4]</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="kw">const</span> arr2 = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>]</div>
+                <div class="code"><span class="kw">const</span> last = arr2.<span class="fn">pop</span>()</div>
+                <div class="result">→ last = 3, arr2 变为 [1, 2]</div>
+            </div>
+        </div>
+
+        <!-- unshift / shift -->
+        <div class="card">
+            <h2>8. unshift / shift <span class="badge mutate">改变原数组</span></h2>
+            <p class="note">unshift 头部添加(返回新长度)，shift 头部删除(返回被删元素)。队列结构</p>
+            <div class="example">
+                <div class="code"><span class="kw">const</span> arr = [<span class="num">2</span>, <span class="num">3</span>]</div>
+                <div class="code">arr.<span class="fn">unshift</span>(<span class="num">0</span>, <span class="num">1</span>)</div>
+                <div class="result">→ 返回 4, arr 变为 [0, 1, 2, 3]</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="kw">const</span> arr2 = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>]</div>
+                <div class="code"><span class="kw">const</span> first = arr2.<span class="fn">shift</span>()</div>
+                <div class="result">→ first = 1, arr2 变为 [2, 3]</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 性能注意：unshift/shift 比 push/pop 慢</span></div>
+                <div class="code"><span class="cm">// 因为头部操作需要移动所有元素索引</span></div>
+            </div>
+        </div>
+
+        <!-- splice -->
+        <div class="card">
+            <h2>9. splice(start, deleteCount, ...items) <span class="badge mutate">改变原数组</span></h2>
+            <p class="note">万能增删改：删除/插入/替换，返回被删元素的数组</p>
+            <div class="example">
+                <div class="code"><span class="kw">const</span> arr = [<span class="str">'a'</span>, <span class="str">'b'</span>, <span class="str">'c'</span>, <span class="str">'d'</span>]</div>
+                <div class="code"><span class="cm">// 删除：从索引1开始删2个</span></div>
+                <div class="code">arr.<span class="fn">splice</span>(<span class="num">1</span>, <span class="num">2</span>)</div>
+                <div class="result">→ 返回 ["b", "c"], arr 变为 ["a", "d"]</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="kw">const</span> arr2 = [<span class="str">'a'</span>, <span class="str">'d'</span>]</div>
+                <div class="code"><span class="cm">// 插入：deleteCount=0，在索引1处插入</span></div>
+                <div class="code">arr2.<span class="fn">splice</span>(<span class="num">1</span>, <span class="num">0</span>, <span class="str">'b'</span>, <span class="str">'c'</span>)</div>
+                <div class="result">→ 返回 [], arr2 变为 ["a", "b", "c", "d"]</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="kw">const</span> arr3 = [<span class="str">'a'</span>, <span class="str">'x'</span>, <span class="str">'c'</span>]</div>
+                <div class="code"><span class="cm">// 替换：删1个，插入1个</span></div>
+                <div class="code">arr3.<span class="fn">splice</span>(<span class="num">1</span>, <span class="num">1</span>, <span class="str">'b'</span>)</div>
+                <div class="result">→ 返回 ["x"], arr3 变为 ["a", "b", "c"]</div>
+            </div>
+        </div>
+
+        <!-- slice -->
+        <div class="card">
+            <h2>10. slice(start, end) <span class="badge immutable">不改变原数组</span></h2>
+            <p class="note">截取子数组（浅拷贝），支持负数。左闭右开 [start, end)</p>
+            <div class="example">
+                <div class="code"><span class="kw">const</span> arr = [<span class="str">'a'</span>, <span class="str">'b'</span>, <span class="str">'c'</span>, <span class="str">'d'</span>, <span class="str">'e'</span>]</div>
+                <div class="code">arr.<span class="fn">slice</span>(<span class="num">1</span>, <span class="num">3</span>)</div>
+                <div class="result">→ ["b", "c"]</div>
+            </div>
+            <div class="example">
+                <div class="code">arr.<span class="fn">slice</span>(-<span class="num">2</span>)</div>
+                <div class="result">→ ["d", "e"] (取最后两个)</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 浅拷贝数组（常用）</span></div>
+                <div class="code"><span class="kw">const</span> copy = arr.<span class="fn">slice</span>()</div>
+                <div class="result">→ copy 是 arr 的浅拷贝 [a,b,c,d,e]</div>
+            </div>
+        </div>
+
+        <!-- ========== 排序与反转 ========== -->
+
+        <!-- sort -->
+        <div class="card">
+            <h2>11. sort(compareFn) <span class="badge mutate">改变原数组</span></h2>
+            <p class="note">默认按字符串排序！数字排序需传比较函数。a-b 升序 / b-a 降序</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 陷阱：默认按字符串排！</span></div>
+                <div class="code">[<span class="num">1</span>, <span class="num">30</span>, <span class="num">4</span>, <span class="num">21</span>].<span class="fn">sort</span>()</div>
+                <div class="result">→ [1, 21, 30, 4] 😱（按字符串"1","21","30","4"）</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 正确：传比较函数</span></div>
+                <div class="code">[<span class="num">1</span>, <span class="num">30</span>, <span class="num">4</span>, <span class="num">21</span>].<span class="fn">sort</span>((a, b) => a - b)</div>
+                <div class="result">→ [1, 4, 21, 30] (升序)</div>
+            </div>
+            <div class="example">
+                <div class="code">[<span class="num">1</span>, <span class="num">30</span>, <span class="num">4</span>, <span class="num">21</span>].<span class="fn">sort</span>((a, b) => b - a)</div>
+                <div class="result">→ [30, 21, 4, 1] (降序)</div>
+            </div>
+        </div>
+
+        <!-- reverse -->
+        <div class="card">
+            <h2>12. reverse <span class="badge mutate">改变原数组</span></h2>
+            <p class="note">反转数组顺序</p>
+            <div class="example">
+                <div class="code"><span class="kw">const</span> arr = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>]</div>
+                <div class="code">arr.<span class="fn">reverse</span>()</div>
+                <div class="result">→ arr 变为 [3, 2, 1]</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 不想改变原数组：先拷贝再反转</span></div>
+                <div class="code"><span class="kw">const</span> reversed = [...arr].<span class="fn">reverse</span>()</div>
+                <div class="result">→ 原数组不变，reversed 是反转后的新数组</div>
+            </div>
+        </div>
+
+        <!-- ========== 查找类 ========== -->
+
+        <!-- includes / indexOf -->
+        <div class="card">
+            <h2>13. includes / indexOf <span class="badge immutable">不改变原数组</span></h2>
+            <p class="note">includes 判断是否存在(NaN能识别)，indexOf 返回位置(不能识别NaN)</p>
+            <div class="example">
+                <div class="code">[<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>].<span class="fn">includes</span>(<span class="num">2</span>)</div>
+                <div class="result">→ true</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// includes 能正确判断 NaN</span></div>
+                <div class="code">[<span class="kw">NaN</span>].<span class="fn">includes</span>(<span class="kw">NaN</span>)</div>
+                <div class="result">→ true (indexOf 做不到！)</div>
+            </div>
+            <div class="example">
+                <div class="code">[<span class="kw">NaN</span>].<span class="fn">indexOf</span>(<span class="kw">NaN</span>)</div>
+                <div class="result">→ -1 (NaN !== NaN，所以找不到)</div>
+            </div>
+        </div>
+
+        <!-- ========== 扁平化 ========== -->
+
+        <!-- flat / flatMap -->
+        <div class="card">
+            <h2>14. flat(depth) / flatMap <span class="badge immutable">不改变原数组</span></h2>
+            <p class="note">flat 按深度扁平化，flatMap = map + flat(1)</p>
+            <div class="example">
+                <div class="code">[<span class="num">1</span>, [<span class="num">2</span>, <span class="num">3</span>], [<span class="num">4</span>, [<span class="num">5</span>]]].<span class="fn">flat</span>()</div>
+                <div class="result">→ [1, 2, 3, 4, [5]] (默认只摊1层)</div>
+            </div>
+            <div class="example">
+                <div class="code">[<span class="num">1</span>, [<span class="num">2</span>, [<span class="num">3</span>]]].<span class="fn">flat</span>(<span class="num">2</span>)</div>
+                <div class="result">→ [1, 2, 3] (摊2层)</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 完全摊平：Infinity</span></div>
+                <div class="code">[<span class="num">1</span>,[<span class="num">2</span>,[<span class="num">3</span>,[<span class="num">4</span>]]]].<span class="fn">flat</span>(<span class="kw">Infinity</span>)</div>
+                <div class="result">→ [1, 2, 3, 4]</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// flatMap：先 map 再 flat(1)</span></div>
+                <div class="code">[<span class="str">'hello'</span>, <span class="str">'world'</span>].<span class="fn">flatMap</span>(w => w.<span class="fn">split</span>(<span class="str">''</span>))</div>
+                <div class="result">→ ["h","e","l","l","o","w","o","r","l","d"]</div>
+            </div>
+        </div>
+
+        <!-- ========== 其他 ========== -->
+
+        <!-- join -->
+        <div class="card">
+            <h2>15. join(分隔符) <span class="badge immutable">不改变原数组</span></h2>
+            <p class="note">数组转字符串，split 的反向操作</p>
+            <div class="example">
+                <div class="code">[<span class="str">'a'</span>, <span class="str">'b'</span>, <span class="str">'c'</span>].<span class="fn">join</span>(<span class="str">','</span>)</div>
+                <div class="result">→ "a,b,c"</div>
+            </div>
+            <div class="example">
+                <div class="code">[<span class="str">'h'</span>, <span class="str">'e'</span>, <span class="str">'l'</span>, <span class="str">'l'</span>, <span class="str">'o'</span>].<span class="fn">join</span>(<span class="str">''</span>)</div>
+                <div class="result">→ "hello"</div>
+            </div>
+        </div>
+
+        <!-- concat -->
+        <div class="card">
+            <h2>16. concat <span class="badge immutable">不改变原数组</span></h2>
+            <p class="note">合并数组，但展开运算符 [...a, ...b] 更常用</p>
+            <div class="example">
+                <div class="code">[<span class="num">1</span>].<span class="fn">concat</span>([<span class="num">2</span>, <span class="num">3</span>], [<span class="num">4</span>])</div>
+                <div class="result">→ [1, 2, 3, 4]</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 更推荐：展开运算符</span></div>
+                <div class="code">[<span class="kw">...</span>[<span class="num">1</span>], <span class="kw">...</span>[<span class="num">2</span>, <span class="num">3</span>], <span class="kw">...</span>[<span class="num">4</span>]]</div>
+                <div class="result">→ [1, 2, 3, 4]</div>
+            </div>
+        </div>
+
+        <!-- 静态方法 -->
+        <div class="card">
+            <h2>17. Array.from / Array.isArray <span class="badge neutral">静态方法</span></h2>
+            <p class="note">Array.from 将类数组/可迭代对象转为数组，Array.isArray 判断类型</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 类数组 → 真数组</span></div>
+                <div class="code"><span class="kw">Array</span>.<span class="fn">from</span>(<span class="str">'hello'</span>)</div>
+                <div class="result">→ ["h","e","l","l","o"]</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 生成序列 (第二个参数是 map)</span></div>
+                <div class="code"><span class="kw">Array</span>.<span class="fn">from</span>({ <span class="kw">length</span>: <span class="num">5</span> }, (_, i) => i + <span class="num">1</span>)</div>
+                <div class="result">→ [1, 2, 3, 4, 5]</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="kw">Array</span>.<span class="fn">isArray</span>([<span class="num">1</span>, <span class="num">2</span>])</div>
+                <div class="result">→ true</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="kw">Array</span>.<span class="fn">isArray</span>({ <span class="kw">length</span>: <span class="num">2</span> })</div>
+                <div class="result">→ false (类数组不是真数组)</div>
+            </div>
+        </div>
+
+        <!-- fill -->
+        <div class="card">
+            <h2>18. fill(value, start, end) <span class="badge mutate">改变原数组</span></h2>
+            <p class="note">用指定值填充数组，左闭右开</p>
+            <div class="example">
+                <div class="code"><span class="kw">new</span> <span class="kw">Array</span>(<span class="num">5</span>).<span class="fn">fill</span>(<span class="num">0</span>)</div>
+                <div class="result">→ [0, 0, 0, 0, 0]</div>
+            </div>
+            <div class="example">
+                <div class="code">[<span class="str">'a'</span>, <span class="str">'b'</span>, <span class="str">'c'</span>, <span class="str">'d'</span>].<span class="fn">fill</span>(<span class="str">'X'</span>, <span class="num">1</span>, <span class="num">3</span>)</div>
+                <div class="result">→ ["a", "X", "X", "d"]</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ========== 链式调用 + 综合实战 ========== -->
+    <div style="max-width: 960px; margin: 32px auto;">
+        <div class="card">
+            <h2>19. 链式调用 — 数据处理流水线</h2>
+            <p class="note">map/filter/reduce/sort 返回新数组，可以链式调用，像流水线一样处理数据</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 找出年龄≥18的用户名字，按年龄升序排列</span></div>
+                <div class="code"><span class="kw">const</span> users = [</div>
+                <div class="code">&nbsp;&nbsp;{ <span class="kw">name</span>: <span class="str">'张三'</span>, <span class="kw">age</span>: <span class="num">16</span> },</div>
+                <div class="code">&nbsp;&nbsp;{ <span class="kw">name</span>: <span class="str">'李四'</span>, <span class="kw">age</span>: <span class="num">22</span> },</div>
+                <div class="code">&nbsp;&nbsp;{ <span class="kw">name</span>: <span class="str">'王五'</span>, <span class="kw">age</span>: <span class="num">18</span> },</div>
+                <div class="code">&nbsp;&nbsp;{ <span class="kw">name</span>: <span class="str">'赵六'</span>, <span class="kw">age</span>: <span class="num">30</span> },</div>
+                <div class="code">]</div>
+                <div class="code"><span class="kw">const</span> result = users</div>
+                <div class="code">&nbsp;&nbsp;.<span class="fn">filter</span>(u => u.age >= <span class="num">18</span>)</div>
+                <div class="code">&nbsp;&nbsp;.<span class="fn">sort</span>((a, b) => a.age - b.age)</div>
+                <div class="code">&nbsp;&nbsp;.<span class="fn">map</span>(u => u.name)</div>
+                <div class="result">→ ["王五", "李四", "赵六"]</div>
+            </div>
+            <div class="example" style="margin-top: 12px;">
+                <div class="code"><span class="cm">// 一行代码：求所有偶数的平方和</span></div>
+                <div class="code">[<span class="num">1</span>,<span class="num">2</span>,<span class="num">3</span>,<span class="num">4</span>,<span class="num">5</span>].<span class="fn">filter</span>(n=>n%<span class="num">2</span>===<span class="num">0</span>).<span class="fn">map</span>(n=>n*n).<span class="fn">reduce</span>((s,n)=>s+n,<span class="num">0</span>)</div>
+                <div class="result">→ 20 (2² + 4² = 4 + 16 = 20)</div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 20px;">
+            <h2>20. 高频实战场景</h2>
+            <div class="example">
+                <div class="code"><span class="cm">// 数组去重（3种方式）</span></div>
+                <div class="code"><span class="kw">const</span> arr = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">3</span>, <span class="num">1</span>]</div>
+                <div class="code"><span class="cm">// 方式1：Set（最简洁）</span></div>
+                <div class="code">[...<span class="kw">new</span> <span class="kw">Set</span>(arr)]</div>
+                <div class="result">→ [1, 2, 3]</div>
+                <div class="code" style="margin-top:6px"><span class="cm">// 方式2：filter + indexOf</span></div>
+                <div class="code">arr.<span class="fn">filter</span>((item, index) => arr.<span class="fn">indexOf</span>(item) === index)</div>
+                <div class="result">→ [1, 2, 3]</div>
+            </div>
+            <div class="example" style="margin-top: 12px;">
+                <div class="code"><span class="cm">// 对象数组按属性去重（按id）</span></div>
+                <div class="code">[{<span class="kw">id</span>:<span class="num">1</span>},{<span class="kw">id</span>:<span class="num">2</span>},{<span class="kw">id</span>:<span class="num">1</span>}].<span class="fn">filter</span>((item,i,self)=> self.<span class="fn">findIndex</span>(t=>t.id===item.id)===i)</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // 控制台完整输出
+        // ============================================
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('  JavaScript 数组方法大全');
+        console.log('  🟢 不改变原数组  |  🔴 改变原数组');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
+        // ---------- forEach ----------
+        console.group('📌 forEach — 遍历（无返回值）');
+        const arr1 = [10, 20, 30];
+        console.log('原数组:', arr1);
+        console.log('遍历结果:');
+        arr1.forEach((item, index) => console.log(`  索引${index}: ${item}`));
+        const forEachReturn = arr1.forEach(n => n * 2);
+        console.log('forEach 返回值:', forEachReturn, '(永远是 undefined)');
+        console.groupEnd();
+
+        // ---------- map ----------
+        console.group('📌 map — 映射（返回新数组）');
+        const nums1 = [1, 2, 3, 4];
+        console.log('原数组:', nums1);
+        console.log('map x2 →', nums1.map(n => n * 2));
+        const users = [{ name: '张三', age: 20 }, { name: '李四', age: 25 }];
+        console.log('提取 name →', users.map(u => u.name));
+        console.log('提取 age  →', users.map(u => u.age));
+        console.groupEnd();
+
+        // ---------- filter ----------
+        console.group('📌 filter — 筛选（返回新数组）');
+        const nums2 = [1, 2, 3, 4, 5];
+        console.log('原数组:', nums2);
+        console.log('> 3  →', nums2.filter(n => n > 3));
+        console.log('偶数 →', nums2.filter(n => n % 2 === 0));
+        console.log('去 falsy →', [0, 'hello', null, '', 42, undefined, false, 'world'].filter(Boolean));
+        console.groupEnd();
+
+        // ---------- find / findIndex ----------
+        console.group('📌 find / findIndex — 查找');
+        const users2 = [{ id: 1, name: 'A' }, { id: 2, name: 'B' }, { id: 3, name: 'A' }];
+        console.log('用户列表:', users2);
+        console.log('find name="A"  →', users2.find(u => u.name === 'A'));
+        console.log('find id=999   →', users2.find(u => u.id === 999));  // undefined
+        console.log('findIndex name="A" →', users2.findIndex(u => u.name === 'A')); // 0
+        console.log('findIndex id=999  →', users2.findIndex(u => u.id === 999));    // -1
+        console.groupEnd();
+
+        // ---------- some / every ----------
+        console.group('📌 some / every — 布尔判断');
+        const nums3 = [1, 2, 3, 4, 5];
+        console.log('数组:', nums3);
+        console.log('some(n > 3)  →', nums3.some(n => n > 3));   // true
+        console.log('some(n > 10) →', nums3.some(n => n > 10));  // false
+        console.log('every(n > 0) →', nums3.every(n => n > 0));  // true
+        console.log('every(n > 3) →', nums3.every(n => n > 3));  // false
+        console.log('有空值? →', ['a', 'b', ''].some(item => !item)); // true
+        console.groupEnd();
+
+        // ---------- reduce ----------
+        console.group('📌 reduce — 万能方法');
+        console.log('求和 [1,2,3,4] →', [1, 2, 3, 4].reduce((sum, n) => sum + n, 0));
+        console.log('求积 [1,2,3,4] →', [1, 2, 3, 4].reduce((prod, n) => prod * n, 1));
+        // 去重
+        const dup = [1, 2, 2, 3, 3, 1];
+        console.log('去重 →', dup.reduce((acc, n) => { if (!acc.includes(n)) acc.push(n); return acc; }, []));
+        // 最大值
+        console.log('最大值 →', [3, 7, 2, 9, 1].reduce((max, n) => n > max ? n : max));
+        // 分组
+        const people = [{ name: 'A', age: 20 }, { name: 'B', age: 20 }, { name: 'C', age: 30 }];
+        const grouped = people.reduce((acc, p) => { (acc[p.age] ??= []).push(p); return acc; }, {});
+        console.log('按年龄分组:', grouped);
+        console.groupEnd();
+
+        // ---------- push/pop ----------
+        console.group('📌 push / pop — 尾部操作（改变原数组）');
+        const a1 = [1, 2];
+        console.log('原数组:', a1);
+        console.log('push(3,4) 返回值:', a1.push(3, 4));
+        console.log('push 后:', a1); // [1,2,3,4]
+        const popped = a1.pop();
+        console.log('pop() 返回值:', popped);
+        console.log('pop 后:', a1); // [1,2,3]
+        console.groupEnd();
+
+        // ---------- unshift/shift ----------
+        console.group('📌 unshift / shift — 头部操作（改变原数组）');
+        const a2 = [2, 3];
+        console.log('原数组:', a2);
+        console.log('unshift(0,1) 返回值:', a2.unshift(0, 1));
+        console.log('unshift 后:', a2); // [0,1,2,3]
+        const shifted = a2.shift();
+        console.log('shift() 返回值:', shifted);
+        console.log('shift 后:', a2); // [1,2,3]
+        console.groupEnd();
+
+        // ---------- splice ----------
+        console.group('📌 splice — 万能增删改（改变原数组）');
+        const a3 = ['a', 'b', 'c', 'd'];
+        console.log('原数组:', a3);
+        const removed = a3.splice(1, 2, 'X', 'Y');
+        console.log('splice(1,2,"X","Y") 删除并替换');
+        console.log('  返回值(被删元素):', removed);
+        console.log('  修改后:', a3); // ["a","X","Y","d"]
+        console.groupEnd();
+
+        // ---------- slice ----------
+        console.group('📌 slice — 截取（不改变原数组）');
+        const a4 = ['a', 'b', 'c', 'd', 'e'];
+        console.log('原数组:', a4);
+        console.log('slice(1,3)  →', a4.slice(1, 3));   // ["b","c"]
+        console.log('slice(2)    →', a4.slice(2));       // ["c","d","e"]
+        console.log('slice(-2)   →', a4.slice(-2));      // ["d","e"]
+        console.log('slice()     →', a4.slice());        // 浅拷贝
+        console.log('原数组未变:', a4);
+        console.groupEnd();
+
+        // ---------- sort ----------
+        console.group('📌 sort — 排序（改变原数组）');
+        console.log('⚠️ 陷阱：默认按字符串排序');
+        console.log('[1,30,4,21].sort() →', [1, 30, 4, 21].sort()); // [1,21,30,4]
+        console.log('✅ 数字升序 .sort((a,b)=>a-b) →', [1, 30, 4, 21].sort((a, b) => a - b));
+        console.log('✅ 数字降序 .sort((a,b)=>b-a) →', [1, 30, 4, 21].sort((a, b) => b - a));
+        // 对象排序
+        const items = [{ n: '苹果', p: 5 }, { n: '香蕉', p: 3 }, { n: '橙子', p: 8 }];
+        console.log('按价格升序:', [...items].sort((a, b) => a.p - b.p));
+        console.groupEnd();
+
+        // ---------- reverse ----------
+        console.group('📌 reverse — 反转（改变原数组）');
+        const a5 = [1, 2, 3];
+        console.log('原数组:', a5);
+        a5.reverse();
+        console.log('reverse 后:', a5); // [3,2,1]
+        console.log('不改变原数组的方式: [...arr].reverse()');
+        console.groupEnd();
+
+        // ---------- includes / indexOf ----------
+        console.group('📌 includes / indexOf — 查找元素');
+        const a6 = [1, 2, 3, NaN];
+        console.log('数组:', a6);
+        console.log('includes(2)   →', a6.includes(2));    // true
+        console.log('includes(99)  →', a6.includes(99));   // false
+        console.log('includes(NaN) →', a6.includes(NaN));  // true ⭐
+        console.log('indexOf(2)    →', a6.indexOf(2));     // 1
+        console.log('indexOf(99)   →', a6.indexOf(99));    // -1
+        console.log('indexOf(NaN)  →', a6.indexOf(NaN));   // -1 (NaN !== NaN)
+        console.groupEnd();
+
+        // ---------- flat / flatMap ----------
+        console.group('📌 flat / flatMap — 扁平化');
+        console.log('[1,[2,3]].flat()          →', [1, [2, 3]].flat());
+        console.log('[1,[2,[3]]].flat(2)       →', [1, [2, [3]]].flat(2));
+        console.log('[1,[2,[3,[4]]]].flat(Infinity) →', [1, [2, [3, [4]]]].flat(Infinity));
+        console.log('flatMap: [1,2,3] → n=>[n,n*2] →', [1, 2, 3].flatMap(n => [n, n * 2]));
+        console.groupEnd();
+
+        // ---------- join ----------
+        console.group('📌 join — 数组转字符串');
+        console.log('["a","b","c"].join(",")  →', ['a', 'b', 'c'].join(','));
+        console.log('["h","e","l","l","o"].join("") →', ['h', 'e', 'l', 'l', 'o'].join(''));
+        console.log('[2024,5,20].join("-")     →', [2024, 5, 20].join('-'));
+        console.groupEnd();
+
+        // ---------- concat ----------
+        console.group('📌 concat / 展开运算符');
+        console.log('[1].concat([2,3],[4])     →', [1].concat([2, 3], [4]));
+        console.log('[...[1],...[2,3],...[4]]  →', [...[1], ...[2, 3], ...[4]]);
+        console.groupEnd();
+
+        // ---------- Array.from / Array.isArray ----------
+        console.group('📌 Array.from / Array.isArray — 静态方法');
+        console.log('Array.from("hello")       →', Array.from('hello'));
+        console.log('Array.from({length:5}, (_,i)=>i+1) →', Array.from({ length: 5 }, (_, i) => i + 1));
+        console.log('Array.isArray([1,2])      →', Array.isArray([1, 2]));          // true
+        console.log('Array.isArray({length:2}) →', Array.isArray({ length: 2 }));   // false
+        console.log('Array.isArray("hello")    →', Array.isArray('hello'));         // false
+        console.groupEnd();
+
+        // ---------- fill ----------
+        console.group('📌 fill — 填充（改变原数组）');
+        console.log('new Array(5).fill(0)       →', new Array(5).fill(0));
+        const a7 = ['a', 'b', 'c', 'd'];
+        console.log('["a","b","c","d"].fill("X",1,3) →', ['a', 'b', 'c', 'd'].fill('X', 1, 3));
+        console.groupEnd();
+
+        // ---------- 综合实战 ----------
+        console.group('📌 综合实战');
+        // 链式调用
+        const users3 = [
+            { name: '张三', age: 16 },
+            { name: '李四', age: 22 },
+            { name: '王五', age: 18 },
+            { name: '赵六', age: 30 },
+        ];
+        const chain = users3.filter(u => u.age >= 18).sort((a, b) => a.age - b.age).map(u => u.name);
+        console.log('链式: filter→sort→map →', chain);
+        // 去重
+        const dup2 = [1, 2, 2, 3, 3, 1];
+        console.log('去重 Set:   ', [...new Set(dup2)]);
+        console.log('去重 filter:', dup2.filter((item, i, self) => self.indexOf(item) === i));
+        // 对象去重
+        const objs = [{ id: 1 }, { id: 2 }, { id: 1 }];
+        console.log('对象去重:', objs.filter((item, i, self) => self.findIndex(t => t.id === item.id) === i));
+        // 偶数平方和
+        const sumSq = [1, 2, 3, 4, 5].filter(n => n % 2 === 0).map(n => n * n).reduce((s, n) => s + n, 0);
+        console.log('偶数平方和 [1,2,3,4,5] →', sumSq); // 20
+        console.groupEnd();
+
+        console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('  所有数组方法运行完毕 ✅');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    </script>
+</body>
+</html>

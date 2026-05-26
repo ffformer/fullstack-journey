@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript 字符串方法大全</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f172a; color: #e2e8f0; padding: 24px; }
+        h1 { text-align: center; margin-bottom: 8px; font-size: 28px; color: #facc15; }
+        .subtitle { text-align: center; color: #94a3b8; margin-bottom: 32px; font-size: 14px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(460px, 1fr)); gap: 20px; }
+        .card { background: #1e293b; border-radius: 12px; padding: 20px; border: 1px solid #334155; }
+        .card h2 { font-size: 18px; margin-bottom: 12px; color: #38bdf8; border-bottom: 1px solid #334155; padding-bottom: 8px; }
+        .card h2 .badge { font-size: 12px; background: #475569; color: #cbd5e1; padding: 2px 8px; border-radius: 99px; margin-left: 8px; vertical-align: middle; }
+        .example { background: #0f172a; border-radius: 8px; padding: 12px 16px; margin-bottom: 10px; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 13px; }
+        .example .code { color: #f8fafc; margin-bottom: 4px; }
+        .example .code .kw { color: #c084fc; }
+        .example .code .str { color: #34d399; }
+        .example .code .fn { color: #38bdf8; }
+        .example .code .cm { color: #64748b; }
+        .example .result { color: #fbbf24; margin-top: 6px; padding-top: 6px; border-top: 1px dashed #334155; }
+        .note { font-size: 12px; color: #94a3b8; margin-top: 4px; font-style: italic; }
+    </style>
+</head>
+<body>
+    <h1>JavaScript 字符串方法大全</h1>
+    <p class="subtitle">打开控制台（F12）查看所有运行结果 | 页面上为精选示例</p>
+
+    <!-- ========== 分类1：获取字符 ========== -->
+    <div class="grid">
+        <div class="card">
+            <h2>1. charAt(index) <span class="badge">获取字符</span></h2>
+            <p class="note">返回指定索引位置的字符，越界返回空字符串</p>
+            <div class="example">
+                <div class="code"><span class="kw">const</span> str = <span class="str">'Hello 世界'</span></div>
+                <div class="code">str.<span class="fn">charAt</span>(<span class="kw">0</span>)</div>
+                <div class="result">→ "H"</div>
+            </div>
+            <div class="example">
+                <div class="code">str.<span class="fn">charAt</span>(<span class="kw">100</span>)</div>
+                <div class="result">→ "" (越界返回空字符串，不报错)</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 用索引访问也行，但越界返回 undefined</span></div>
+                <div class="code">str[<span class="kw">0</span>] &nbsp;&nbsp;<span class="cm">// "H"</span></div>
+                <div class="code">str[<span class="kw">100</span>] <span class="cm">// undefined</span></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>2. charCodeAt(index) <span class="badge">获取编码</span></h2>
+            <p class="note">返回 UTF-16 码元（0-65535），越界返回 NaN</p>
+            <div class="example">
+                <div class="code"><span class="str">'ABC'</span>.<span class="fn">charCodeAt</span>(<span class="kw">0</span>)</div>
+                <div class="result">→ 65 (A 的 ASCII 码)</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="str">'ABC'</span>.<span class="fn">charCodeAt</span>(<span class="kw">1</span>)</div>
+                <div class="result">→ 66 (B 的 ASCII 码)</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// codePointAt 能正确处理 emoji（>65535）</span></div>
+                <div class="code"><span class="str">'𠮷'</span>.<span class="fn">codePointAt</span>(<span class="kw">0</span>)</div>
+                <div class="result">→ 134071 (大于 65535 的码点)</div>
+            </div>
+        </div>
+
+        <!-- ========== 分类2：查找位置 ========== -->
+        <div class="card">
+            <h2>3. indexOf / lastIndexOf <span class="badge">查找位置</span></h2>
+            <p class="note">返回子串首次/末次出现的位置，找不到返回 -1</p>
+            <div class="example">
+                <div class="code"><span class="str">'hello world hello'</span>.<span class="fn">indexOf</span>(<span class="str">'hello'</span>)</div>
+                <div class="result">→ 0 (首次出现位置)</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="str">'hello world hello'</span>.<span class="fn">indexOf</span>(<span class="str">'hello'</span>, <span class="kw">2</span>)</div>
+                <div class="result">→ 12 (从索引2开始找，跳过第1个)</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="str">'hello world hello'</span>.<span class="fn">lastIndexOf</span>(<span class="str">'hello'</span>)</div>
+                <div class="result">→ 12 (从末尾开始找)</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="str">'hello'</span>.<span class="fn">indexOf</span>(<span class="str">'xxx'</span>)</div>
+                <div class="result">→ -1 (找不到)</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>4. includes / startsWith / endsWith <span class="badge">布尔判断</span></h2>
+            <p class="note">ES6 新增，返回布尔值，比 indexOf 更语义化</p>
+            <div class="example">
+                <div class="code"><span class="str">'hello world'</span>.<span class="fn">includes</span>(<span class="str">'world'</span>)</div>
+                <div class="result">→ true</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="str">'hello world'</span>.<span class="fn">startsWith</span>(<span class="str">'hel'</span>)</div>
+                <div class="result">→ true</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="str">'hello world'</span>.<span class="fn">endsWith</span>(<span class="str">'rld'</span>)</div>
+                <div class="result">→ true</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 第二个参数：从哪个位置开始算</span></div>
+                <div class="code"><span class="str">'hello'</span>.<span class="fn">startsWith</span>(<span class="str">'ll'</span>, <span class="kw">2</span>)</div>
+                <div class="result">→ true (从索引2开始是"llo", 以"ll"开头)</div>
+            </div>
+        </div>
+
+        <!-- ========== 分类3：截取子串 ========== -->
+        <div class="card">
+            <h2>5. slice(start, end) <span class="badge">截取</span></h2>
+            <p class="note">最常用！支持负数（从末尾数），左闭右开 [start, end)</p>
+            <div class="example">
+                <div class="code"><span class="str">'JavaScript'</span>.<span class="fn">slice</span>(<span class="kw">0</span>, <span class="kw">4</span>)</div>
+                <div class="result">→ "Java"</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="str">'JavaScript'</span>.<span class="fn">slice</span>(<span class="kw">4</span>)</div>
+                <div class="result">→ "Script" (省略 end 截到末尾)</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="str">'JavaScript'</span>.<span class="fn">slice</span>(-<span class="kw">6</span>)</div>
+                <div class="result">→ "Script" (负数从末尾倒数)</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="str">'JavaScript'</span>.<span class="fn">slice</span>(-<span class="kw">6</span>, -<span class="kw">1</span>)</div>
+                <div class="result">→ "Scrip" (倒数第6位到倒数第1位)</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>6. substring(start, end) <span class="badge">截取</span></h2>
+            <p class="note">类似 slice，但不支持负数，且会自动交换大小参数</p>
+            <div class="example">
+                <div class="code"><span class="str">'JavaScript'</span>.<span class="fn">substring</span>(<span class="kw">0</span>, <span class="kw">4</span>)</div>
+                <div class="result">→ "Java"</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 与 slice 的关键区别：负数当 0 处理</span></div>
+                <div class="code"><span class="str">'JavaScript'</span>.<span class="fn">substring</span>(-<span class="kw">5</span>)</div>
+                <div class="result">→ "JavaScript" (负数→0，即 substring(0))</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 自动交换：end < start 时会调换</span></div>
+                <div class="code"><span class="str">'JavaScript'</span>.<span class="fn">substring</span>(<span class="kw">4</span>, <span class="kw">0</span>)</div>
+                <div class="result">→ "Java" (等价于 substring(0,4))</div>
+            </div>
+        </div>
+
+        <!-- ========== 分类4：大小写转换 ========== -->
+        <div class="card">
+            <h2>7. toUpperCase / toLowerCase <span class="badge">大小写</span></h2>
+            <p class="note">全转大写/全转小写，常用于搜索时忽略大小写</p>
+            <div class="example">
+                <div class="code"><span class="str">'Hello World'</span>.<span class="fn">toUpperCase</span>()</div>
+                <div class="result">→ "HELLO WORLD"</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="str">'Hello World'</span>.<span class="fn">toLowerCase</span>()</div>
+                <div class="result">→ "hello world"</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 实战：忽略大小写搜索</span></div>
+                <div class="code"><span class="str">'JavaScript'</span>.<span class="fn">toLowerCase</span>().<span class="fn">includes</span>(<span class="str">'SCRIPT'</span>.<span class="fn">toLowerCase</span>())</div>
+                <div class="result">→ true</div>
+            </div>
+        </div>
+
+        <!-- ========== 分类5：去空白 ========== -->
+        <div class="card">
+            <h2>8. trim / trimStart / trimEnd <span class="badge">去空白</span></h2>
+            <p class="note">去除空白字符（空格、制表符、换行符等），常用于表单输入处理</p>
+            <div class="example">
+                <div class="code"><span class="str">'  hello  '</span>.<span class="fn">trim</span>()</div>
+                <div class="result">→ "hello"</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="str">'  hello  '</span>.<span class="fn">trimStart</span>()</div>
+                <div class="result">→ "hello  " (只去左边)</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="str">'  hello  '</span>.<span class="fn">trimEnd</span>()</div>
+                <div class="result">→ "  hello" (只去右边)</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 表单验证常用</span></div>
+                <div class="code"><span class="kw">const</span> input = <span class="str">'   '</span></div>
+                <div class="code">input.<span class="fn">trim</span>().<span class="kw">length</span> === <span class="kw">0</span></div>
+                <div class="result">→ true (判断是否为空输入)</div>
+            </div>
+        </div>
+
+        <!-- ========== 分类6：替换 ========== -->
+        <div class="card">
+            <h2>9. replace / replaceAll <span class="badge">替换</span></h2>
+            <p class="note">replace 只替换第一个，replaceAll 替换全部（ES2021）</p>
+            <div class="example">
+                <div class="code"><span class="str">'banana'</span>.<span class="fn">replace</span>(<span class="str">'a'</span>, <span class="str">'X'</span>)</div>
+                <div class="result">→ "bXnana" (只替换第一个 a)</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="str">'banana'</span>.<span class="fn">replaceAll</span>(<span class="str">'a'</span>, <span class="str">'X'</span>)</div>
+                <div class="result">→ "bXnXnX" (全部替换)</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// replace 配合正则 /g 也能全替换</span></div>
+                <div class="code"><span class="str">'banana'</span>.<span class="fn">replace</span>(<span class="str">/a/g</span>, <span class="str">'X'</span>)</div>
+                <div class="result">→ "bXnXnX"</div>
+            </div>
+        </div>
+
+        <!-- ========== 分类7：分割与拼接 ========== -->
+        <div class="card">
+            <h2>10. split(分隔符) <span class="badge">分割</span></h2>
+            <p class="note">按分隔符将字符串拆成数组，反向操作是 join</p>
+            <div class="example">
+                <div class="code"><span class="str">'a,b,c'</span>.<span class="fn">split</span>(<span class="str">','</span>)</div>
+                <div class="result">→ ["a", "b", "c"]</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="str">'hello world'</span>.<span class="fn">split</span>(<span class="str">' '</span>)</div>
+                <div class="result">→ ["hello", "world"]</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="str">'hello'</span>.<span class="fn">split</span>(<span class="str">''</span>)</div>
+                <div class="result">→ ["h", "e", "l", "l", "o"] (空字符串→逐字拆分)</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 第二个参数：限制返回数组长度</span></div>
+                <div class="code"><span class="str">'a,b,c,d'</span>.<span class="fn">split</span>(<span class="str">','</span>, <span class="kw">2</span>)</div>
+                <div class="result">→ ["a", "b"]</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>11. concat(...) <span class="badge">拼接</span></h2>
+            <p class="note">拼接多个字符串，但更推荐用模板字符串</p>
+            <div class="example">
+                <div class="code"><span class="str">'Hello'</span>.<span class="fn">concat</span>(<span class="str">' '</span>, <span class="str">'World'</span>, <span class="str">'!'</span>)</div>
+                <div class="result">→ "Hello World!"</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 实际开发中更推荐模板字符串</span></div>
+                <div class="code"><span class="kw">const</span> name = <span class="str">'张三'</span>, age = <span class="kw">25</span></div>
+                <div class="code"><span class="str">`我叫${name}，今年${age}岁`</span></div>
+                <div class="result">→ "我叫张三，今年25岁" (模板字符串更直观)</div>
+            </div>
+        </div>
+
+        <!-- ========== 分类8：填充 ========== -->
+        <div class="card">
+            <h2>12. padStart / padEnd <span class="badge">填充</span></h2>
+            <p class="note">用指定字符补足长度，常用于格式化（时间、金额）</p>
+            <div class="example">
+                <div class="code"><span class="str">'5'</span>.<span class="fn">padStart</span>(<span class="kw">2</span>, <span class="str">'0'</span>)</div>
+                <div class="result">→ "05" (前面补0)</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="str">'123'</span>.<span class="fn">padStart</span>(<span class="kw">8</span>, <span class="str">'*'</span>)</div>
+                <div class="result">→ "*****123"</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 实战：格式化时间</span></div>
+                <div class="code"><span class="kw">const</span> h = <span class="str">'9'</span>, m = <span class="str">'5'</span>, s = <span class="str">'3'</span></div>
+                <div class="code"><span class="str">`${h.padStart(2,'0')}:${m.padStart(2,'0')}:${s.padStart(2,'0')}`</span></div>
+                <div class="result">→ "09:05:03"</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>13. repeat(n) <span class="badge">重复</span></h2>
+            <p class="note">将字符串重复 n 次，n 为 0 返回空串</p>
+            <div class="example">
+                <div class="code"><span class="str">'Hi'</span>.<span class="fn">repeat</span>(<span class="kw">3</span>)</div>
+                <div class="result">→ "HiHiHi"</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="str">'*'</span>.<span class="fn">repeat</span>(<span class="kw">10</span>)</div>
+                <div class="result">→ "**********"</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 制作分隔线</span></div>
+                <div class="code"><span class="str">'━'</span>.<span class="fn">repeat</span>(<span class="kw">40</span>)</div>
+                <div class="result">→ "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"</div>
+            </div>
+        </div>
+
+        <!-- ========== 分类9：正则相关 ========== -->
+        <div class="card">
+            <h2>14. search / match / matchAll <span class="badge">正则查找</span></h2>
+            <p class="note">search 返回匹配位置，match 返回匹配结果，matchAll 返回迭代器</p>
+            <div class="example">
+                <div class="code"><span class="str">'hello 123 world'</span>.<span class="fn">search</span>(<span class="str">/\d+/</span>)</div>
+                <div class="result">→ 6 (第一个数字出现的位置)</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="str">'a1 b2 c3'</span>.<span class="fn">match</span>(<span class="str">/\d+/g</span>)</div>
+                <div class="result">→ ["1", "2", "3"]</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// match 不带 g：返回详细信息（捕获组、index等）</span></div>
+                <div class="code"><span class="str">'hello 2024'</span>.<span class="fn">match</span>(<span class="str">/(\d+)/</span>)</div>
+                <div class="result">→ ["2024", "2024", index: 6, ...]</div>
+            </div>
+        </div>
+
+        <!-- ========== 分类10：静态方法 ========== -->
+        <div class="card">
+            <h2>15. String.fromCharCode / fromCodePoint <span class="badge">静态方法</span></h2>
+            <p class="note">从编码值创建字符，反向操作是 charCodeAt / codePointAt</p>
+            <div class="example">
+                <div class="code"><span class="kw">String</span>.<span class="fn">fromCharCode</span>(<span class="kw">65</span>, <span class="kw">66</span>, <span class="kw">67</span>)</div>
+                <div class="result">→ "ABC"</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 生成字母表</span></div>
+                <div class="code"><span class="kw">Array</span>.<span class="fn">from</span>({<span class="kw">length</span>: <span class="kw">26</span>}, (_, i) => <span class="kw">String</span>.<span class="fn">fromCharCode</span>(<span class="kw">65</span> + i))</div>
+                <div class="result">→ ["A","B","C",...,"Z"]</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== 综合实战示例 ========== -->
+    <div style="max-width: 960px; margin: 32px auto;">
+        <div class="card">
+            <h2>16. 综合实战 <span class="badge">常见场景</span></h2>
+            <div class="example">
+                <div class="code"><span class="cm">// 1. 隐藏手机号中间4位</span></div>
+                <div class="code"><span class="kw">const</span> phone = <span class="str">'13812345678'</span></div>
+                <div class="code">phone.<span class="fn">slice</span>(<span class="kw">0</span>, <span class="kw">3</span>) + <span class="str">'****'</span> + phone.<span class="fn">slice</span>(-<span class="kw">4</span>)</div>
+                <div class="result">→ "138****5678"</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 2. 首字母大写</span></div>
+                <div class="code"><span class="kw">const</span> word = <span class="str">'hello'</span></div>
+                <div class="code">word[<span class="kw">0</span>].<span class="fn">toUpperCase</span>() + word.<span class="fn">slice</span>(<span class="kw">1</span>)</div>
+                <div class="result">→ "Hello"</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 3. 驼峰命名转换 (hello-world → helloWorld)</span></div>
+                <div class="code"><span class="kw">function</span> <span class="fn">toCamel</span>(str) {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">return</span> str.<span class="fn">split</span>(<span class="str">'-'</span>).<span class="fn">map</span>((w, i) => i === <span class="kw">0</span> ? w : w[<span class="kw">0</span>].<span class="fn">toUpperCase</span>() + w.<span class="fn">slice</span>(<span class="kw">1</span>)).<span class="fn">join</span>(<span class="str">''</span>)</div>
+                <div class="code">}</div>
+                <div class="code"><span class="fn">toCamel</span>(<span class="str">'font-size-color'</span>)</div>
+                <div class="result">→ "fontSizeColor"</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 4. 验证邮箱格式</span></div>
+                <div class="code"><span class="kw">function</span> <span class="fn">isEmail</span>(str) {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">return</span> str.<span class="fn">includes</span>(<span class="str">'@'</span>) && str.<span class="fn">includes</span>(<span class="str">'.'</span>) && !str.<span class="fn">startsWith</span>(<span class="str">'@'</span>)</div>
+                <div class="code">}</div>
+                <div class="code"><span class="fn">isEmail</span>(<span class="str">'test@qq.com'</span>)</div>
+                <div class="result">→ true</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // 控制台完整输出（每类方法都有运行示例）
+        // ============================================
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('  JavaScript 字符串方法大全');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
+        const str = 'Hello World';
+        const chinese = '你好世界';
+        const repeated = 'banana racecar banana';
+
+        // ---------- 1. length 属性 ----------
+        console.group('📌 length — 字符串长度');
+        console.log('"Hello World".length →', str.length);           // 11
+        console.log('"你好世界".length   →', chinese.length);         // 4
+        console.log('"".length           →', ''.length);             // 0
+        console.log('注意：length 返回的是 UTF-16 码元数量，emoji 可能为 2');
+        console.log('"😀".length         →', '😀'.length);           // 2（某些 emoji）
+        console.groupEnd();
+
+        // ---------- 2. 字符获取 ----------
+        console.group('📌 charAt / charCodeAt / codePointAt');
+        console.log('"Hello".charAt(0)       →', 'Hello'.charAt(0));        // H
+        console.log('"Hello".charAt(100)     →', `"${'Hello'.charAt(100)}" (空)`); // ""
+        console.log('"Hello"[0]              →', 'Hello'[0]);                // H
+        console.log('"Hello"[100]            →', 'Hello'[100]);              // undefined
+        console.log('"ABC".charCodeAt(0)     →', 'ABC'.charCodeAt(0));       // 65
+        console.log('"ABC".charCodeAt(1)     →', 'ABC'.charCodeAt(1));       // 66
+        console.log('"ABC".charCodeAt(2)     →', 'ABC'.charCodeAt(2));       // 67
+        console.log('"𠮷".length             →', '𠮷'.length);              // 2
+        console.log('"𠮷".charCodeAt(0)      →', '𠮷'.charCodeAt(0));       // 55362
+        console.log('"𠮷".codePointAt(0)     →', '𠮷'.codePointAt(0));      // 134071
+        console.groupEnd();
+
+        // ---------- 3. 查找位置 ----------
+        console.group('📌 indexOf / lastIndexOf');
+        console.log('"hello world hello".indexOf("hello")      →', repeated.indexOf('banana'));       // 0
+        console.log('"hello world hello".indexOf("hello", 2)   →', 'hello world hello'.indexOf('hello', 2)); // 12
+        console.log('"hello world hello".lastIndexOf("hello")  →', repeated.lastIndexOf('banana'));   // 13
+        console.log('"hello".indexOf("xxx")                    →', 'hello'.indexOf('xxx'));           // -1
+        console.groupEnd();
+
+        console.group('📌 includes / startsWith / endsWith');
+        console.log('"hello world".includes("world")    →', 'hello world'.includes('world'));    // true
+        console.log('"hello world".includes("xxx")      →', 'hello world'.includes('xxx'));      // false
+        console.log('"hello world".startsWith("hel")    →', 'hello world'.startsWith('hel'));    // true
+        console.log('"hello world".startsWith("ll", 2)  →', 'hello world'.startsWith('ll', 2));  // true
+        console.log('"hello world".endsWith("rld")      →', 'hello world'.endsWith('rld'));      // true
+        console.log('"hello world".endsWith("hel", 5)   →', 'hello world'.endsWith('hel', 5));   // true (前5个字符是"hello")
+        console.groupEnd();
+
+        // ---------- 4. 截取 ----------
+        console.group('📌 slice / substring');
+        console.log('"JavaScript".slice(0, 4)     →', 'JavaScript'.slice(0, 4));     // Java
+        console.log('"JavaScript".slice(4)        →', 'JavaScript'.slice(4));         // Script
+        console.log('"JavaScript".slice(-6)       →', 'JavaScript'.slice(-6));        // Script
+        console.log('"JavaScript".slice(-6, -1)   →', 'JavaScript'.slice(-6, -1));   // Scrip
+        console.log('"JavaScript".slice(2, -3)    →', 'JavaScript'.slice(2, -3));    // vaScr
+        console.log('---');
+        console.log('"JavaScript".substring(0, 4)  →', 'JavaScript'.substring(0, 4));  // Java
+        console.log('"JavaScript".substring(-5)    →', `"${'JavaScript'.substring(-5)}" (负数→0)`); // JavaScript
+        console.log('"JavaScript".substring(4, 0)  →', 'JavaScript'.substring(4, 0));  // Java (自动交换)
+        console.groupEnd();
+
+        // ---------- 5. 大小写 ----------
+        console.group('📌 toUpperCase / toLowerCase');
+        console.log('"Hello World".toUpperCase() →', 'Hello World'.toUpperCase()); // HELLO WORLD
+        console.log('"Hello World".toLowerCase() →', 'Hello World'.toLowerCase()); // hello world
+        console.log('忽略大小写比较:', 'JS'.toLowerCase() === 'js'.toLowerCase());  // true
+        console.groupEnd();
+
+        // ---------- 6. 去空白 ----------
+        console.group('📌 trim / trimStart / trimEnd');
+        console.log('"  hello  ".trim()       →', `"${'  hello  '.trim()}"`);       // "hello"
+        console.log('"  hello  ".trimStart()  →', `"${'  hello  '.trimStart()}"`);  // "hello  "
+        console.log('"  hello  ".trimEnd()    →', `"${'  hello  '.trimEnd()}"`);    // "  hello"
+        console.log('空输入检测:', '   '.trim().length === 0);                      // true
+        console.groupEnd();
+
+        // ---------- 7. 替换 ----------
+        console.group('📌 replace / replaceAll');
+        console.log('"banana".replace("a", "X")    →', 'banana'.replace('a', 'X'));     // bXnana
+        console.log('"banana".replaceAll("a", "X")  →', 'banana'.replaceAll('a', 'X')); // bXnXnX
+        console.log('"banana".replace(/a/g, "X")    →', 'banana'.replace(/a/g, 'X'));   // bXnXnX
+        console.groupEnd();
+
+        // ---------- 8. 分割 ----------
+        console.group('📌 split');
+        console.log('"a,b,c".split(",")        →', 'a,b,c'.split(','));           // ["a","b","c"]
+        console.log('"hello".split("")          →', 'hello'.split(''));            // ["h","e","l","l","o"]
+        console.log('"a,b,c,d".split(",", 2)    →', 'a,b,c,d'.split(',', 2));     // ["a","b"]
+        console.log('"hello world".split(" ")   →', 'hello world'.split(' '));    // ["hello","world"]
+        console.groupEnd();
+
+        // ---------- 9. 填充 ----------
+        console.group('📌 padStart / padEnd');
+        console.log('"5".padStart(2, "0")       →', '5'.padStart(2, '0'));        // "05"
+        console.log('"123".padStart(8, "*")      →', '123'.padStart(8, '*'));      // "*****123"
+        console.log('"123".padEnd(8, "*")        →', '123'.padEnd(8, '*'));        // "123*****"
+        console.log('时间格式化:', `${'9'.padStart(2,'0')}:${'5'.padStart(2,'0')}:${'3'.padStart(2,'0')}`); // 09:05:03
+        console.groupEnd();
+
+        // ---------- 10. 重复 ----------
+        console.group('📌 repeat');
+        console.log('"Hi".repeat(3)             →', 'Hi'.repeat(3));              // HiHiHi
+        console.log('"*".repeat(20)             →', '*'.repeat(20));              // 20个星号
+        console.log('"abc".repeat(0)            →', `"${'abc'.repeat(0)}" (空)`); // ""
+        console.groupEnd();
+
+        // ---------- 11. 拼接 ----------
+        console.group('📌 concat / 模板字符串');
+        console.log('"Hello".concat(" ", "World", "!") →', 'Hello'.concat(' ', 'World', '!'));
+        const name = '张三', age = 25, city = '北京';
+        console.log(`模板字符串: 我叫${name}，今年${age}岁，来自${city}`);
+        console.groupEnd();
+
+        // ---------- 12. 正则相关 ----------
+        console.group('📌 search / match / matchAll');
+        console.log('"hello 123 world".search(/\\d+/)    →', 'hello 123 world'.search(/\d+/));     // 6
+        console.log('"a1 b2 c3".match(/\\d+/g)            →', 'a1 b2 c3'.match(/\d+/g));           // ["1","2","3"]
+        const matchResult = 'hello 2024'.match(/(\d+)/);
+        console.log('"hello 2024".match(/(\\d+)/)          →', matchResult);                        // 含捕获组
+        // matchAll 返回迭代器
+        const matches = [...'a1 b2 c3'.matchAll(/\d+/g)];
+        console.log('matchAll 转换数组                      →', matches.map(m => m[0]));
+        console.groupEnd();
+
+        // ---------- 13. 静态方法 ----------
+        console.group('📌 String.fromCharCode / fromCodePoint');
+        console.log('String.fromCharCode(65, 66, 67)     →', String.fromCharCode(65, 66, 67)); // ABC
+        console.log('String.fromCharCode(97, 98, 99)     →', String.fromCharCode(97, 98, 99)); // abc
+        // 生成 A-Z
+        const alphabet = Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i));
+        console.log('A-Z:', alphabet.join(''));
+        console.groupEnd();
+
+        // ---------- 14. 实战 ----------
+        console.group('📌 综合实战');
+        // 隐藏手机号
+        const phone = '13812345678';
+        console.log('隐藏手机号:', phone.slice(0, 3) + '****' + phone.slice(-4)); // 138****5678
+        // 首字母大写
+        const capitalize = s => s[0].toUpperCase() + s.slice(1);
+        console.log('首字母大写:', capitalize('hello')); // Hello
+        // 驼峰转换
+        function toCamel(str) {
+            return str.split('-').map((w, i) => i === 0 ? w : w[0].toUpperCase() + w.slice(1)).join('');
+        }
+        console.log('驼峰转换 font-size-color →', toCamel('font-size-color')); // fontSizeColor
+        // 反转字符串
+        const reverseStr = s => s.split('').reverse().join('');
+        console.log('反转 "hello" →', reverseStr('hello')); // olleh
+        // 统计某字符出现次数
+        const countChar = (s, char) => s.split(char).length - 1;
+        console.log('"banana" 中 a 出现次数:', countChar('banana', 'a')); // 3
+        console.groupEnd();
+
+        console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('  所有方法运行完毕 ✅');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    </script>
+</body>
+</html>
