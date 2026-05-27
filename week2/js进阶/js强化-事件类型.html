@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>鼠标 · 键盘 · 表单事件</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f172a; color: #e2e8f0; padding: 24px; }
+        h1 { text-align: center; margin-bottom: 8px; font-size: 28px; color: #facc15; }
+        .subtitle { text-align: center; color: #94a3b8; margin-bottom: 32px; font-size: 14px; }
+        .section-title { font-size: 22px; color: #38bdf8; margin: 32px 0 16px; padding-bottom: 8px; border-bottom: 2px solid #334155; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(460px, 1fr)); gap: 20px; }
+        .card { background: #1e293b; border-radius: 12px; padding: 20px; border: 1px solid #334155; }
+        .card h2 { font-size: 18px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #334155; }
+        .example { background: #0f172a; border-radius: 8px; padding: 12px 16px; margin-bottom: 10px; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 13px; }
+        .example .code { color: #f8fafc; margin-bottom: 2px; }
+        .example .code .kw { color: #c084fc; }
+        .example .code .str { color: #34d399; }
+        .example .code .fn { color: #38bdf8; }
+        .example .code .cm { color: #64748b; }
+        .example .code .num { color: #fb923c; }
+        .example .code .prop { color: #facc15; }
+        .example .result { color: #fbbf24; margin-top: 6px; padding-top: 6px; border-top: 1px dashed #334155; }
+        .note { font-size: 12px; color: #94a3b8; margin-top: 4px; font-style: italic; }
+
+        /* 交互演示区 */
+        .demo-area { background: #1e293b; border: 2px dashed #475569; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center; cursor: pointer; user-select: none; transition: all 0.2s; }
+        .demo-area:hover { border-color: #38bdf8; }
+        .demo-area:active { border-color: #facc15; background: #1a2332; }
+        .demo-log { background: #0f172a; border-radius: 8px; padding: 12px; margin-top: 12px; font-family: 'Cascadia Code', monospace; font-size: 13px; max-height: 200px; overflow-y: auto; text-align: left; }
+        .demo-log .entry { padding: 3px 0; border-bottom: 1px solid #1e293b; animation: fadeIn 0.3s; }
+        .demo-log .entry .ts { color: #64748b; margin-right: 8px; }
+        .demo-log .entry .ev { color: #38bdf8; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 表单样式 */
+        input, button, textarea { padding: 8px 12px; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: #e2e8f0; font-family: inherit; font-size: 14px; }
+        button { cursor: pointer; background: #1d4ed8; border-color: #3b82f6; font-weight: 600; }
+        button:hover { background: #2563eb; }
+        input:focus, textarea:focus { outline: none; border-color: #38bdf8; }
+    </style>
+</head>
+<body>
+    <h1>鼠标 · 键盘 · 表单事件</h1>
+    <p class="subtitle">打开控制台（F12）+ 在页面上动手操作 | 交互式学习</p>
+
+    <!-- ==================== 鼠标事件 ==================== -->
+    <h2 class="section-title">一、鼠标事件</h2>
+
+    <!-- 交互演示区 -->
+    <div class="demo-area" id="mouseDemo">
+        <p style="font-size:16px; margin-bottom:4px;">🖱️ 在这里移动、点击、右键试试</p>
+        <p style="font-size:12px; color:#94a3b8;">单击 · 双击 · 右键 · 滚轮 · 移动 · 按下 · 松开</p>
+        <div class="demo-log" id="mouseLog">
+            <div class="entry"><span class="ts">--:--:--</span>等待操作...</div>
+        </div>
+    </div>
+
+    <div class="grid">
+
+        <!-- click / dblclick -->
+        <div class="card">
+            <h2>1. click / dblclick</h2>
+            <p class="note">click = 按下+松开一次；dblclick = 快速双击</p>
+            <div class="example">
+                <div class="code">el.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, (e) => {</div>
+                <div class="code">&nbsp;&nbsp;console.<span class="fn">log</span>(<span class="str">'单击'</span>, e.<span class="prop">clientX</span>, e.<span class="prop">clientY</span>)</div>
+                <div class="code">})</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 注意：dblclick 会先触发两次 click</span></div>
+                <div class="code"><span class="cm">// 触发顺序：mousedown → mouseup → click → dblclick</span></div>
+            </div>
+        </div>
+
+        <!-- mousedown / mouseup -->
+        <div class="card">
+            <h2>2. mousedown / mouseup</h2>
+            <p class="note">按下即触发 / 松开即触发，比 click 更底层</p>
+            <div class="example">
+                <div class="code">el.<span class="fn">addEventListener</span>(<span class="str">'mousedown'</span>, () => {</div>
+                <div class="code">&nbsp;&nbsp;<span class="cm">// 按住时触发，适合实现长按效果</span></div>
+                <div class="code">})</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 通过 event.button 判断哪个键</span></div>
+                <div class="code"><span class="cm">// 0=左键  1=中键  2=右键</span></div>
+            </div>
+        </div>
+
+        <!-- mousemove -->
+        <div class="card">
+            <h2>3. mousemove</h2>
+            <p class="note">鼠标在元素上移动时持续触发，频率很高，注意性能</p>
+            <div class="example">
+                <div class="code">el.<span class="fn">addEventListener</span>(<span class="str">'mousemove'</span>, (e) => {</div>
+                <div class="code">&nbsp;&nbsp;console.<span class="fn">log</span>(<span class="str">`x:${e.<span class="prop">clientX</span>}, y:${e.<span class="prop">clientY</span>}`</span>)</div>
+                <div class="code">})</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 性能优化：用节流 throttle 或用 requestAnimationFrame</span></div>
+                <div class="code"><span class="cm">// mousemove 一秒钟可触发上百次</span></div>
+            </div>
+        </div>
+
+        <!-- mouseenter vs mouseover -->
+        <div class="card">
+            <h2>4. mouseenter/mouseleave vs mouseover/mouseout</h2>
+            <p class="note">关键区别：enter/leave 不冒泡，over/out 会冒泡</p>
+            <div class="example">
+                <div class="code"><span class="cm">// ⭐ mouseenter / mouseleave：不冒泡</span></div>
+                <div class="code"><span class="cm">// 进入/离开元素本身，不受子元素影响</span></div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// mouseover / mouseout：会冒泡</span></div>
+                <div class="code"><span class="cm">// 鼠标移到子元素上也会触发父元素的 mouseout</span></div>
+                <div class="code"><span class="cm">// 大部分场景用 enter/leave 更符合预期</span></div>
+            </div>
+        </div>
+
+        <!-- contextmenu -->
+        <div class="card">
+            <h2>5. contextmenu — 右键菜单</h2>
+            <p class="note">右键触发，通常配合 preventDefault 屏蔽浏览器默认菜单</p>
+            <div class="example">
+                <div class="code">el.<span class="fn">addEventListener</span>(<span class="str">'contextmenu'</span>, (e) => {</div>
+                <div class="code">&nbsp;&nbsp;e.<span class="fn">preventDefault</span>()  <span class="cm">// 阻止浏览器右键菜单</span></div>
+                <div class="code">&nbsp;&nbsp;<span class="cm">// 这里显示自定义菜单...</span></div>
+                <div class="code">})</div>
+            </div>
+        </div>
+
+        <!-- wheel -->
+        <div class="card">
+            <h2>6. wheel — 鼠标滚轮</h2>
+            <p class="note">deltaY > 0 向下滚，deltaY < 0 向上滚</p>
+            <div class="example">
+                <div class="code">el.<span class="fn">addEventListener</span>(<span class="str">'wheel'</span>, (e) => {</div>
+                <div class="code">&nbsp;&nbsp;console.<span class="fn">log</span>(<span class="str">'deltaY:'</span>, e.<span class="prop">deltaY</span>)</div>
+                <div class="code">&nbsp;&nbsp;<span class="cm">// 正值=向下滚  负值=向上滚</span></div>
+                <div class="code">}, { <span class="prop">passive</span>: <span class="kw">false</span> })  <span class="cm">// 如需 e.preventDefault()</span></div>
+            </div>
+        </div>
+
+        <!-- MouseEvent 属性 -->
+        <div class="card">
+            <h2>7. MouseEvent 常用属性</h2>
+            <p class="note">所有鼠标事件的 event 对象都包含这些属性</p>
+            <div class="example">
+                <div class="code">e.<span class="prop">clientX</span> / e.<span class="prop">clientY</span></div>
+                <div class="result">→ 相对于浏览器视口的坐标</div>
+            </div>
+            <div class="example">
+                <div class="code">e.<span class="prop">pageX</span> / e.<span class="prop">pageY</span></div>
+                <div class="result">→ 相对于文档的坐标（含滚动距离）</div>
+            </div>
+            <div class="example">
+                <div class="code">e.<span class="prop">button</span></div>
+                <div class="result">→ 0=左键 1=中键 2=右键</div>
+            </div>
+            <div class="example">
+                <div class="code">e.<span class="prop">target</span> / e.<span class="prop">currentTarget</span></div>
+                <div class="result">→ target=实际点击元素 / currentTarget=绑定事件的元素</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== 键盘事件 ==================== -->
+    <h2 class="section-title">二、键盘事件</h2>
+
+    <!-- 交互演示区 -->
+    <div class="demo-area" id="keyboardDemo" style="cursor:text;">
+        <p style="font-size:16px; margin-bottom:4px;">⌨️ 点这里然后按键盘试试</p>
+        <p style="font-size:12px; color:#94a3b8;">试试字母 · 数字 · 方向键 · Ctrl+S · Shift+A · Escape · Enter</p>
+        <div class="demo-log" id="keyLog">
+            <div class="entry"><span class="ts">--:--:--</span>等待按键...</div>
+        </div>
+    </div>
+
+    <div class="grid">
+
+        <!-- keydown / keyup -->
+        <div class="card">
+            <h2>1. keydown / keyup</h2>
+            <p class="note">keydown 按下触发（按住不放持续触发）；keyup 松开触发</p>
+            <div class="example">
+                <div class="code"><span class="kw">document</span>.<span class="fn">addEventListener</span>(<span class="str">'keydown'</span>, (e) => {</div>
+                <div class="code">&nbsp;&nbsp;console.<span class="fn">log</span>(<span class="str">'按下:'</span>, e.<span class="prop">key</span>)</div>
+                <div class="code">})</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// ⚠️ keypress 已废弃，不要使用</span></div>
+                <div class="code"><span class="cm">// keydown 在按住时会重复触发（repeat）</span></div>
+            </div>
+        </div>
+
+        <!-- event.key -->
+        <div class="card">
+            <h2>2. event.key — 按键名称（推荐）</h2>
+            <p class="note">返回按下键的字符串表示，大小写敏感</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 字母键</span></div>
+                <div class="code"><span class="str">'a'</span> <span class="str">'A'</span>  <span class="cm">// 大小写取决于是否按了 Shift</span></div>
+                <div class="code"><span class="cm">// 特殊键</span></div>
+                <div class="code"><span class="str">'Enter'</span> <span class="str">'Escape'</span> <span class="str">'Tab'</span> <span class="str">'Backspace'</span> <span class="str">'Delete'</span></div>
+                <div class="code"><span class="cm">// 方向键</span></div>
+                <div class="code"><span class="str">'ArrowUp'</span> <span class="str">'ArrowDown'</span> <span class="str">'ArrowLeft'</span> <span class="str">'ArrowRight'</span></div>
+            </div>
+        </div>
+
+        <!-- event.code -->
+        <div class="card">
+            <h2>3. event.code — 物理按键位置</h2>
+            <p class="note">code 代表键盘上的物理位置，与输入语言无关</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 无论输入法是什么，code 始终一致</span></div>
+                <div class="code"><span class="str">'KeyA'</span> <span class="str">'Digit1'</span> <span class="str">'Space'</span></div>
+                <div class="code"><span class="str">'Enter'</span> <span class="str">'Escape'</span> <span class="str">'Backspace'</span></div>
+                <div class="code"><span class="str">'ArrowUp'</span> <span class="str">'ShiftLeft'</span> <span class="str">'ShiftRight'</span></div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// key vs code 区别：</span></div>
+                <div class="code"><span class="cm">// 按 Q 键：key='q', code='KeyQ'</span></div>
+                <div class="code"><span class="cm">// Shift+Q：key='Q', code='KeyQ'（code 不变！）</span></div>
+            </div>
+        </div>
+
+        <!-- 修饰键 -->
+        <div class="card">
+            <h2>4. 修饰键：ctrlKey / shiftKey / altKey / metaKey</h2>
+            <p class="note">检查组合键，metaKey 在 Mac 是 Cmd，Win 是 Windows 键</p>
+            <div class="example">
+                <div class="code"><span class="cm">// Ctrl+S 保存</span></div>
+                <div class="code"><span class="kw">document</span>.<span class="fn">addEventListener</span>(<span class="str">'keydown'</span>, (e) => {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">if</span> (e.<span class="prop">ctrlKey</span> && e.<span class="prop">key</span> === <span class="str">'s'</span>) {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;e.<span class="fn">preventDefault</span>()  <span class="cm">// 阻止浏览器保存网页</span></div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;console.<span class="fn">log</span>(<span class="str">'Ctrl+S 被拦截'</span>)</div>
+                <div class="code">&nbsp;&nbsp;}</div>
+                <div class="code">})</div>
+            </div>
+        </div>
+
+        <!-- 实战场景 -->
+        <div class="card">
+            <h2>5. 常用键盘实战场景</h2>
+            <p class="note">常见用例：快捷键、输入框控制、游戏方向</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 按 Escape 关闭弹窗</span></div>
+                <div class="code"><span class="kw">if</span> (e.<span class="prop">key</span> === <span class="str">'Escape'</span>) closeModal()</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 按 Enter 提交（输入框中）</span></div>
+                <div class="code"><span class="kw">if</span> (e.<span class="prop">key</span> === <span class="str">'Enter'</span>) form.submit()</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 阻止输入框输入数字以外的字符</span></div>
+                <div class="code"><span class="kw">if</span> (!<span class="str">/[0-9]/</span>.<span class="fn">test</span>(e.<span class="prop">key</span>) && e.<span class="prop">key</span> !== <span class="str">'Backspace'</span>) e.<span class="fn">preventDefault</span>()</div>
+            </div>
+        </div>
+
+        <!-- event.repeat -->
+        <div class="card">
+            <h2>6. event.repeat — 是否重复触发</h2>
+            <p class="note">按住键不放时 keydown 会持续触发，repeat 为 true</p>
+            <div class="example">
+                <div class="code"><span class="kw">document</span>.<span class="fn">addEventListener</span>(<span class="str">'keydown'</span>, (e) => {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">if</span> (e.<span class="prop">repeat</span>) {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;console.<span class="fn">log</span>(<span class="str">'按键持续按住中...'</span>)</div>
+                <div class="code">&nbsp;&nbsp;}</div>
+                <div class="code">})</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== 表单事件 ==================== -->
+    <h2 class="section-title">三、表单事件</h2>
+
+    <!-- 交互演示区 -->
+    <div class="demo-area" id="formDemo" style="cursor:default;">
+        <p style="font-size:16px; margin-bottom:12px;">📝 表单事件演示</p>
+        <form id="demoForm" style="display:flex; flex-direction:column; gap:10px; align-items:center;" autocomplete="off">
+            <input type="text" id="nameInput" placeholder="输入姓名（input/change/focus/blur）" style="width:300px;">
+            <input type="email" id="emailInput" placeholder="输入邮箱" style="width:300px;">
+            <div style="display:flex; gap:10px;">
+                <button type="submit">提交（submit）</button>
+                <button type="reset" style="background:#475569;border-color:#64748b;">重置（reset）</button>
+            </div>
+        </form>
+        <div class="demo-log" id="formLog">
+            <div class="entry"><span class="ts">--:--:--</span>等待表单操作...</div>
+        </div>
+    </div>
+
+    <div class="grid">
+
+        <!-- input -->
+        <div class="card">
+            <h2>1. input — 实时输入</h2>
+            <p class="note">输入框内容变化时实时触发（包括粘贴、剪切、拖拽）</p>
+            <div class="example">
+                <div class="code">inputEl.<span class="fn">addEventListener</span>(<span class="str">'input'</span>, (e) => {</div>
+                <div class="code">&nbsp;&nbsp;console.<span class="fn">log</span>(<span class="str">'当前值:'</span>, e.<span class="prop">target</span>.<span class="prop">value</span>)</div>
+                <div class="code">})</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 实战：搜索框实时搜索 / 字数统计 / 输入校验</span></div>
+                <div class="code"><span class="cm">// input 是最常用的表单事件</span></div>
+            </div>
+        </div>
+
+        <!-- change -->
+        <div class="card">
+            <h2>2. change — 值确认改变</h2>
+            <p class="note">用户完成修改并失去焦点时才触发（选择框则立即触发）</p>
+            <div class="example">
+                <div class="code">inputEl.<span class="fn">addEventListener</span>(<span class="str">'change'</span>, (e) => {</div>
+                <div class="code">&nbsp;&nbsp;console.<span class="fn">log</span>(<span class="str">'最终值:'</span>, e.<span class="prop">target</span>.<span class="prop">value</span>)</div>
+                <div class="code">})</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// ⚠️ input vs change 区别：</span></div>
+                <div class="code"><span class="cm">// input：每次输入都触发（实时）</span></div>
+                <div class="code"><span class="cm">// change：失去焦点且值变了才触发</span></div>
+                <div class="code"><span class="cm">// 对于 &lt;select&gt; / &lt;input type="checkbox"&gt;：change 立即触发</span></div>
+            </div>
+        </div>
+
+        <!-- focus / blur -->
+        <div class="card">
+            <h2>3. focus / blur — 获得/失去焦点</h2>
+            <p class="note">focus 获得焦点触发，blur 失去焦点触发。不冒泡</p>
+            <div class="example">
+                <div class="code">inputEl.<span class="fn">addEventListener</span>(<span class="str">'focus'</span>, () => {</div>
+                <div class="code">&nbsp;&nbsp;console.<span class="fn">log</span>(<span class="str">'输入框获得焦点'</span>)</div>
+                <div class="code">})</div>
+            </div>
+            <div class="example">
+                <div class="code">inputEl.<span class="fn">addEventListener</span>(<span class="str">'blur'</span>, () => {</div>
+                <div class="code">&nbsp;&nbsp;console.<span class="fn">log</span>(<span class="str">'输入框失去焦点，可以在这里做校验'</span>)</div>
+                <div class="code">})</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// focusin / focusout 是冒泡版本（用于事件委托）</span></div>
+            </div>
+        </div>
+
+        <!-- submit -->
+        <div class="card">
+            <h2>4. submit — 表单提交</h2>
+            <p class="note">点击提交按钮或按 Enter 触发。通常用 preventDefault 阻止默认跳转</p>
+            <div class="example">
+                <div class="code">form.<span class="fn">addEventListener</span>(<span class="str">'submit'</span>, (e) => {</div>
+                <div class="code">&nbsp;&nbsp;e.<span class="fn">preventDefault</span>()  <span class="cm">// 阻止页面刷新</span></div>
+                <div class="code">&nbsp;&nbsp;<span class="cm">// 用 FormData 收集数据</span></div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">const</span> data = <span class="kw">new</span> <span class="fn">FormData</span>(form)</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">const</span> obj = <span class="fn">Object</span>.<span class="fn">fromEntries</span>(data)</div>
+                <div class="code">&nbsp;&nbsp;console.<span class="fn">log</span>(<span class="str">'提交数据:'</span>, obj)</div>
+                <div class="code">})</div>
+            </div>
+        </div>
+
+        <!-- reset / 综合 -->
+        <div class="card">
+            <h2>5. reset 与事件触发顺序</h2>
+            <p class="note">reset 在表单重置时触发</p>
+            <div class="example">
+                <div class="code">form.<span class="fn">addEventListener</span>(<span class="str">'reset'</span>, () => {</div>
+                <div class="code">&nbsp;&nbsp;console.<span class="fn">log</span>(<span class="str">'表单已重置'</span>)</div>
+                <div class="code">})</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 表单输入典型事件触发顺序：</span></div>
+                <div class="code"><span class="cm">// focus → input(多次) → change → blur</span></div>
+            </div>
+        </div>
+
+        <!-- 事件委托 -->
+        <div class="card">
+            <h2>6. 事件委托（重要概念）</h2>
+            <p class="note">利用事件冒泡，在父元素上监听子元素的事件，减少监听器数量</p>
+            <div class="example">
+                <div class="code"><span class="cm">// ❌ 低效：给每个按钮绑定</span></div>
+                <div class="code"><span class="kw">document</span>.<span class="fn">querySelectorAll</span>(<span class="str">'.btn'</span>).<span class="fn">forEach</span>(btn => {</div>
+                <div class="code">&nbsp;&nbsp;btn.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, handler)</div>
+                <div class="code">})</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// ✅ 高效：在父元素上做事件委托</span></div>
+                <div class="code">parent.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, (e) => {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">if</span> (e.<span class="prop">target</span>.<span class="fn">matches</span>(<span class="str">'.btn'</span>)) handler(e)</div>
+                <div class="code">})</div>
+                <div class="result">→ 即使以后动态添加 .btn，也能响应</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ========== 工具函数 ==========
+        function timestamp() {
+            const d = new Date();
+            return d.toTimeString().slice(0, 8);
+        }
+
+        function addLog(container, text) {
+            const entry = document.createElement('div');
+            entry.className = 'entry';
+            entry.innerHTML = `<span class="ts">${timestamp()}</span>${text}`;
+            container.prepend(entry);
+            // 最多保留 15 条
+            while (container.children.length > 15) container.lastChild.remove();
+        }
+
+        // ========== 鼠标事件演示 ==========
+        const mouseDemo = document.getElementById('mouseDemo');
+        const mouseLog = document.getElementById('mouseLog');
+
+        mouseDemo.addEventListener('click', (e) => {
+            addLog(mouseLog, `<span class="ev">click</span> — button=${e.button}, x=${e.clientX}, y=${e.clientY}`);
+        });
+        mouseDemo.addEventListener('dblclick', (e) => {
+            addLog(mouseLog, `<span class="ev" style="color:#facc15;">dblclick</span> — button=${e.button}`);
+        });
+        mouseDemo.addEventListener('mousedown', (e) => {
+            addLog(mouseLog, `<span class="ev">mousedown</span> — button=${e.button} (0左/1中/2右)`);
+        });
+        mouseDemo.addEventListener('mouseup', (e) => {
+            addLog(mouseLog, `<span class="ev">mouseup</span> — button=${e.button}`);
+        });
+        mouseDemo.addEventListener('contextmenu', (e) => {
+            e.preventDefault(); // 阻止默认右键菜单
+            addLog(mouseLog, `<span class="ev" style="color:#f87171;">contextmenu</span> — 右键菜单已拦截`);
+        });
+        mouseDemo.addEventListener('wheel', (e) => {
+            const dir = e.deltaY > 0 ? '向下' : '向上';
+            addLog(mouseLog, `<span class="ev">wheel</span> — ${dir} deltaY=${e.deltaY}`);
+        });
+        // mousemove 有节流以免刷屏
+        let moveTimer;
+        mouseDemo.addEventListener('mousemove', (e) => {
+            if (moveTimer) return;
+            moveTimer = setTimeout(() => {
+                moveTimer = null;
+                addLog(mouseLog, `<span class="ev">mousemove</span> — clientX=${e.clientX}, clientY=${e.clientY}`);
+            }, 80);
+        });
+        mouseDemo.addEventListener('mouseenter', () => {
+            addLog(mouseLog, `<span class="ev" style="color:#34d399;">mouseenter</span> — 进入区域`);
+        });
+        mouseDemo.addEventListener('mouseleave', () => {
+            addLog(mouseLog, `<span class="ev" style="color:#f87171;">mouseleave</span> — 离开区域`);
+        });
+
+        // ========== 键盘事件演示 ==========
+        const keyboardDemo = document.getElementById('keyboardDemo');
+        const keyLog = document.getElementById('keyLog');
+
+        keyboardDemo.setAttribute('tabindex', '0');
+        keyboardDemo.style.outline = 'none';
+
+        keyboardDemo.addEventListener('keydown', (e) => {
+            const repeat = e.repeat ? ' <span style="color:#f87171;">(重复)</span>' : '';
+            const mods = [];
+            if (e.ctrlKey) mods.push('Ctrl');
+            if (e.shiftKey) mods.push('Shift');
+            if (e.altKey) mods.push('Alt');
+            if (e.metaKey) mods.push('Meta');
+            const modStr = mods.length ? ` [${mods.join('+')}]` : '';
+            addLog(keyLog, `<span class="ev">keydown</span> — key="${e.key}" code="${e.code}"${modStr}${repeat}`);
+        });
+
+        keyboardDemo.addEventListener('keyup', (e) => {
+            addLog(keyLog, `<span class="ev" style="color:#34d399;">keyup</span> — key="${e.key}"`);
+        });
+
+        // 页面级快捷键演示：Ctrl+S 拦截
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                console.log('🔒 Ctrl+S 被拦截（浏览器保存已阻止）');
+                addLog(keyLog, `<span class="ev" style="color:#facc15;">快捷键</span> — Ctrl+S 已拦截（阻止浏览器保存）`);
+            }
+            if (e.key === 'Escape') {
+                console.log('🔙 Escape 按下');
+                addLog(keyLog, `<span class="ev">Escape</span> — 通常用于关闭弹窗/菜单`);
+            }
+        });
+
+        // ========== 表单事件演示 ==========
+        const formLog = document.getElementById('formLog');
+        const nameInput = document.getElementById('nameInput');
+        const emailInput = document.getElementById('emailInput');
+        const demoFormEl = document.getElementById('demoForm');
+
+        nameInput.addEventListener('focus', () => {
+            addLog(formLog, `<span class="ev" style="color:#38bdf8;">focus</span> — 姓名输入框获得焦点`);
+        });
+        nameInput.addEventListener('blur', () => {
+            addLog(formLog, `<span class="ev" style="color:#94a3b8;">blur</span> — 姓名输入框失去焦点（可在此做校验）`);
+        });
+        nameInput.addEventListener('input', (e) => {
+            addLog(formLog, `<span class="ev">input</span> — 姓名: "${e.target.value}"`);
+        });
+        nameInput.addEventListener('change', (e) => {
+            addLog(formLog, `<span class="ev" style="color:#facc15;">change</span> — 姓名最终值: "${e.target.value}"`);
+        });
+
+        emailInput.addEventListener('focus', () => {
+            addLog(formLog, `<span class="ev" style="color:#38bdf8;">focus</span> — 邮箱输入框获得焦点`);
+        });
+        emailInput.addEventListener('blur', () => {
+            addLog(formLog, `<span class="ev" style="color:#94a3b8;">blur</span> — 邮箱输入框失去焦点`);
+        });
+
+        demoFormEl.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const data = new FormData(demoFormEl);
+            const obj = Object.fromEntries(data);
+            addLog(formLog, `<span class="ev" style="color:#facc15;font-weight:bold;">submit</span> — 表单提交！数据: ${JSON.stringify(obj)}`);
+            console.log('📋 表单提交数据:', obj);
+        });
+
+        demoFormEl.addEventListener('reset', () => {
+            addLog(formLog, `<span class="ev" style="color:#f87171;">reset</span> — 表单已重置`);
+            console.log('🔄 表单重置');
+        });
+
+        // ========== 控制台补充说明 ==========
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('  鼠标 · 键盘 · 表单事件 ✅');
+        console.log('  页面上有三个交互演示区供练习');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('');
+        console.log('📌 鼠标事件类型一览:');
+        console.log('  click, dblclick, mousedown, mouseup, mousemove');
+        console.log('  mouseenter, mouseleave, mouseover, mouseout');
+        console.log('  contextmenu(右键), wheel(滚轮)');
+        console.log('');
+        console.log('📌 键盘事件类型一览:');
+        console.log('  keydown(按下), keyup(松开) — keypress 已废弃');
+        console.log('  属性: key(按键名), code(物理位置), ctrlKey, shiftKey, altKey, metaKey');
+        console.log('');
+        console.log('📌 表单事件类型一览:');
+        console.log('  input(实时), change(确认), focus, blur, submit, reset');
+        console.log('');
+        console.log('💡 核心概念：事件委托');
+        console.log('  利用冒泡，在父元素统一监听 → 省内存，动态元素也能响应');
+        console.log('  parent.addEventListener("click", e => e.target.matches(".btn") && handler(e))');
+    </script>
+</body>
+</html>

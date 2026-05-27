@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math 对象 · Date 对象 · DOM 概述</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f172a; color: #e2e8f0; padding: 24px; }
+        h1 { text-align: center; margin-bottom: 8px; font-size: 28px; color: #facc15; }
+        .subtitle { text-align: center; color: #94a3b8; margin-bottom: 32px; font-size: 14px; }
+        .section-title { font-size: 22px; color: #38bdf8; margin: 32px 0 16px; padding-bottom: 8px; border-bottom: 2px solid #334155; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(460px, 1fr)); gap: 20px; }
+        .card { background: #1e293b; border-radius: 12px; padding: 20px; border: 1px solid #334155; }
+        .card h2 { font-size: 18px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #334155; }
+        .example { background: #0f172a; border-radius: 8px; padding: 12px 16px; margin-bottom: 10px; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 13px; }
+        .example .code { color: #f8fafc; margin-bottom: 2px; }
+        .example .code .kw { color: #c084fc; }
+        .example .code .str { color: #34d399; }
+        .example .code .fn { color: #38bdf8; }
+        .example .code .cm { color: #64748b; }
+        .example .code .num { color: #fb923c; }
+        .example .result { color: #fbbf24; margin-top: 6px; padding-top: 6px; border-top: 1px dashed #334155; }
+        .note { font-size: 12px; color: #94a3b8; margin-top: 4px; font-style: italic; }
+    </style>
+</head>
+<body>
+    <h1>Math 对象 · Date 对象 · DOM 概述</h1>
+    <p class="subtitle">打开控制台（F12）查看完整运行结果 | 页面上为精选示例</p>
+
+    <!-- ==================== Math 对象 ==================== -->
+    <h2 class="section-title">一、Math 对象</h2>
+    <p class="note" style="margin-bottom:16px;">Math 是内置对象，不是构造函数（不能用 new），所有属性和方法都是静态的</p>
+
+    <div class="grid">
+
+        <!-- Math.PI / Math.E -->
+        <div class="card">
+            <h2>1. 数学常量</h2>
+            <p class="note">Math 提供了常用的数学常量</p>
+            <div class="example">
+                <div class="code"><span class="fn">Math</span>.<span class="kw">PI</span></div>
+                <div class="result">→ 3.141592653589793</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="fn">Math</span>.<span class="kw">E</span></div>
+                <div class="result">→ 2.718281828459045（自然对数的底）</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="fn">Math</span>.<span class="kw">SQRT2</span></div>
+                <div class="result">→ 1.4142135623730951（2 的平方根）</div>
+            </div>
+        </div>
+
+        <!-- Math.abs / Math.round / Math.ceil / Math.floor -->
+        <div class="card">
+            <h2>2. 取整与绝对值</h2>
+            <p class="note">abs 取绝对值，ceil 向上取整，floor 向下取整，round 四舍五入</p>
+            <div class="example">
+                <div class="code"><span class="fn">Math</span>.<span class="fn">abs</span>(-<span class="num">42</span>)</div>
+                <div class="result">→ 42</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="fn">Math</span>.<span class="fn">ceil</span>(<span class="num">3.1</span>)</div>
+                <div class="result">→ 4  <span class="cm">// 向上取整</span></div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="fn">Math</span>.<span class="fn">floor</span>(<span class="num">3.9</span>)</div>
+                <div class="result">→ 3  <span class="cm">// 向下取整</span></div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="fn">Math</span>.<span class="fn">round</span>(<span class="num">3.5</span>)</div>
+                <div class="result">→ 4  <span class="cm">// 四舍五入，.5 时向正无穷</span></div>
+            </div>
+        </div>
+
+        <!-- Math.max / Math.min -->
+        <div class="card">
+            <h2>3. max / min — 最大最小值</h2>
+            <p class="note">接收多个参数，返回其中的最大值或最小值</p>
+            <div class="example">
+                <div class="code"><span class="fn">Math</span>.<span class="fn">max</span>(<span class="num">10</span>, <span class="num">25</span>, <span class="num">3</span>, <span class="num">88</span>)</div>
+                <div class="result">→ 88</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="fn">Math</span>.<span class="fn">min</span>(<span class="num">10</span>, <span class="num">25</span>, <span class="num">3</span>, <span class="num">88</span>)</div>
+                <div class="result">→ 3</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 实战：取数组最大/最小值（用展开运算符）</span></div>
+                <div class="code"><span class="kw">const</span> arr = [<span class="num">5</span>, <span class="num">12</span>, <span class="num">8</span>, <span class="num">3</span>]</div>
+                <div class="code"><span class="fn">Math</span>.<span class="fn">max</span>(...arr)</div>
+                <div class="result">→ 12</div>
+            </div>
+        </div>
+
+        <!-- Math.random -->
+        <div class="card">
+            <h2>4. random — 随机数</h2>
+            <p class="note">返回 [0, 1) 之间的伪随机浮点数，0 ≤ x < 1</p>
+            <div class="example">
+                <div class="code"><span class="fn">Math</span>.<span class="fn">random</span>()</div>
+                <div class="result">→ 0.734...（每次不同）</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 1~10 随机整数（含1和10）</span></div>
+                <div class="code"><span class="fn">Math</span>.<span class="fn">floor</span>(<span class="fn">Math</span>.<span class="fn">random</span>() * <span class="num">10</span>) + <span class="num">1</span></div>
+                <div class="result">→ 1~10 之间的整数</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 通用公式：min~max 随机整数（含两端）</span></div>
+                <div class="code"><span class="kw">function</span> <span class="fn">randInt</span>(min, max) {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">return</span> <span class="fn">Math</span>.<span class="fn">floor</span>(<span class="fn">Math</span>.<span class="fn">random</span>() * (max - min + <span class="num">1</span>)) + min</div>
+                <div class="code">}</div>
+            </div>
+        </div>
+
+        <!-- Math.pow / Math.sqrt -->
+        <div class="card">
+            <h2>5. pow / sqrt — 幂与平方根</h2>
+            <p class="note">pow(底数, 指数) 求幂；sqrt 求平方根；cbrt 求立方根</p>
+            <div class="example">
+                <div class="code"><span class="fn">Math</span>.<span class="fn">pow</span>(<span class="num">2</span>, <span class="num">10</span>)</div>
+                <div class="result">→ 1024</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="fn">Math</span>.<span class="fn">sqrt</span>(<span class="num">64</span>)</div>
+                <div class="result">→ 8</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="fn">Math</span>.<span class="fn">cbrt</span>(<span class="num">27</span>)</div>
+                <div class="result">→ 3  <span class="cm">// 立方根</span></div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// ES7 幂运算符 **</span></div>
+                <div class="code"><span class="num">2</span> ** <span class="num">10</span></div>
+                <div class="result">→ 1024（等价于 Math.pow(2,10)）</div>
+            </div>
+        </div>
+
+        <!-- Math.log / Math.exp -->
+        <div class="card">
+            <h2>6. 对数与指数函数</h2>
+            <p class="note">log = 自然对数(ln)；log10 = 以10为底；log2 = 以2为底</p>
+            <div class="example">
+                <div class="code"><span class="fn">Math</span>.<span class="fn">log</span>(<span class="fn">Math</span>.<span class="kw">E</span>)</div>
+                <div class="result">→ 1（ln(e) = 1）</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="fn">Math</span>.<span class="fn">log10</span>(<span class="num">100</span>)</div>
+                <div class="result">→ 2</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="fn">Math</span>.<span class="fn">exp</span>(<span class="num">1</span>)</div>
+                <div class="result">→ 2.718...（e¹）</div>
+            </div>
+        </div>
+
+        <!-- Math.sign / Math.trunc -->
+        <div class="card">
+            <h2>7. 符号判断与截断</h2>
+            <p class="note">sign 判断正负零；trunc 直接去掉小数部分</p>
+            <div class="example">
+                <div class="code"><span class="fn">Math</span>.<span class="fn">sign</span>(<span class="num">42</span>)</div>
+                <div class="result">→ 1（正数）</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="fn">Math</span>.<span class="fn">sign</span>(-<span class="num">42</span>)</div>
+                <div class="result">→ -1（负数）</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="fn">Math</span>.<span class="fn">trunc</span>(<span class="num">3.9</span>) / <span class="fn">Math</span>.<span class="fn">trunc</span>(-<span class="num">3.9</span>)</div>
+                <div class="result">→ 3 / -3  <span class="cm">// 与 floor 的区别：floor(-3.9) = -4</span></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== Date 对象 ==================== -->
+    <h2 class="section-title">二、Date 对象</h2>
+    <p class="note" style="margin-bottom:16px;">Date 是构造函数，需要用 new 创建实例来表示某个时刻</p>
+
+    <div class="grid">
+
+        <!-- 创建 Date -->
+        <div class="card">
+            <h2>1. 创建 Date 实例</h2>
+            <p class="note">四种常见方式创建日期对象</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 当前时间</span></div>
+                <div class="code"><span class="kw">new</span> <span class="fn">Date</span>()</div>
+                <div class="result">→ 当前日期时间</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 时间戳（毫秒）</span></div>
+                <div class="code"><span class="kw">new</span> <span class="fn">Date</span>(<span class="num">0</span>)</div>
+                <div class="result">→ 1970-01-01T00:00:00.000Z（Unix 纪元）</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 日期字符串</span></div>
+                <div class="code"><span class="kw">new</span> <span class="fn">Date</span>(<span class="str">'2024-05-20'</span>)</div>
+                <div class="result">→ 2024年5月20日</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 年月日时分秒（月份从0开始！）</span></div>
+                <div class="code"><span class="kw">new</span> <span class="fn">Date</span>(<span class="num">2024</span>, <span class="num">4</span>, <span class="num">20</span>, <span class="num">14</span>, <span class="num">30</span>, <span class="num">0</span>)</div>
+                <div class="result">→ 2024-05-20 14:30:00  <span class="cm">// 月份 4 = 5月</span></div>
+            </div>
+        </div>
+
+        <!-- get 方法 -->
+        <div class="card">
+            <h2>2. get 系列 — 获取日期成分</h2>
+            <p class="note">注意 getMonth() 返回 0~11，getDay() 返回 0(周日)~6(周六)</p>
+            <div class="example">
+                <div class="code"><span class="kw">const</span> d = <span class="kw">new</span> <span class="fn">Date</span>(<span class="str">'2024-05-20T14:30:00'</span>)</div>
+            </div>
+            <div class="example">
+                <div class="code">d.<span class="fn">getFullYear</span>()</div>
+                <div class="result">→ 2024</div>
+            </div>
+            <div class="example">
+                <div class="code">d.<span class="fn">getMonth</span>()</div>
+                <div class="result">→ 4  <span class="cm">// ⚠️ 0=1月，4=5月！</span></div>
+            </div>
+            <div class="example">
+                <div class="code">d.<span class="fn">getDate</span>() / d.<span class="fn">getDay</span>()</div>
+                <div class="result">→ 20 (号) / 1 (周一)  <span class="cm">// 0=周日</span></div>
+            </div>
+            <div class="example">
+                <div class="code">d.<span class="fn">getHours</span>() / d.<span class="fn">getMinutes</span>() / d.<span class="fn">getSeconds</span>()</div>
+                <div class="result">→ 14 / 30 / 0</div>
+            </div>
+        </div>
+
+        <!-- set 方法 -->
+        <div class="card">
+            <h2>3. set 系列 — 设置日期成分</h2>
+            <p class="note">set 方法会直接修改原 Date 对象（类似数组的修改方法）</p>
+            <div class="example">
+                <div class="code"><span class="kw">const</span> d = <span class="kw">new</span> <span class="fn">Date</span>(<span class="str">'2024-01-01'</span>)</div>
+                <div class="code">d.<span class="fn">setFullYear</span>(<span class="num">2025</span>)</div>
+                <div class="code">d.<span class="fn">setMonth</span>(<span class="num">5</span>)  <span class="cm">// 设为6月</span></div>
+                <div class="result">→ d 变为 2025-06-01</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// set 支持自动进位</span></div>
+                <div class="code"><span class="kw">const</span> d2 = <span class="kw">new</span> <span class="fn">Date</span>(<span class="str">'2024-01-31'</span>)</div>
+                <div class="code">d2.<span class="fn">setMonth</span>(<span class="num">1</span>)  <span class="cm">// 设为2月，但没有31天</span></div>
+                <div class="result">→ 自动变为 2024-03-02</div>
+            </div>
+        </div>
+
+        <!-- 时间戳 -->
+        <div class="card">
+            <h2>4. 时间戳（Timestamp）</h2>
+            <p class="note">从 1970-01-01 00:00:00 UTC 到现在的毫秒数，常用于计算时间差</p>
+            <div class="example">
+                <div class="code"><span class="kw">Date</span>.<span class="fn">now</span>()</div>
+                <div class="result">→ 1716...（当前时间戳，13位毫秒）</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="kw">new</span> <span class="fn">Date</span>().<span class="fn">getTime</span>()</div>
+                <div class="result">→ 等价于 Date.now()</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 计算代码执行时间</span></div>
+                <div class="code"><span class="kw">const</span> start = <span class="kw">Date</span>.<span class="fn">now</span>()</div>
+                <div class="code"><span class="cm">// ... 执行一些代码 ...</span></div>
+                <div class="code">console.<span class="fn">log</span>(<span class="str">`耗时: ${</span><span class="kw">Date</span>.<span class="fn">now</span>() - start<span class="str">}ms`</span>)</div>
+            </div>
+        </div>
+
+        <!-- 日期格式化 -->
+        <div class="card">
+            <h2>5. 日期转字符串</h2>
+            <p class="note">不同方法输出不同格式的日期字符串</p>
+            <div class="example">
+                <div class="code"><span class="kw">const</span> d = <span class="kw">new</span> <span class="fn">Date</span>(<span class="str">'2024-05-20T14:30:00'</span>)</div>
+            </div>
+            <div class="example">
+                <div class="code">d.<span class="fn">toISOString</span>()</div>
+                <div class="result">→ "2024-05-20T06:30:00.000Z"  <span class="cm">// UTC 时区</span></div>
+            </div>
+            <div class="example">
+                <div class="code">d.<span class="fn">toLocaleString</span>()</div>
+                <div class="result">→ "2024/5/20 14:30:00"  <span class="cm">// 本地格式</span></div>
+            </div>
+            <div class="example">
+                <div class="code">d.<span class="fn">toLocaleDateString</span>(<span class="str">'zh-CN'</span>)</div>
+                <div class="result">→ "2024/5/20"  <span class="cm">// 中文日期格式</span></div>
+            </div>
+        </div>
+
+        <!-- 日期计算 -->
+        <div class="card">
+            <h2>6. 日期加减运算</h2>
+            <p class="note">计算两个日期之间的天数、加减天数等</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 两个日期相差多少天</span></div>
+                <div class="code"><span class="kw">const</span> d1 = <span class="kw">new</span> <span class="fn">Date</span>(<span class="str">'2024-05-01'</span>)</div>
+                <div class="code"><span class="kw">const</span> d2 = <span class="kw">new</span> <span class="fn">Date</span>(<span class="str">'2024-05-20'</span>)</div>
+                <div class="code"><span class="kw">const</span> diff = (d2 - d1) / (<span class="num">1000</span> * <span class="num">60</span> * <span class="num">60</span> * <span class="num">24</span>)</div>
+                <div class="result">→ 19（天）  <span class="cm">// 日期相减自动转时间戳</span></div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 3天后是什么日期</span></div>
+                <div class="code"><span class="kw">const</span> d = <span class="kw">new</span> <span class="fn">Date</span>()</div>
+                <div class="code">d.<span class="fn">setDate</span>(d.<span class="fn">getDate</span>() + <span class="num">3</span>)</div>
+                <div class="result">→ 三天后的日期  <span class="cm">// setDate 自动进位处理跨月</span></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== DOM 概述 ==================== -->
+    <h2 class="section-title">三、DOM 概述</h2>
+    <p class="note" style="margin-bottom:16px;">DOM（Document Object Model）是浏览器将 HTML 文档解析成的树形对象结构，JS 通过 DOM API 操作页面</p>
+
+    <div class="grid">
+
+        <!-- DOM 是什么 -->
+        <div class="card">
+            <h2>1. 什么是 DOM？</h2>
+            <p class="note">HTML 是文本，DOM 是浏览器解析后的对象模型。可以把它理解为一棵"节点树"</p>
+            <div class="example">
+                <div class="code"><span class="cm">// HTML:</span></div>
+                <div class="code"><span class="cm">// &lt;body&gt;</span></div>
+                <div class="code"><span class="cm">//   &lt;h1&gt;标题&lt;/h1&gt;</span></div>
+                <div class="code"><span class="cm">//   &lt;p&gt;段落&lt;/p&gt;</span></div>
+                <div class="code"><span class="cm">// &lt;/body&gt;</span></div>
+                <div class="result">→ body 是父节点，h1 和 p 是它的子节点，形成树形结构</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// JS 中访问整个文档的入口</span></div>
+                <div class="code">console.<span class="fn">dir</span>(<span class="kw">document</span>)</div>
+                <div class="result">→ 展开可看到完整的 DOM 树</div>
+            </div>
+        </div>
+
+        <!-- 选择元素 -->
+        <div class="card">
+            <h2>2. 选择 DOM 元素（核心）</h2>
+            <p class="note">querySelector 是现代最推荐的方式，支持 CSS 选择器语法</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 通过 ID 选择</span></div>
+                <div class="code"><span class="kw">document</span>.<span class="fn">getElementById</span>(<span class="str">'app'</span>)</div>
+                <div class="result">→ 返回单个元素或 null</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 通过 CSS 选择器选第一个</span></div>
+                <div class="code"><span class="kw">document</span>.<span class="fn">querySelector</span>(<span class="str">'.card'</span>)</div>
+                <div class="result">→ 第一个匹配的元素</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 通过 CSS 选择器选全部</span></div>
+                <div class="code"><span class="kw">document</span>.<span class="fn">querySelectorAll</span>(<span class="str">'.card'</span>)</div>
+                <div class="result">→ NodeList（类数组，可用 forEach）</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 其他传统方法（了解即可）</span></div>
+                <div class="code"><span class="kw">document</span>.<span class="fn">getElementsByClassName</span>(<span class="str">'item'</span>)</div>
+                <div class="code"><span class="kw">document</span>.<span class="fn">getElementsByTagName</span>(<span class="str">'div'</span>)</div>
+            </div>
+        </div>
+
+        <!-- 操作内容 -->
+        <div class="card">
+            <h2>3. 读写元素内容</h2>
+            <p class="note">textContent 只读文本（安全）；innerHTML 解析 HTML（有 XSS 风险）</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 读取/设置纯文本（推荐）</span></div>
+                <div class="code"><span class="kw">const</span> el = <span class="kw">document</span>.<span class="fn">querySelector</span>(<span class="str">'h1'</span>)</div>
+                <div class="code">el.<span class="kw">textContent</span> = <span class="str">'新标题'</span></div>
+                <div class="result">→ 页面上标题立即变为"新标题"</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 读取/设置 HTML（注意 XSS）</span></div>
+                <div class="code">el.<span class="kw">innerHTML</span> = <span class="str">'&lt;strong&gt;加粗&lt;/strong&gt;'</span></div>
+                <div class="result">→ 解析为 HTML，显示加粗文字</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// ⚠️ 用户输入绝不要直接插 innerHTML！</span></div>
+                <div class="code"><span class="cm">// 恶意脚本：&lt;img src=x onerror="alert(1)"&gt;</span></div>
+            </div>
+        </div>
+
+        <!-- 操作属性 -->
+        <div class="card">
+            <h2>4. 读写元素属性</h2>
+            <p class="note">标准属性直接用点语法；自定义属性用 getAttribute / setAttribute</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 标准属性直接读写</span></div>
+                <div class="code"><span class="kw">const</span> img = <span class="kw">document</span>.<span class="fn">querySelector</span>(<span class="str">'img'</span>)</div>
+                <div class="code">img.<span class="kw">src</span> = <span class="str">'new.jpg'</span></div>
+                <div class="code">img.<span class="kw">alt</span> = <span class="str">'描述文字'</span></div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 自定义属性（data-*）</span></div>
+                <div class="code"><span class="cm">// &lt;div data-id="123"&gt;&lt;/div&gt;</span></div>
+                <div class="code">el.<span class="kw">dataset</span>.<span class="kw">id</span>  <span class="cm">// → "123"</span></div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// classList 操作类名</span></div>
+                <div class="code">el.<span class="kw">classList</span>.<span class="fn">add</span>(<span class="str">'active'</span>)</div>
+                <div class="code">el.<span class="kw">classList</span>.<span class="fn">remove</span>(<span class="str">'hidden'</span>)</div>
+                <div class="code">el.<span class="kw">classList</span>.<span class="fn">toggle</span>(<span class="str">'dark'</span>)</div>
+                <div class="code">el.<span class="kw">classList</span>.<span class="fn">contains</span>(<span class="str">'active'</span>)  <span class="cm">// → true/false</span></div>
+            </div>
+        </div>
+
+        <!-- 操作样式 -->
+        <div class="card">
+            <h2>5. 操作内联样式</h2>
+            <p class="note">style 属性读写的是内联样式，驼峰命名对应 CSS 属性名</p>
+            <div class="example">
+                <div class="code">el.<span class="kw">style</span>.<span class="kw">color</span> = <span class="str">'red'</span></div>
+                <div class="code">el.<span class="kw">style</span>.<span class="kw">backgroundColor</span> = <span class="str">'#0f172a'</span>  <span class="cm">// CSS: background-color</span></div>
+                <div class="code">el.<span class="kw">style</span>.<span class="kw">fontSize</span> = <span class="str">'20px'</span>  <span class="cm">// CSS: font-size</span></div>
+                <div class="code">el.<span class="kw">style</span>.<span class="kw">display</span> = <span class="str">'none'</span>  <span class="cm">// 隐藏元素</span></div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 获取计算后的样式（包含 CSS 文件中的样式）</span></div>
+                <div class="code"><span class="kw">const</span> styles = <span class="fn">getComputedStyle</span>(el)</div>
+                <div class="code">styles.<span class="kw">color</span></div>
+                <div class="result">→ 返回最终生效的颜色值</div>
+            </div>
+        </div>
+
+        <!-- 创建与插入 -->
+        <div class="card">
+            <h2>6. 创建与插入节点</h2>
+            <p class="note">createElement 创建空元素，然后通过 appendChild / append 插入 DOM 树</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 创建新元素</span></div>
+                <div class="code"><span class="kw">const</span> div = <span class="kw">document</span>.<span class="fn">createElement</span>(<span class="str">'div'</span>)</div>
+                <div class="code">div.<span class="kw">textContent</span> = <span class="str">'我是新创建的'</span></div>
+                <div class="code"><span class="kw">document</span>.<span class="kw">body</span>.<span class="fn">append</span>(div)</div>
+                <div class="result">→ 页面出现新 div</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 插入到某个元素前面</span></div>
+                <div class="code">parent.<span class="fn">insertBefore</span>(newEl, referenceEl)</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 删除元素</span></div>
+                <div class="code">el.<span class="fn">remove</span>()  <span class="cm">// 直接从 DOM 中移除</span></div>
+            </div>
+        </div>
+
+        <!-- 事件基础 -->
+        <div class="card">
+            <h2>7. 事件基础</h2>
+            <p class="note">事件是用户与页面交互的方式（点击、输入、滚动等），addEventListener 监听事件</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 绑定点击事件</span></div>
+                <div class="code">btn.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, () => {</div>
+                <div class="code">&nbsp;&nbsp;console.<span class="fn">log</span>(<span class="str">'按钮被点击了!'</span>)</div>
+                <div class="code">})</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 常用事件类型</span></div>
+                <div class="code"><span class="str">'click'</span>      — 鼠标点击</div>
+                <div class="code"><span class="str">'input'</span>      — 输入框内容变化（实时）</div>
+                <div class="code"><span class="str">'change'</span>     — 表单值改变并失去焦点</div>
+                <div class="code"><span class="str">'submit'</span>     — 表单提交</div>
+                <div class="code"><span class="str">'keydown'</span>    — 键盘按下</div>
+                <div class="code"><span class="str">'DOMContentLoaded'</span> — DOM 树构建完毕</div>
+            </div>
+        </div>
+
+        <!-- 事件对象 -->
+        <div class="card">
+            <h2>8. 事件对象 event</h2>
+            <p class="note">事件回调的第一个参数是 event 对象，包含事件相关信息</p>
+            <div class="example">
+                <div class="code">el.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, (<span class="kw">event</span>) => {</div>
+                <div class="code">&nbsp;&nbsp;event.<span class="kw">target</span>  <span class="cm">// 触发事件的元素</span></div>
+                <div class="code">&nbsp;&nbsp;event.<span class="kw">type</span>    <span class="cm">// 事件类型，如 "click"</span></div>
+                <div class="code">&nbsp;&nbsp;event.<span class="fn">preventDefault</span>()  <span class="cm">// 阻止默认行为（如 a 标签跳转）</span></div>
+                <div class="code">&nbsp;&nbsp;event.<span class="fn">stopPropagation</span>() <span class="cm">// 阻止事件冒泡</span></div>
+                <div class="code">})</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== 控制台演练 ==================== -->
+    <script>
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('  Math 对象 · Date 对象 · DOM 概述');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+        // ==================== Math 对象 ====================
+        console.group('📌 一、Math 对象');
+
+        // 常量
+        console.group('1. 数学常量');
+        console.log('Math.PI           →', Math.PI);
+        console.log('Math.E            →', Math.E);
+        console.log('Math.SQRT2        →', Math.SQRT2);
+        console.log('Math.LN2          →', Math.LN2);
+        console.groupEnd();
+
+        // 取整
+        console.group('2. 取整与绝对值');
+        console.log('abs(-42)          →', Math.abs(-42));
+        console.log('ceil(3.1)         →', Math.ceil(3.1));
+        console.log('ceil(-3.1)        →', Math.ceil(-3.1));   // -3
+        console.log('floor(3.9)        →', Math.floor(3.9));
+        console.log('floor(-3.9)       →', Math.floor(-3.9));  // -4
+        console.log('round(3.5)        →', Math.round(3.5));   // 4
+        console.log('round(-3.5)       →', Math.round(-3.5));  // -3（向正无穷方向）
+        console.log('trunc(3.9)        →', Math.trunc(3.9));   // 3
+        console.log('trunc(-3.9)       →', Math.trunc(-3.9));  // -3（与 floor 不同！）
+        console.groupEnd();
+
+        // 最大最小值
+        console.group('3. max / min');
+        console.log('max(10,25,3,88)   →', Math.max(10, 25, 3, 88));
+        console.log('min(10,25,3,88)   →', Math.min(10, 25, 3, 88));
+        console.log('max(...[1,5,3])   →', Math.max(...[1, 5, 3]));
+        console.log('max()             →', Math.max());  // -Infinity
+        console.log('min()             →', Math.min());  // Infinity
+        console.groupEnd();
+
+        // 随机数
+        console.group('4. random — 随机数');
+        console.log('Math.random()     → 下面跑5次看效果:');
+        for (let i = 0; i < 5; i++) {
+            console.log(`  第${i + 1}次:`, Math.random());
+        }
+        // 1~10 随机整数
+        console.log('1~10 随机整数 ×5:', Array.from({ length: 5 }, () => Math.floor(Math.random() * 10) + 1));
+        console.groupEnd();
+
+        // 幂与根
+        console.group('5. pow / sqrt');
+        console.log('pow(2, 10)        →', Math.pow(2, 10));
+        console.log('pow(3, 4)         →', Math.pow(3, 4));
+        console.log('sqrt(64)          →', Math.sqrt(64));
+        console.log('cbrt(27)          →', Math.cbrt(27));
+        console.log('2 ** 10 (运算符)   →', 2 ** 10);
+        console.groupEnd();
+
+        // 对数
+        console.group('6. 对数函数');
+        console.log('log(Math.E)       →', Math.log(Math.E));
+        console.log('log2(8)           →', Math.log2(8));
+        console.log('log10(100)        →', Math.log10(100));
+        console.log('exp(1)            →', Math.exp(1));
+        console.groupEnd();
+
+        // sign
+        console.group('7. sign — 符号判断');
+        console.log('sign(42)          →', Math.sign(42));
+        console.log('sign(-42)         →', Math.sign(-42));
+        console.log('sign(0)           →', Math.sign(0));
+        console.log('sign(-0)          →', Math.sign(-0));
+        console.groupEnd();
+
+        console.groupEnd(); // Math 结束
+
+        // ==================== Date 对象 ====================
+        console.group('📌 二、Date 对象');
+
+        // 创建
+        console.group('1. 创建 Date');
+        const now = new Date();
+        console.log('new Date()        →', now);
+        console.log('new Date(0)       →', new Date(0));
+        console.log("new Date('2024-05-20') →", new Date('2024-05-20'));
+        console.log('new Date(2024,4,20,14,30,0) →', new Date(2024, 4, 20, 14, 30, 0));
+        console.groupEnd();
+
+        // get 系列
+        console.group('2. get 系列');
+        const d = new Date('2024-05-20T14:30:00');
+        console.log('测试日期:', d);
+        console.log('getFullYear()     →', d.getFullYear());
+        console.log('getMonth()        →', d.getMonth(), '(⚠️ 0=1月, 4=5月！)');
+        console.log('getDate()         →', d.getDate(), '(几号)');
+        console.log('getDay()          →', d.getDay(), '(0=周日)');
+        console.log('getHours()        →', d.getHours());
+        console.log('getMinutes()      →', d.getMinutes());
+        console.log('getSeconds()      →', d.getSeconds());
+        console.log('getMilliseconds() →', d.getMilliseconds());
+        console.groupEnd();
+
+        // 时间戳
+        console.group('3. 时间戳');
+        console.log('Date.now()        →', Date.now());
+        console.log('new Date().getTime() →', new Date().getTime());
+        // 计算某段代码耗时
+        const start = Date.now();
+        let sum = 0;
+        for (let i = 0; i < 1000000; i++) sum += i;
+        console.log('100万次累加耗时:', Date.now() - start, 'ms');
+        console.groupEnd();
+
+        // 日期格式化
+        console.group('4. 日期转字符串');
+        const d2 = new Date('2024-05-20T14:30:00');
+        console.log('toString()        →', d2.toString());
+        console.log('toISOString()     →', d2.toISOString());
+        console.log('toLocaleString()  →', d2.toLocaleString());
+        console.log("toLocaleString('zh-CN') →", d2.toLocaleString('zh-CN'));
+        console.log("toLocaleDateString('zh-CN') →", d2.toLocaleDateString('zh-CN'));
+        console.log("toLocaleTimeString('zh-CN') →", d2.toLocaleTimeString('zh-CN'));
+        console.groupEnd();
+
+        // 日期计算
+        console.group('5. 日期加减');
+        const d3 = new Date('2024-05-01');
+        const d4 = new Date('2024-05-20');
+        const diffMs = d4 - d3;
+        const diffDays = diffMs / (1000 * 60 * 60 * 24);
+        console.log('5月1日 ~ 5月20日 相差:', diffDays, '天');
+
+        // 3天后
+        const nextWeek = new Date();
+        nextWeek.setDate(nextWeek.getDate() + 7);
+        console.log('今天:', new Date().toLocaleDateString('zh-CN'));
+        console.log('7天后:', nextWeek.toLocaleDateString('zh-CN'));
+        console.groupEnd();
+
+        console.groupEnd(); // Date 结束
+
+        // ==================== DOM 概述 ====================
+        console.group('📌 三、DOM 概述');
+
+        console.group('1. document 对象');
+        console.log('document.title      →', document.title);
+        console.log('document.head       →', document.head);
+        console.log('document.body       →', document.body);
+        console.log('document.URL        →', document.URL);
+        console.groupEnd();
+
+        console.group('2. 选择元素演示');
+        const h1 = document.querySelector('h1');
+        console.log("querySelector('h1') →", h1);
+        console.log("h1.textContent      →", h1.textContent);
+
+        const allCards = document.querySelectorAll('.card');
+        console.log("querySelectorAll('.card').length →", allCards.length);
+
+        const subtitle = document.querySelector('.subtitle');
+        console.log("querySelector('.subtitle') →", subtitle);
+        console.groupEnd();
+
+        console.group('3. 操作元素内容');
+        console.log('修改前 subtitle.textContent:', subtitle.textContent);
+        // 实际修改页面
+        const oldText = subtitle.textContent;
+        subtitle.textContent = '✅ 内容已被 JS 修改！打开控制台看完整演示';
+        console.log('修改后:', subtitle.textContent);
+        // 恢复
+        setTimeout(() => { subtitle.textContent = oldText; }, 3000);
+        console.log('（3秒后将自动恢复原标题）');
+        console.groupEnd();
+
+        console.group('4. classList 操作');
+        // 给页面第一个 card 添加临时样式
+        const firstCard = document.querySelector('.card');
+        if (firstCard) {
+            firstCard.classList.add('active');
+            console.log("添加 'active' 类 →", firstCard.classList.contains('active'));
+            firstCard.style.border = '2px solid #facc15';
+            console.log('临时高亮第一个卡片（黄色边框）');
+            setTimeout(() => {
+                firstCard.classList.remove('active');
+                firstCard.style.border = '';
+                console.log('已恢复第一个卡片样式');
+            }, 3000);
+        }
+        console.groupEnd();
+
+        console.group('5. 创建新元素演示');
+        const newDiv = document.createElement('div');
+        newDiv.textContent = '🟡 这是 JS 动态创建的演示元素（3秒后自动消失）';
+        newDiv.style.cssText = 'background:#422006; color:#fbbf24; padding:12px 24px; border-radius:8px; text-align:center; margin:16px 0; border:1px solid #f59e0b;';
+        document.body.insertBefore(newDiv, document.querySelector('script'));
+        console.log('已在页面上插入新元素');
+        setTimeout(() => {
+            newDiv.remove();
+            console.log('动态元素已删除');
+        }, 3000);
+        console.groupEnd();
+
+        console.groupEnd(); // DOM 结束
+
+        console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('  Math · Date · DOM 演示完毕 ✅');
+        console.log('  页面上有 3 秒的动态效果演示');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    </script>
+</body>
+</html>
