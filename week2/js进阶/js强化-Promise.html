@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Promise · 异步编程</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f172a; color: #e2e8f0; padding: 24px; }
+        h1 { text-align: center; margin-bottom: 8px; font-size: 28px; color: #facc15; }
+        .subtitle { text-align: center; color: #94a3b8; margin-bottom: 32px; font-size: 14px; }
+        .section-title { font-size: 22px; color: #38bdf8; margin: 32px 0 16px; padding-bottom: 8px; border-bottom: 2px solid #334155; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(460px, 1fr)); gap: 20px; }
+        .card { background: #1e293b; border-radius: 12px; padding: 20px; border: 1px solid #334155; }
+        .card h2 { font-size: 18px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #334155; }
+        .card h2 .badge { font-size: 12px; padding: 2px 8px; border-radius: 99px; margin-left: 8px; vertical-align: middle; }
+        .badge.key { background: #7f1d1d; color: #fca5a5; }
+        .badge.tip { background: #14532d; color: #86efac; }
+        .example { background: #0f172a; border-radius: 8px; padding: 12px 16px; margin-bottom: 10px; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 13px; }
+        .example .code { color: #f8fafc; margin-bottom: 2px; }
+        .example .code .kw { color: #c084fc; }
+        .example .code .str { color: #34d399; }
+        .example .code .fn { color: #38bdf8; }
+        .example .code .cm { color: #64748b; }
+        .example .code .num { color: #fb923c; }
+        .example .code .prop { color: #facc15; }
+        .example .code .err { color: #f87171; }
+        .example .code .good { color: #34d399; }
+        .example .result { color: #fbbf24; margin-top: 6px; padding-top: 6px; border-top: 1px dashed #334155; }
+        .note { font-size: 12px; color: #94a3b8; margin-top: 4px; font-style: italic; }
+
+        /* 状态机可视化 */
+        .state-diagram { display: flex; align-items: center; justify-content: center; gap: 20px; margin: 10px 0; font-size: 14px; flex-wrap: wrap; }
+        .state { padding: 10px 20px; border-radius: 8px; text-align: center; }
+        .state.pending { background: #475569; border: 2px solid #64748b; }
+        .state.fulfilled { background: #14532d; border: 2px solid #22c55e; }
+        .state.rejected { background: #7f1d1d; border: 2px solid #ef4444; }
+        .state-arrow { font-size: 24px; color: #facc15; }
+
+        /* 对比图 */
+        .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 8px 0; }
+        .compare-box { border-radius: 8px; padding: 12px; }
+        .compare-box.bad { background: #3b1313; border: 1px solid #7f1d1d; }
+        .compare-box.good { background: #132b1b; border: 1px solid #166534; }
+        .compare-box h4 { margin-bottom: 6px; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <h1>Promise · 异步编程</h1>
+    <p class="subtitle">从"为什么需要异步"到"Promise 原理与实战"——一条线讲清</p>
+
+    <!-- ==================== 同步 vs 异步 ==================== -->
+    <h2 class="section-title">一、同步 vs 异步：JavaScript 的执行模型</h2>
+
+    <div class="grid">
+
+        <!-- 同步 -->
+        <div class="card">
+            <h2>1. 同步（Synchronous）— 一行等一行的阻塞执行</h2>
+            <p class="note">代码一行接一行执行，上一步没做完，下一步就不开始</p>
+            <div class="example">
+                <div class="code">console.<span class="fn">log</span>(<span class="str">'① 开始煮饭'</span>)</div>
+                <div class="code"><span class="cm">// 假设这行要等 3 秒（烧水）</span></div>
+                <div class="code"><span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i < <span class="num">3e9</span>; i++) {}  <span class="cm">// 忙等 3 秒</span></div>
+                <div class="code">console.<span class="fn">log</span>(<span class="str">'② 饭煮好了'</span>)</div>
+                <div class="code">console.<span class="fn">log</span>(<span class="str">'③ 开始炒菜'</span>)  <span class="cm">// 必须等煮饭完成!</span></div>
+                <div class="result">→ ①②③ 依次输出，②到③之间什么都做不了</div>
+            </div>
+        </div>
+
+        <!-- 异步 -->
+        <div class="card">
+            <h2>2. 异步（Asynchronous）— 非阻塞，先干别的</h2>
+            <p class="note">耗时的操作丢给浏览器线程，代码继续往下执行，完成后再通知你</p>
+            <div class="example">
+                <div class="code">console.<span class="fn">log</span>(<span class="str">'① 打开电磁炉煮水'</span>)</div>
+                <div class="code"><span class="fn">setTimeout</span>(() => {</div>
+                <div class="code">&nbsp;&nbsp;console.<span class="fn">log</span>(<span class="str">'③ 水开了！（3秒后通知）'</span>)</div>
+                <div class="code">}, <span class="num">3000</span>)</div>
+                <div class="code">console.<span class="fn">log</span>(<span class="str">'② 趁水没开，先切菜'</span>)</div>
+                <div class="result">→ ①②（同时做）... 3秒后 ... ③</div>
+            </div>
+        </div>
+
+        <!-- 为什么需要异步 -->
+        <div class="card">
+            <h2>3. 为什么必须用异步？</h2>
+            <p class="note">JS 是单线程的——一次只能做一件事。如果同步等网络请求，页面就卡死了</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 如果网络请求是同步的：</span></div>
+                <div class="code"><span class="cm">// 用户点击按钮 → 发请求 → 等 2 秒 → 才能继续操作页面</span></div>
+                <div class="code"><span class="cm">// 这 2 秒内，页面完全冻结：点击无效、滚动无效、动画卡死</span></div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// JS 的解决方式：</span></div>
+                <div class="code"><span class="cm">// 把耗时任务委托给浏览器（浏览器有多线程）</span></div>
+                <div class="code"><span class="cm">// 主线程继续执行，等任务完成再"回调"通知</span></div>
+                <div class="code"><span class="cm">// → 这就是"异步"的本质</span></div>
+            </div>
+        </div>
+
+        <!-- 常见异步场景 -->
+        <div class="card">
+            <h2>4. 常见的异步操作</h2>
+            <p class="note">JS 中这些操作都是异步的</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 定时器</span></div>
+                <div class="code"><span class="fn">setTimeout</span>(fn, <span class="num">1000</span>)</div>
+                <div class="code"><span class="fn">setInterval</span>(fn, <span class="num">1000</span>)</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 网络请求（最重要的场景）</span></div>
+                <div class="code"><span class="fn">fetch</span>(<span class="str">'/api/user'</span>)</div>
+                <div class="code"><span class="cm">// 读文件（Node.js）</span></div>
+                <div class="code"><span class="fn">fs</span>.<span class="fn">readFile</span>(<span class="str">'/data.json'</span>, callback)</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 事件监听</span></div>
+                <div class="code">btn.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, fn)</div>
+                <div class="code"><span class="cm">// DOM 渲染相关</span></div>
+                <div class="code"><span class="fn">requestAnimationFrame</span>(fn)</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== 回调地狱 ==================== -->
+    <h2 class="section-title">二、问题：回调地狱（Callback Hell）</h2>
+    <p class="note" style="margin-bottom:16px;">Promise 诞生之前，异步靠回调函数——当多层异步依赖时，代码变成"金字塔"</p>
+
+    <div class="grid">
+
+        <div class="card">
+            <h2>5. 回调地狱长这样 👇</h2>
+            <p class="note">每个异步操作的结果依赖上一个结果，层层嵌套</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 需求：登录 → 获取用户信息 → 获取订单 → 获取详情</span></div>
+                <div class="code"><span class="fn">login</span>(user, password, (err, token) => {  <span class="cm">// ① 登录</span></div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">if</span> (err) { <span class="cm">/* 处理错误 */</span> }</div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">getUser</span>(token, (err, user) => {  <span class="cm">// ② 查用户</span></div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> (err) {}</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">getOrders</span>(user.<span class="prop">id</span>, (err, orders) => {  <span class="cm">// ③ 查订单</span></div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> (err) {}</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">getDetail</span>(orders[<span class="num">0</span>].<span class="prop">id</span>, (err, detail) => {  <span class="cm">// ④ 查详情</span></div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> (err) {}</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;console.<span class="fn">log</span>(<span class="str">'终于拿到数据:'</span>, detail)</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;})</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;})</div>
+                <div class="code">&nbsp;&nbsp;})</div>
+                <div class="code">})  <span class="cm">// 😱 箭头越来越深 —— "回调地狱"</span></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>6. 回调地狱的三大问题</h2>
+            <p class="note">不只是不好看，更是维护和可靠性的噩梦</p>
+            <div class="example">
+                <div class="code"><span class="err">① 可读性差</span> — 深层嵌套，"doom pyramid"</div>
+                <div class="code"><span class="err">② 错误处理重复</span> — 每一层都要 if(err)，大量重复代码</div>
+                <div class="code"><span class="err">③ 无法统一控制</span> — "等 A 和 B 都完成再做 C" 用回调很难实现</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="good">✅ Promise 解决这三个问题</span></div>
+                <div class="code"><span class="cm">— 用 .then() 链式调用替代嵌套</span></div>
+                <div class="code"><span class="cm">— 一个 .catch() 处理所有错误</span></div>
+                <div class="code"><span class="cm">— Promise.all 等组合方法处理并发</span></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== Promise 概念与原理 ==================== -->
+    <h2 class="section-title">三、Promise 是什么？—— 一个"承诺"</h2>
+
+    <div class="grid">
+
+        <!-- 生活类比 -->
+        <div class="card">
+            <h2>7. 生活类比</h2>
+            <p class="note">Promise 就像外卖订单，它有三种状态</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 你下单外卖 →</span></div>
+                <div class="code"><span class="cm">//   [等待中] ：商家正在做，你不知道最终能不能送到</span></div>
+                <div class="code"><span class="cm">//   [已送达] ：外卖到了，你开吃（成功回调）</span></div>
+                <div class="code"><span class="cm">//   [已取消] ：商家取消订单，你退款（失败回调）</span></div>
+                <div class="code"><span class="cm">// 状态一旦从 [等待中] 变成其他，就再也不会变</span></div>
+            </div>
+        </div>
+
+        <!-- 三种状态 -->
+        <div class="card">
+            <h2>8. Promise 的三种状态<span class="badge key">核心</span></h2>
+            <p class="note">这正是 Promise 的基本原理——状态机</p>
+            <div class="state-diagram">
+                <div class="state pending">pending<br><small>进行中</small></div>
+                <div class="state-arrow">→</div>
+                <div class="state fulfilled">fulfilled<br><small>已成功</small></div>
+                <div class="state-arrow">或</div>
+                <div class="state rejected">rejected<br><small>已失败</small></div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 规则：</span></div>
+                <div class="code"><span class="cm">// ① 状态只能从 pending → fulfilled 或 pending → rejected</span></div>
+                <div class="code"><span class="cm">// ② 状态一旦改变就不可逆——这叫"决议"（resolve）</span></div>
+                <div class="code"><span class="cm">// ③ fulfilled 和 rejected 统称 settled（已敲定）</span></div>
+            </div>
+        </div>
+
+        <!-- 创建 Promise -->
+        <div class="card">
+            <h2>9. 创建 Promise<span class="badge key">核心</span></h2>
+            <p class="note">new Promise 接收一个 executor 函数，里面做异步工作</p>
+            <div class="example">
+                <div class="code"><span class="kw">const</span> promise = <span class="kw">new</span> <span class="fn">Promise</span>((resolve, reject) => {</div>
+                <div class="code">&nbsp;&nbsp;<span class="cm">// executor 函数：在这里做异步操作</span></div>
+                <div class="code">&nbsp;&nbsp;<span class="cm">// resolve(value) — 成功后调用，将状态改为 fulfilled</span></div>
+                <div class="code">&nbsp;&nbsp;<span class="cm">// reject(reason) — 失败后调用，将状态改为 rejected</span></div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 实战：把 setTimeout 包装成 Promise</span></div>
+                <div class="code"><span class="kw">const</span> delay = ms => <span class="kw">new</span> <span class="fn">Promise</span>(resolve => {</div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">setTimeout</span>(resolve, ms)</div>
+                <div class="code">})</div>
+                <div class="code"><span class="fn">delay</span>(<span class="num">2000</span>).<span class="fn">then</span>(() => console.<span class="fn">log</span>(<span class="str">'2秒后'</span>))</div>
+            </div>
+        </div>
+
+        <!-- then / catch / finally -->
+        <div class="card">
+            <h2>10. then / catch / finally<span class="badge key">核心</span></h2>
+            <p class="note">这三个方法是 Promise 的使用入口——注册"成功/失败/最终"的回调</p>
+            <div class="example">
+                <div class="code">promise</div>
+                <div class="code">&nbsp;&nbsp;.<span class="fn">then</span>(value => {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// 成功时执行，value = resolve() 传的值</span></div>
+                <div class="code">&nbsp;&nbsp;})</div>
+                <div class="code">&nbsp;&nbsp;.<span class="fn">catch</span>(error => {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// 失败时执行，error = reject() 传的值</span></div>
+                <div class="code">&nbsp;&nbsp;})</div>
+                <div class="code">&nbsp;&nbsp;.<span class="fn">finally</span>(() => {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// 无论成功与否都执行（ES2018）</span></div>
+                <div class="code">&nbsp;&nbsp;})</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// ⚠️ 注意：then 也接受第二个参数作为错误回调</span></div>
+                <div class="code">.<span class="fn">then</span>(onSuccess, onError)</div>
+                <div class="code"><span class="cm">// 但推荐用 .catch()，可以捕获 then 中的错误</span></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== 链式调用 ==================== -->
+    <h2 class="section-title">四、链式调用：Promise 的核心威力</h2>
+    <p class="note" style="margin-bottom:16px;">then 返回的也是一个 Promise → 可以无限链下去 → 解决回调地狱</p>
+
+    <div class="grid">
+
+        <!-- 链式原理 -->
+        <div class="card">
+            <h2>11. .then() 返回新 Promise 的规则</h2>
+            <p class="note">这是理解链式调用的关键，面试高频</p>
+            <div class="example">
+                <div class="code"><span class="cm">// .then() 始终返回一个新的 Promise</span></div>
+                <div class="code"><span class="cm">// 新 Promise 的值 = then 回调的返回值</span></div>
+            </div>
+            <table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:8px;">
+                <tr style="background:#0f172a;"><th style="padding:8px; text-align:left; color:#facc15;">then 回调 return 什么</th><th style="padding:8px; text-align:left; color:#facc15;">下一个 then 得到什么</th></tr>
+                <tr><td style="padding:8px;">普通值，如 42</td><td style="padding:8px; color:#34d399;">42</td></tr>
+                <tr><td style="padding:8px;">一个新的 Promise</td><td style="padding:8px; color:#34d399;">等这个 Promise resolve/reject</td></tr>
+                <tr><td style="padding:8px;">什么都没 return</td><td style="padding:8px; color:#f87171;">undefined</td></tr>
+                <tr><td style="padding:8px;">throw new Error()</td><td style="padding:8px; color:#f87171;">跳到最近的 .catch()</td></tr>
+            </table>
+        </div>
+
+        <!-- 回调地狱改写 -->
+        <div class="card">
+            <h2>12. 用 Promise 改写回调地狱</h2>
+            <p class="note">同样的需求，用链式调用变成清晰的"流水线"</p>
+            <div class="example">
+                <div class="code"><span class="fn">login</span>(user, password)</div>
+                <div class="code">&nbsp;&nbsp;.<span class="fn">then</span>(token => <span class="fn">getUser</span>(token))</div>
+                <div class="code">&nbsp;&nbsp;.<span class="fn">then</span>(user => <span class="fn">getOrders</span>(user.<span class="prop">id</span>))</div>
+                <div class="code">&nbsp;&nbsp;.<span class="fn">then</span>(orders => <span class="fn">getDetail</span>(orders[<span class="num">0</span>].<span class="prop">id</span>))</div>
+                <div class="code">&nbsp;&nbsp;.<span class="fn">then</span>(detail => console.<span class="fn">log</span>(<span class="str">'拿到数据:'</span>, detail))</div>
+                <div class="code">&nbsp;&nbsp;.<span class="fn">catch</span>(err => console.<span class="fn">error</span>(<span class="str">'任何一步出错都在这处理'</span>, err))</div>
+                <div class="result">→ 扁平化！四个操作像流水线一样清晰</div>
+            </div>
+        </div>
+
+        <!-- 错误穿透 -->
+        <div class="card">
+            <h2>13. 错误穿透机制</h2>
+            <p class="note">链中任何一步出错都会跳过中间的 then，直达最近的 catch</p>
+            <div class="example">
+                <div class="code"><span class="fn">fetch</span>(<span class="str">'/api/data'</span>)</div>
+                <div class="code">&nbsp;&nbsp;.<span class="fn">then</span>(res => res.<span class="fn">json</span>())</div>
+                <div class="code">&nbsp;&nbsp;.<span class="fn">then</span>(data => {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">throw</span> <span class="kw">new</span> <span class="fn">Error</span>(<span class="str">'业务异常'</span>)  <span class="cm">// 抛出错误</span></div>
+                <div class="code">&nbsp;&nbsp;})</div>
+                <div class="code">&nbsp;&nbsp;.<span class="fn">then</span>(data => {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;console.<span class="fn">log</span>(<span class="str">'永远不会到这里'</span>)  <span class="cm">// 被跳过了</span></div>
+                <div class="code">&nbsp;&nbsp;})</div>
+                <div class="code">&nbsp;&nbsp;.<span class="fn">catch</span>(err => {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;console.<span class="fn">error</span>(<span class="str">'捕获到:'</span>, err)  <span class="cm">// ✅ 这步执行</span></div>
+                <div class="code">&nbsp;&nbsp;})</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== 静态方法 ==================== -->
+    <h2 class="section-title">五、Promise 静态方法（组合多个 Promise）</h2>
+
+    <div class="grid">
+
+        <!-- Promise.all -->
+        <div class="card">
+            <h2>14. Promise.all — 全部成功才成功</h2>
+            <p class="note">等所有 Promise 完成，只要有一个失败就整体失败</p>
+            <div class="example">
+                <div class="code"><span class="kw">const</span> [user, posts, settings] = <span class="kw">await</span> <span class="fn">Promise</span>.<span class="fn">all</span>([</div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">fetch</span>(<span class="str">'/api/user'</span>).<span class="fn">then</span>(r => r.<span class="fn">json</span>()),</div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">fetch</span>(<span class="str">'/api/posts'</span>).<span class="fn">then</span>(r => r.<span class="fn">json</span>()),</div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">fetch</span>(<span class="str">'/api/settings'</span>).<span class="fn">then</span>(r => r.<span class="fn">json</span>()),</div>
+                <div class="code">])</div>
+                <div class="result">→ 等 3 个请求全部完成，结果数组 [user, posts, settings]</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// ⚠️ 任何一个 reject，整个 all 立即 reject</span></div>
+                <div class="code"><span class="cm">// 适合：多个独立请求，全部需要才渲染页面</span></div>
+            </div>
+        </div>
+
+        <!-- Promise.allSettled -->
+        <div class="card">
+            <h2>15. Promise.allSettled — 全部完成就成功<span class="badge tip">ES2020</span></h2>
+            <p class="note">等所有完成（不论成败），每个结果带有 status 和 value/reason</p>
+            <div class="example">
+                <div class="code"><span class="kw">const</span> results = <span class="kw">await</span> <span class="fn">Promise</span>.<span class="fn">allSettled</span>([</div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">fetch</span>(<span class="str">'/api/ok'</span>),</div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">fetch</span>(<span class="str">'/api/broken'</span>),  <span class="cm">// 这个会 500</span></div>
+                <div class="code">])</div>
+                <div class="code"><span class="cm">// → [{status:"fulfilled",value:...}, {status:"rejected",reason:...}]</span></div>
+                <div class="code"><span class="cm">// 不会 reject，适合"能拿多少拿多少"的场景</span></div>
+            </div>
+        </div>
+
+        <!-- Promise.race -->
+        <div class="card">
+            <h2>16. Promise.race — 第一个完成的决定结果</h2>
+            <p class="note">多个 Promise 竞赛，取最快完成的（不管成功失败）</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 请求超时控制（经典用法）</span></div>
+                <div class="code"><span class="fn">Promise</span>.<span class="fn">race</span>([</div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">fetch</span>(<span class="str">'/api/data'</span>),</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">new</span> <span class="fn">Promise</span>((_, reject) =></div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">setTimeout</span>(() => reject(<span class="str">'超时!'</span>), <span class="num">5000</span>)</div>
+                <div class="code">&nbsp;&nbsp;)</div>
+                <div class="code">])</div>
+                <div class="result">→ 5 秒内没拿到数据就 reject('超时!')</div>
+            </div>
+        </div>
+
+        <!-- Promise.any -->
+        <div class="card">
+            <h2>17. Promise.any — 第一个成功的决定结果<span class="badge tip">ES2021</span></h2>
+            <p class="note">取第一个成功的，只有全部失败才 reject</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 从多个 CDN 加载资源，哪个快用哪个</span></div>
+                <div class="code"><span class="fn">Promise</span>.<span class="fn">any</span>([</div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">fetch</span>(<span class="str">'https://cdn1.com/file.js'</span>),</div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">fetch</span>(<span class="str">'https://cdn2.com/file.js'</span>),</div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">fetch</span>(<span class="str">'https://cdn3.com/file.js'</span>),</div>
+                <div class="code">])</div>
+                <div class="result">→ 三个 CDN 只要有一个成功就 OK</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== async/await ==================== -->
+    <h2 class="section-title">六、async / await：Promise 的语法糖（ES2017）</h2>
+    <p class="note" style="margin-bottom:16px;">让异步代码看起来像同步代码一样直白——但底层还是 Promise</p>
+
+    <div class="grid">
+
+        <!-- async/await 基础 -->
+        <div class="card">
+            <h2>18. async 函数和 await 表达式<span class="badge key">核心</span></h2>
+            <p class="note">async 函数自动返回 Promise；await 等待 Promise resolve</p>
+            <div class="example">
+                <div class="code"><span class="cm">// async 函数声明</span></div>
+                <div class="code"><span class="kw">async</span> <span class="kw">function</span> <span class="fn">getUserData</span>() {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">const</span> user = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/user'</span>).<span class="fn">then</span>(r => r.<span class="fn">json</span>())</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">const</span> posts = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/posts'</span>).<span class="fn">then</span>(r => r.<span class="fn">json</span>())</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">return</span> { user, posts }</div>
+                <div class="code">}</div>
+                <div class="code"><span class="cm">// 调用时也返回 Promise</span></div>
+                <div class="code"><span class="fn">getUserData</span>().<span class="fn">then</span>(data => console.<span class="fn">log</span>(data))</div>
+            </div>
+        </div>
+
+        <!-- 错误处理 -->
+        <div class="card">
+            <h2>19. async/await 错误处理</h2>
+            <p class="note">用 try/catch 捕获 await 的错误</p>
+            <div class="example">
+                <div class="code"><span class="kw">async</span> <span class="kw">function</span> <span class="fn">safeFetch</span>() {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">try</span> {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">const</span> data = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/data'</span>).<span class="fn">then</span>(r => r.<span class="fn">json</span>())</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> data</div>
+                <div class="code">&nbsp;&nbsp;} <span class="kw">catch</span> (err) {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;console.<span class="fn">error</span>(<span class="str">'请求失败:'</span>, err)</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> <span class="kw">null</span>  <span class="cm">// 返回默认值</span></div>
+                <div class="code">&nbsp;&nbsp;}</div>
+                <div class="code">}</div>
+            </div>
+        </div>
+
+        <!-- .then vs async/await 对比 -->
+        <div class="card">
+            <h2>20. .then() vs await — 什么时候用哪个</h2>
+            <div class="compare">
+                <div class="compare-box bad">
+                    <h4>.then() 更好</h4>
+                    <p style="font-size:13px;color:#94a3b8;">并发请求（不需要等上一个结果）<br>Promise.all([a(), b()])</p>
+                </div>
+                <div class="compare-box good">
+                    <h4>await 更好</h4>
+                    <p style="font-size:13px;color:#94a3b8;">有依赖的串行请求<br>先登录→再查用户→再查订单</p>
+                </div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// ❌ 慢：有依赖时用 .then 链反而啰嗦</span></div>
+                <div class="code"><span class="cm">// ✅ 快：并发时用 await 会变串行（慢），用 .all() 并行</span></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== 手写 Promise 简版 ==================== -->
+    <h2 class="section-title">七、Promise 原理：手写一个简易版</h2>
+    <p class="note" style="margin-bottom:16px;">这是理解 Promise 原理最直接的方式——实现 then 的链式调用和状态管理</p>
+
+    <div class="grid">
+
+        <div class="card">
+            <h2>21. 手写 MyPromise（核心骨架）</h2>
+            <p class="note">实现了状态管理 + then 注册 + resolve/reject + 链式调用</p>
+            <div class="example">
+                <div class="code"><span class="kw">class</span> <span class="fn">MyPromise</span> {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">constructor</span>(executor) {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">this</span>.<span class="prop">state</span> = <span class="str">'pending'</span>  <span class="cm">// 初始状态</span></div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">this</span>.<span class="prop">value</span> = <span class="kw">undefined</span>  <span class="cm">// resolve 的值</span></div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">this</span>.<span class="prop">callbacks</span> = []  <span class="cm">// 存放 .then() 注册的回调</span></div>
+            </div>
+            <div class="example">
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">const</span> resolve = (value) => {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> (<span class="kw">this</span>.<span class="prop">state</span> !== <span class="str">'pending'</span>) <span class="kw">return</span>  <span class="cm">// 状态不可逆</span></div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">this</span>.<span class="prop">state</span> = <span class="str">'fulfilled'</span></div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">this</span>.<span class="prop">value</span> = value</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">this</span>.<span class="prop">callbacks</span>.<span class="fn">forEach</span>(cb => cb.<span class="prop">onFulfilled</span>(value))</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;}</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">const</span> reject = (reason) => { <span class="cm">/* 同上，state='rejected' */</span> }</div>
+            </div>
+            <div class="example">
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">try</span> { executor(resolve, reject) }</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">catch</span> (err) { reject(err) }</div>
+                <div class="code">&nbsp;&nbsp;}</div>
+            </div>
+            <div class="example">
+                <div class="code">&nbsp;&nbsp;<span class="fn">then</span>(onFulfilled, onRejected) {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> <span class="kw">new</span> <span class="fn">MyPromise</span>((resolve, reject) => {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// 如果已 settled，直接执行；否则先存到 callbacks</span></div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;})</div>
+                <div class="code">&nbsp;&nbsp;}</div>
+                <div class="code">}</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>22. 手写 MyPromise.all（静态方法）</h2>
+            <p class="note">理解 .all 的原理——计数 + 结果数组</p>
+            <div class="example">
+                <div class="code"><span class="kw">static</span> <span class="fn">all</span>(promises) {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">return</span> <span class="kw">new</span> <span class="fn">MyPromise</span>((resolve, reject) => {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">const</span> results = []</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">let</span> count = <span class="num">0</span></div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;promises.<span class="fn">forEach</span>((p, i) => {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;p.<span class="fn">then</span>(value => {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;results[i] = value</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> (++count === promises.<span class="prop">length</span>) resolve(results)</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}, reject)  <span class="cm">// 任何一个失败 → 整体失败</span></div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;})</div>
+                <div class="code">&nbsp;&nbsp;})</div>
+                <div class="code">}</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('  Promise · 异步编程 ✅');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+        // ========== 1. 同步 vs 异步 ==========
+        console.group('📌 1. 同步 vs 异步');
+        console.log('① 开始');
+        setTimeout(() => console.log('③ 异步回调：2秒后执行'), 2000);
+        console.log('② 结束（不等待异步）');
+        console.log('→ 输出顺序：①②③，异步不阻塞主线');
+        console.groupEnd();
+
+        // ========== 2. Promise 三种状态 ==========
+        console.group('📌 2. Promise 状态演示');
+        const p1 = Promise.resolve('成功');
+        const p2 = Promise.reject('失败').catch(() => { });
+        console.log('Promise.resolve() → 状态:', p1);
+        console.log('Promise.reject() → 状态:', p2);
+        console.log('注意：Promise 的状态是内部的，不能直接读取，要用 .then/.catch');
+        console.groupEnd();
+
+        // ========== 3. 创建 Promise ==========
+        console.group('📌 3. 创建和使用 Promise');
+        const delay = ms => new Promise(resolve => {
+            console.log(`  开始倒计时 ${ms}ms...`);
+            setTimeout(() => resolve(`✅ ${ms}ms 完成`), ms);
+        });
+        console.log('调用 delay(1000)，观察执行顺序...');
+        delay(1000).then(result => console.log('  then 回调:', result));
+        console.log('  .then() 注册后，主线程继续执行（不阻塞）');
+        console.groupEnd();
+
+        // ========== 4. 链式调用 ==========
+        console.group('📌 4. 链式调用演示');
+        Promise.resolve(1)
+            .then(n => { console.log('  第1步:', n); return n + 1; })
+            .then(n => { console.log('  第2步:', n); return n * 3; })
+            .then(n => { console.log('  第3步:', n); return `结果是${n}`; })
+            .then(s => console.log('  最终:', s))
+            .catch(err => console.error('  捕获错误:', err));
+        console.log('  → 等上面链执行完看控制台');
+        console.groupEnd();
+
+        // ========== 5. 错误捕获 ==========
+        console.group('📌 5. 错误穿透');
+        Promise.resolve('ok')
+            .then(val => {
+                console.log('  正常执行:', val);
+                throw new Error('业务异常');
+            })
+            .then(() => console.log('  这步被跳过'))
+            .catch(err => console.log('  .catch 捕获:', err.message))
+            .then(() => console.log('  catch 后面还可以继续 .then'));
+        console.groupEnd();
+
+        // ========== 6. Promise.all ==========
+        console.group('📌 6. Promise.all');
+        const mockFetch = (url, delay_ms) =>
+            new Promise(resolve => setTimeout(() => resolve(`${url} 结果`), delay_ms));
+        console.log('并发请求 3 个 API...');
+        Promise.all([
+            mockFetch('/api/user', 1500),
+            mockFetch('/api/posts', 800),
+            mockFetch('/api/settings', 1000),
+        ]).then(results => {
+            console.log('  全部完成:', results);
+        });
+        console.groupEnd();
+
+        // ========== 7. async/await ==========
+        console.group('📌 7. async / await');
+        async function demoAsync() {
+            console.log('  async 函数开始');
+            const result = await new Promise(r => setTimeout(() => r('hello'), 100));
+            console.log('  await 结果:', result);
+            return 'done';
+        }
+        demoAsync().then(ret => console.log('  async 函数返回:', ret));
+        console.groupEnd();
+
+        // ========== 8. 常见错误 ==========
+        console.group('📌 8. 常见错误示范');
+        console.log('❌ 忘记 return 下一个 Promise:');
+        console.log('  fetch(url).then(res => { res.json() })  // 没 return');
+        console.log('  .then(data => ...)  // data 是 undefined');
+        console.log('');
+        console.log('✅ 正确:');
+        console.log('  fetch(url).then(res => res.json())  // 隐式 return');
+        console.log('  fetch(url).then(res => { return res.json() })  // 显式 return');
+        console.groupEnd();
+
+        // ========== 9. 手写 MyPromise 测试 ==========
+        console.group('📌 9. 手写 MyPromise 测试（页面下方有源码）');
+
+        class MyPromise {
+            constructor(executor) {
+                this.state = 'pending';
+                this.value = undefined;
+                this.callbacks = [];
+
+                const resolve = (value) => {
+                    if (this.state !== 'pending') return;
+                    this.state = 'fulfilled';
+                    this.value = value;
+                    this.callbacks.forEach(cb => cb.onFulfilled(value));
+                };
+
+                const reject = (reason) => {
+                    if (this.state !== 'pending') return;
+                    this.state = 'rejected';
+                    this.value = reason;
+                    this.callbacks.forEach(cb => cb.onRejected(reason));
+                };
+
+                try { executor(resolve, reject); }
+                catch (err) { reject(err); }
+            }
+
+            then(onFulfilled, onRejected) {
+                return new MyPromise((resolve, reject) => {
+                    const run = () => {
+                        try {
+                            if (this.state === 'fulfilled') {
+                                const result = onFulfilled ? onFulfilled(this.value) : this.value;
+                                resolve(result);
+                            } else if (this.state === 'rejected') {
+                                if (onRejected) {
+                                    const result = onRejected(this.value);
+                                    resolve(result);
+                                } else {
+                                    reject(this.value);
+                                }
+                            }
+                        } catch (err) {
+                            reject(err);
+                        }
+                    };
+
+                    if (this.state !== 'pending') {
+                        setTimeout(run, 0); // 异步执行
+                    } else {
+                        this.callbacks.push({
+                            onFulfilled: () => setTimeout(() => {
+                                try {
+                                    const result = onFulfilled ? onFulfilled(this.value) : this.value;
+                                    resolve(result);
+                                } catch (err) { reject(err); }
+                            }, 0),
+                            onRejected: () => setTimeout(() => {
+                                try {
+                                    if (onRejected) {
+                                        const result = onRejected(this.value);
+                                        resolve(result);
+                                    } else {
+                                        reject(this.value);
+                                    }
+                                } catch (err) { reject(err); }
+                            }, 0),
+                        });
+                    }
+                });
+            }
+
+            static all(promises) {
+                return new MyPromise((resolve, reject) => {
+                    const results = [];
+                    let count = 0;
+                    promises.forEach((p, i) => {
+                        p.then(value => {
+                            results[i] = value;
+                            if (++count === promises.length) resolve(results);
+                        }, reject);
+                    });
+                });
+            }
+        }
+
+        // 测试手写的 MyPromise
+        console.log('测试 MyPromise:');
+        new MyPromise((resolve) => {
+            setTimeout(() => resolve('手写版成功!'), 100);
+        })
+            .then(val => { console.log('  第1个 then:', val); return val + ' → 链'; })
+            .then(val => console.log('  第2个 then:', val));
+
+        console.log('测试 MyPromise.all:');
+        MyPromise.all([
+            new MyPromise(r => setTimeout(() => r('A'), 50)),
+            new MyPromise(r => setTimeout(() => r('B'), 20)),
+        ]).then(results => console.log('  all 结果:', results));
+
+        console.groupEnd();
+
+        console.log('\n💡 核心总结：');
+        console.log('  1. 异步 = 不阻塞主线程，JS 把耗时任务委托给浏览器/Node');
+        console.log('  2. Promise = 一个承诺，有三种状态：pending/fulfilled/rejected');
+        console.log('  3. .then() 返回新 Promise → 链式调用 → 解决回调地狱');
+        console.log('  4. .catch() 捕获链上任何一步的错误 → 错误穿透');
+        console.log('  5. async/await 是 Promise 的语法糖 → 让异步代码像同步');
+        console.log('  6. Promise.all = 并发等全部 / allSettled = 全完成就成功 / race = 竞赛');
+        console.log('  7. 状态一旦改变就不可逆 → resolve 后再 reject 无效');
+        console.log('  8. executor 中的代码是同步执行的 → new Promise 里立即执行');
+    </script>
+</body>
+</html>

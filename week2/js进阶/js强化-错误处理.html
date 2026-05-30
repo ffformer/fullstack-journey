@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>错误处理 — throw · try · catch · finally</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f172a; color: #e2e8f0; padding: 24px; }
+        h1 { text-align: center; margin-bottom: 8px; font-size: 28px; color: #facc15; }
+        .subtitle { text-align: center; color: #94a3b8; margin-bottom: 32px; font-size: 14px; }
+        .section-title { font-size: 22px; color: #38bdf8; margin: 32px 0 16px; padding-bottom: 8px; border-bottom: 2px solid #334155; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(460px, 1fr)); gap: 20px; }
+        .card { background: #1e293b; border-radius: 12px; padding: 20px; border: 1px solid #334155; }
+        .card h2 { font-size: 18px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #334155; }
+        .card h2 .badge { font-size: 12px; padding: 2px 8px; border-radius: 99px; margin-left: 8px; vertical-align: middle; }
+        .badge.key { background: #7f1d1d; color: #fca5a5; }
+        .example { background: #0f172a; border-radius: 8px; padding: 12px 16px; margin-bottom: 10px; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 13px; }
+        .example .code { color: #f8fafc; margin-bottom: 2px; }
+        .example .code .kw { color: #c084fc; }
+        .example .code .str { color: #34d399; }
+        .example .code .fn { color: #38bdf8; }
+        .example .code .cm { color: #64748b; }
+        .example .code .num { color: #fb923c; }
+        .example .code .prop { color: #facc15; }
+        .example .code .err { color: #f87171; }
+        .example .code .good { color: #34d399; }
+        .example .result { color: #fbbf24; margin-top: 6px; padding-top: 6px; border-top: 1px dashed #334155; }
+        .note { font-size: 12px; color: #94a3b8; margin-top: 4px; font-style: italic; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+        th { text-align: left; padding: 8px 10px; background: #0f172a; color: #facc15; border-bottom: 2px solid #334155; }
+        td { padding: 8px 10px; border-bottom: 1px solid #1e293b; }
+        tr:hover td { background: #1a2332; }
+
+        .flow-diagram { display: flex; align-items: center; justify-content: center; gap: 16px; margin: 10px 0; font-size: 14px; flex-wrap: wrap; }
+        .flow-step { padding: 8px 16px; border-radius: 6px; }
+        .flow-step.try { background: #1d4ed8; }
+        .flow-step.catch { background: #dc2626; }
+        .flow-step.finally { background: #475569; }
+        .flow-arrow { color: #facc15; font-size: 20px; }
+    </style>
+</head>
+<body>
+    <h1>错误处理 — throw · try · catch · finally</h1>
+    <p class="subtitle">程序不可能不出错，关键是出错之后怎么处理 | 打开控制台（F12）看演示</p>
+
+    <!-- ==================== 错误是什么 ==================== -->
+    <h2 class="section-title">一、什么是错误（Error）</h2>
+
+    <div class="grid">
+
+        <!-- 你没处理错误时 -->
+        <div class="card">
+            <h2>1. 不处理错误的后果</h2>
+            <p class="note">一旦抛出错误且没被捕获，后面的代码全部不执行</p>
+            <div class="example">
+                <div class="code">console.<span class="fn">log</span>(<span class="str">'① 正常执行'</span>)</div>
+                <div class="code"><span class="kw">throw</span> <span class="kw">new</span> <span class="fn">Error</span>(<span class="str">'出事了!'</span>)</div>
+                <div class="code">console.<span class="fn">log</span>(<span class="str">'② 永远不会执行'</span>)  <span class="cm">// 被错误中断</span></div>
+                <div class="result">→ ① 正常执行 → 💥 程序崩溃 → ② 不执行</div>
+            </div>
+        </div>
+
+        <!-- 错误的本质 -->
+        <div class="card">
+            <h2>2. 错误的本质：一种"信号"</h2>
+            <p class="note">错误不是坏事——它是代码告诉你"这个路径走不通"的方式</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 生活类比：</span></div>
+                <div class="code"><span class="cm">// 你去银行取钱 → 卡里没钱 → ATM 提示"余额不足"</span></div>
+                <div class="code"><span class="cm">// 这个"提示"就是错误——它阻止了不该发生的事</span></div>
+                <div class="code"><span class="cm">// 如果没有这个错误，你就透支了</span></div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 代码中的等价物：</span></div>
+                <div class="code"><span class="kw">function</span> <span class="fn">withdraw</span>(balance, amount) {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">if</span> (amount > balance) {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">throw</span> <span class="kw">new</span> <span class="fn">Error</span>(<span class="str">'余额不足'</span>)  <span class="cm">// 阻止透支</span></div>
+                <div class="code">&nbsp;&nbsp;}</div>
+                <div class="code">}</div>
+            </div>
+        </div>
+
+        <!-- 内置错误类型 -->
+        <div class="card">
+            <h2>3. JS 内置的错误类型</h2>
+            <p class="note">不同场景 JS 会自动抛出不同类型的错误</p>
+            <table>
+                <tr><th>错误类型</th><th>触发场景</th><th>示例</th></tr>
+                <tr><td>SyntaxError</td><td>语法错误</td><td style="color:#f87171;">const a =</td></tr>
+                <tr><td>ReferenceError</td><td>访问未定义变量</td><td style="color:#f87171;">console.log(xxx)</td></tr>
+                <tr><td>TypeError</td><td>类型不对</td><td style="color:#f87171;">null.name</td></tr>
+                <tr><td>RangeError</td><td>数值超出范围</td><td style="color:#f87171;">[].length = -1</td></tr>
+                <tr><td>URIError</td><td>URI 编解码出错</td><td style="color:#f87171;">decodeURIComponent('%')</td></tr>
+            </table>
+        </div>
+
+        <!-- Error 对象 -->
+        <div class="card">
+            <h2>4. Error 对象的三个属性</h2>
+            <p class="note">每个错误都带有这些信息，debug 的核心线索</p>
+            <div class="example">
+                <div class="code"><span class="kw">const</span> err = <span class="kw">new</span> <span class="fn">Error</span>(<span class="str">'用户名不能为空'</span>)</div>
+                <div class="code">err.<span class="prop">name</span>    <span class="cm">// → "Error" — 错误类型</span></div>
+                <div class="code">err.<span class="prop">message</span> <span class="cm">// → "用户名不能为空" — 人类可读的描述</span></div>
+                <div class="code">err.<span class="prop">stack</span>   <span class="cm">// → 调用栈：从哪一层代码触发的</span></div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// stack 是最有价值的调试信息：</span></div>
+                <div class="code"><span class="cm">// Error: 用户名不能为空</span></div>
+                <div class="code"><span class="cm">//     at validate (app.js:12:15)</span></div>
+                <div class="code"><span class="cm">//     at submit (app.js:45:10)</span></div>
+                <div class="code"><span class="cm">//     at HTMLButtonElement.onclick (index.html:8:5)</span></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== try/catch 机制 ==================== -->
+    <h2 class="section-title">二、try/catch：捕获并处理错误</h2>
+    <p class="note" style="margin-bottom:16px;">核心语法：用 try 包裹可能出错的代码，出错后跳到 catch 处理，程序不会崩溃</p>
+
+    <div class="grid">
+
+        <!-- 基本语法 -->
+        <div class="card">
+            <h2>5. 基本语法</h2>
+            <p class="note">try 里放可能出错的代码，catch 里做补救</p>
+            <div class="example">
+                <div class="code"><span class="kw">try</span> {</div>
+                <div class="code">&nbsp;&nbsp;<span class="cm">// 可能出错的代码</span></div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">const</span> data = <span class="fn">JSON</span>.<span class="fn">parse</span>(userInput)</div>
+                <div class="code">&nbsp;&nbsp;console.<span class="fn">log</span>(<span class="str">'解析成功:'</span>, data)</div>
+                <div class="code">} <span class="kw">catch</span> (error) {</div>
+                <div class="code">&nbsp;&nbsp;<span class="cm">// 出错了才到这里，不会崩溃</span></div>
+                <div class="code">&nbsp;&nbsp;console.<span class="fn">error</span>(<span class="str">'JSON 格式错误:'</span>, error.<span class="prop">message</span>)</div>
+                <div class="code">}</div>
+                <div class="code"><span class="cm">// ✅ 程序继续运行！</span></div>
+            </div>
+        </div>
+
+        <!-- 执行流程图 -->
+        <div class="card">
+            <h2>6. 执行流程</h2>
+            <p class="note">try 中一旦出错，立刻跳到 catch，try 剩余代码不执行</p>
+            <div class="flow-diagram">
+                <div class="flow-step try">try { 开始执行</div>
+                <div class="flow-arrow">→</div>
+                <div style="font-size:13px;">正常？<br>出错了？</div>
+                <div class="flow-arrow">↘↗</div>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <div class="flow-step" style="background:#166534;">正常完成 → 跳过 catch</div>
+                    <div class="flow-step catch;">出错 → 跳入 catch</div>
+                </div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// ⚠️ 关键点：try 中出错位置之后的代码不会执行</span></div>
+                <div class="code"><span class="kw">try</span> {</div>
+                <div class="code">&nbsp;&nbsp;console.<span class="fn">log</span>(<span class="str">'A'</span>)</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">throw</span> <span class="kw">new</span> <span class="fn">Error</span>(<span class="str">'中断!'</span>)</div>
+                <div class="code">&nbsp;&nbsp;console.<span class="fn">log</span>(<span class="str">'B'</span>)  <span class="cm">// ❌ 不执行</span></div>
+                <div class="code">} <span class="kw">catch</span> (e) { console.<span class="fn">log</span>(<span class="str">'C'</span>) }</div>
+                <div class="result">→ 输出：A → C（跳过了 B）</div>
+            </div>
+        </div>
+
+        <!-- catch 的参数 -->
+        <div class="card">
+            <h2>7. catch 的参数可以省略</h2>
+            <p class="note">如果你不需要用到 error 对象，可以完全不写括号（ES2019）</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 需要用到错误信息</span></div>
+                <div class="code"><span class="kw">catch</span> (err) { console.<span class="fn">error</span>(err.<span class="prop">message</span>) }</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 不需要错误信息——ES2019 可以直接省略</span></div>
+                <div class="code"><span class="kw">catch</span> {</div>
+                <div class="code">&nbsp;&nbsp;<span class="cm">// 直接做补救工作，不需要 err</span></div>
+                <div class="code">&nbsp;&nbsp;console.<span class="fn">log</span>(<span class="str">'出错了，但我不关心是什么错'</span>)</div>
+                <div class="code">}</div>
+            </div>
+        </div>
+
+        <!-- 错误类型判断 -->
+        <div class="card">
+            <h2>8. 判断错误类型——分类处理</h2>
+            <p class="note">不同错误类型用不同的处理方式，用 instanceof 判断</p>
+            <div class="example">
+                <div class="code"><span class="kw">try</span> {</div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">riskyOperation</span>()</div>
+                <div class="code">} <span class="kw">catch</span> (err) {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">if</span> (err <span class="kw">instanceof</span> <span class="fn">TypeError</span>) {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// 类型错误的处理方式</span></div>
+                <div class="code">&nbsp;&nbsp;} <span class="kw">else if</span> (err <span class="kw">instanceof</span> <span class="fn">RangeError</span>) {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// 范围错误的处理方式</span></div>
+                <div class="code">&nbsp;&nbsp;} <span class="kw">else</span> {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">throw</span> err  <span class="cm">// 不认识的错误，继续往上抛</span></div>
+                <div class="code">&nbsp;&nbsp;}</div>
+                <div class="code">}</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== finally ==================== -->
+    <h2 class="section-title">三、finally：无论如何都要执行</h2>
+
+    <div class="grid">
+
+        <div class="card">
+            <h2>9. finally 的用途</h2>
+            <p class="note">无论 try 成功还是 catch 捕获，finally 块都会执行</p>
+            <div class="example">
+                <div class="code"><span class="kw">try</span> {</div>
+                <div class="code">&nbsp;&nbsp;<span class="cm">// 数据库查询</span></div>
+                <div class="code">} <span class="kw">catch</span> (err) {</div>
+                <div class="code">&nbsp;&nbsp;<span class="cm">// 处理错误</span></div>
+                <div class="code"><span class="kw">finally</span> {</div>
+                <div class="code">&nbsp;&nbsp;<span class="cm">// ✅ 无论成功失败，都要关闭数据库连接</span></div>
+                <div class="code">}</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 经典场景：隐藏 loading 动画</span></div>
+                <div class="code"><span class="kw">let</span> loading = <span class="kw">true</span></div>
+                <div class="code"><span class="kw">try</span> { <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/data'</span>) }</div>
+                <div class="code"><span class="kw">catch</span> (err) { <span class="fn">showError</span>(<span class="str">'请求失败'</span>) }</div>
+                <div class="code"><span class="kw">finally</span> { loading = <span class="kw">false</span> }  <span class="cm">// 无论成功失败都关 loading</span></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>10. finally 的两个特殊行为</h2>
+            <p class="note">finally 的 return 会覆盖 try/catch 中的 return</p>
+            <div class="example">
+                <div class="code"><span class="cm">// ⚠️ finally 中的 return 会"吃掉"try 的返回值</span></div>
+                <div class="code"><span class="kw">function</span> <span class="fn">demo</span>() {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">try</span> {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> <span class="str">'try 的返回值'</span></div>
+                <div class="code">&nbsp;&nbsp;} <span class="kw">finally</span> {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> <span class="str">'finally 覆盖了!'</span>  <span class="cm">// 不推荐</span></div>
+                <div class="code">&nbsp;&nbsp;}</div>
+                <div class="code">}</div>
+                <div class="code">demo()</div>
+                <div class="result">→ "finally 覆盖了!"（finally 的 return 赢了）</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== throw 与自定义错误 ==================== -->
+    <h2 class="section-title">四、throw 与自定义错误</h2>
+
+    <div class="grid">
+
+        <!-- throw 语法 -->
+        <div class="card">
+            <h2>11. throw 可以抛出任何值</h2>
+            <p class="note">虽然可以 throw 任何东西，但强烈建议只 throw Error 实例</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 技术上合法但不推荐</span></div>
+                <div class="code"><span class="kw">throw</span> <span class="str">'出错啦'</span>    <span class="cm">// throw 字符串</span></div>
+                <div class="code"><span class="kw">throw</span> <span class="num">42</span>         <span class="cm">// throw 数字</span></div>
+                <div class="code"><span class="kw">throw</span> { <span class="prop">code</span>: <span class="num">500</span> }  <span class="cm">// throw 对象</span></div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// ✅ 推荐：永远 throw Error 实例</span></div>
+                <div class="code"><span class="kw">throw</span> <span class="kw">new</span> <span class="fn">Error</span>(<span class="str">'有意义的错误描述'</span>)</div>
+                <div class="code"><span class="cm">// 因为 Error 实例自带 stack 堆栈信息，方便定位</span></div>
+            </div>
+        </div>
+
+        <!-- 自定义错误类 -->
+        <div class="card">
+            <h2>12. 自定义错误类<span class="badge key">实战</span></h2>
+            <p class="note">继承 Error 创建业务专属的错误类型，让错误更具语义</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 创建业务错误类</span></div>
+                <div class="code"><span class="kw">class</span> <span class="fn">ValidationError</span> <span class="kw">extends</span> <span class="fn">Error</span> {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">constructor</span>(message, field) {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">super</span>(message)</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">this</span>.<span class="prop">name</span> = <span class="str">'ValidationError'</span></div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">this</span>.<span class="prop">field</span> = field  <span class="cm">// 哪个字段出错了</span></div>
+                <div class="code">&nbsp;&nbsp;}</div>
+                <div class="code">}</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 使用自定义错误</span></div>
+                <div class="code"><span class="kw">if</span> (!email.<span class="fn">includes</span>(<span class="str">'@'</span>)) {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">throw</span> <span class="kw">new</span> <span class="fn">ValidationError</span>(<span class="str">'邮箱格式不正确'</span>, <span class="str">'email'</span>)</div>
+                <div class="code">}</div>
+                <div class="code"><span class="cm">// catch 时可以精确判断：</span></div>
+                <div class="code"><span class="kw">if</span> (err <span class="kw">instanceof</span> <span class="fn">ValidationError</span>) { ... }</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== 实战模式 ==================== -->
+    <h2 class="section-title">五、实战模式</h2>
+
+    <div class="grid">
+
+        <!-- JSON 解析 -->
+        <div class="card">
+            <h2>13. 模式一：安全 JSON 解析</h2>
+            <p class="note">用户输入/API 响应的 JSON 可能格式错误，必须 try/catch</p>
+            <div class="example">
+                <div class="code"><span class="kw">function</span> <span class="fn">safeJsonParse</span>(str, fallback = <span class="kw">null</span>) {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">try</span> {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> <span class="fn">JSON</span>.<span class="fn">parse</span>(str)</div>
+                <div class="code">&nbsp;&nbsp;} <span class="kw">catch</span> {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> fallback  <span class="cm">// 解析失败返回默认值</span></div>
+                <div class="code">&nbsp;&nbsp;}</div>
+                <div class="code">}</div>
+            </div>
+        </div>
+
+        <!-- 表单验证 -->
+        <div class="card">
+            <h2>14. 模式二：表单验证</h2>
+            <p class="note">收集所有验证错误，统一抛出</p>
+            <div class="example">
+                <div class="code"><span class="kw">function</span> <span class="fn">validate</span>(form) {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">const</span> errors = []</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">if</span> (!form.<span class="prop">name</span>) errors.<span class="fn">push</span>(<span class="str">'姓名必填'</span>)</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">if</span> (!form.<span class="prop">email</span>.<span class="fn">includes</span>(<span class="str">'@'</span>)) errors.<span class="fn">push</span>(<span class="str">'邮箱格式错误'</span>)</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">if</span> (errors.<span class="prop">length</span>) <span class="kw">throw</span> <span class="kw">new</span> <span class="fn">Error</span>(errors.<span class="fn">join</span>(<span class="str">'；'</span>))</div>
+                <div class="code">}</div>
+            </div>
+        </div>
+
+        <!-- 优雅降级 -->
+        <div class="card">
+            <h2>15. 模式三：优雅降级</h2>
+            <p class="note">某个功能崩了不应影响整体页面——前端重要原则</p>
+            <div class="example">
+                <div class="code"><span class="kw">try</span> {</div>
+                <div class="code">&nbsp;&nbsp;<span class="cm">// 尝试加载第三方组件（可能因为 CDN 挂掉失败）</span></div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">initChart</span>()</div>
+                <div class="code">} <span class="kw">catch</span> {</div>
+                <div class="code">&nbsp;&nbsp;<span class="cm">// 降级：显示一个"图表加载失败"的占位图</span></div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">showFallbackPlaceholder</span>()</div>
+                <div class="code">}</div>
+                <div class="result">→ 图表坏了，但页面其他功能正常使用</div>
+            </div>
+        </div>
+
+        <!-- 与 Promise 的关联 -->
+        <div class="card">
+            <h2>16. Promise 的 .catch() 对标 try/catch</h2>
+            <p class="note">理解了 try/catch，再看 Promise 的错误处理是一回事</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 同步错误处理</span></div>
+                <div class="code"><span class="kw">try</span> { <span class="fn">riskySync</span>() }</div>
+                <div class="code"><span class="kw">catch</span> (err) { <span class="cm">/* 处理 */</span> }</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 异步错误处理（Promise 版）</span></div>
+                <div class="code"><span class="fn">riskyAsync</span>()</div>
+                <div class="code">&nbsp;&nbsp;.<span class="fn">then</span>(result => <span class="cm">/* 成功 */</span>)</div>
+                <div class="code">&nbsp;&nbsp;.<span class="fn">catch</span>(err => <span class="cm">/* 处理 — 对标 try/catch */</span>)</div>
+                <div class="code">&nbsp;&nbsp;.<span class="fn">finally</span>(() => <span class="cm">/* 清理 — 和 finally 一样 */</span>)</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 异步错误处理（async/await 版 — 直接就是 try/catch!）</span></div>
+                <div class="code"><span class="kw">async</span> <span class="kw">function</span> <span class="fn">main</span>() {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">try</span> { <span class="kw">await</span> <span class="fn">riskyAsync</span>() }</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">catch</span> (err) { <span class="cm">/* 处理 */</span> }</div>
+                <div class="code">}</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('  错误处理 — try/catch/finally ✅');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+        // ========== 1. 错误的对象属性 ==========
+        console.group('📌 1. Error 对象的三个属性');
+        const err1 = new Error('用户名不能为空');
+        console.log('err.name   →', err1.name);
+        console.log('err.message →', err1.message);
+        console.log('err.stack  ↓');
+        console.log(err1.stack);
+        console.groupEnd();
+
+        // ========== 2. try/catch 基本用法 ==========
+        console.group('📌 2. try/catch 基本用法');
+        console.log('正常情况:');
+        try {
+            const data = JSON.parse('{"name":"张三"}');
+            console.log('  解析成功:', data);
+        } catch (err) {
+            console.log('  (不会到这里)');
+        }
+        console.log('异常情况:');
+        try {
+            JSON.parse('这不是合法的 JSON {');
+            console.log('  (不会到这里)');
+        } catch (err) {
+            console.log('  捕获到错误:', err.message);
+        }
+        console.log('✅ try/catch 之后的代码继续执行');
+        console.groupEnd();
+
+        // ========== 3. finally 演示 ==========
+        console.group('📌 3. finally 演示');
+        function tryFinally(shouldThrow) {
+            const result = { try: false, catch: false, finally: false };
+            try {
+                result.try = true;
+                if (shouldThrow) throw new Error('模拟出错');
+            } catch (e) {
+                result.catch = true;
+            } finally {
+                result.finally = true;  // 永远执行
+            }
+            return result;
+        }
+        console.log('不出错时:', tryFinally(false));
+        console.log('出错时:  ', tryFinally(true));
+        console.log('→ finally 在任何情况下都执行');
+        console.groupEnd();
+
+        // ========== 4. 错误类型判断 ==========
+        console.group('📌 4. 分类处理不同错误');
+        function classifyError(operation) {
+            try {
+                if (operation === 'type') null.name;
+                if (operation === 'ref') console.log(undefinedVar);
+                if (operation === 'range') [].length = -1;
+            } catch (err) {
+                if (err instanceof TypeError) console.log('  → TypeError: 访问了不存在的东西');
+                else if (err instanceof ReferenceError) console.log('  → ReferenceError: 变量未定义');
+                else if (err instanceof RangeError) console.log('  → RangeError: 数值越界');
+                else console.log('  → 其他错误:', err.message);
+            }
+        }
+        classifyError('type');
+        classifyError('ref');
+        classifyError('range');
+        console.groupEnd();
+
+        // ========== 5. 自定义错误 ==========
+        console.group('📌 5. 自定义错误类');
+        class ValidationError extends Error {
+            constructor(message, field) {
+                super(message);
+                this.name = 'ValidationError';
+                this.field = field;
+            }
+        }
+        try {
+            throw new ValidationError('邮箱格式不正确', 'email');
+        } catch (err) {
+            console.log('错误类型:', err.name);
+            console.log('错误消息:', err.message);
+            console.log('出错字段:', err.field);
+            console.log('是否是 ValidationError:', err instanceof ValidationError);
+        }
+        console.groupEnd();
+
+        // ========== 6. 安全 JSON 解析 ==========
+        console.group('📌 6. 实战：安全 JSON 解析');
+        function safeJsonParse(str, fallback = null) {
+            try { return JSON.parse(str); }
+            catch { return fallback; }
+        }
+        console.log('合法 JSON:', safeJsonParse('{"x":1}'));
+        console.log('非法 JSON:', safeJsonParse('bad{{{json'), '(返回 null)');
+        console.log('非法 + 自定义默认值:', safeJsonParse('bad', '默认值'));
+        console.groupEnd();
+
+        // ========== 7. 嵌套 try/catch ==========
+        console.group('📌 7. 错误冒泡');
+        function inner() { throw new Error('内部错误'); }
+        function middle() { inner(); }
+        function outer() {
+            try {
+                middle();
+            } catch (err) {
+                console.log('在 outer 中捕获到内部抛出的错误');
+                console.log('错误来自:', err.stack.split('\n')[1]?.trim());
+            }
+        }
+        outer();
+        console.log('→ 错误会沿着调用栈一直冒泡，直到被 catch 捕获');
+        console.groupEnd();
+
+        console.log('\n💡 核心总结：');
+        console.log('  1. throw = 主动发出"出错了"的信号');
+        console.log('  2. try/catch = 主动接收信号，防止程序崩溃');
+        console.log('  3. finally = 无论成功失败都执行的清理代码');
+        console.log('  4. Error 对象三大属性：name / message / stack');
+        console.log('  5. 可以自定义错误类（继承 Error）区分业务错误类型');
+        console.log('  6. 未捕获的错误会沿调用栈冒泡，直到被 catch 或崩溃');
+        console.log('  7. Promise 的 .catch() 和 async/await 的 try/catch 完全对标');
+    </script>
+</body>
+</html>

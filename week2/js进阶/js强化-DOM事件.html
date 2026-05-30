@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOM 事件层级 · 事件流 · 事件委托</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f172a; color: #e2e8f0; padding: 24px; }
+        h1 { text-align: center; margin-bottom: 8px; font-size: 28px; color: #facc15; }
+        .subtitle { text-align: center; color: #94a3b8; margin-bottom: 32px; font-size: 14px; }
+        .section-title { font-size: 22px; color: #38bdf8; margin: 32px 0 16px; padding-bottom: 8px; border-bottom: 2px solid #334155; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(460px, 1fr)); gap: 20px; }
+        .card { background: #1e293b; border-radius: 12px; padding: 20px; border: 1px solid #334155; }
+        .card h2 { font-size: 18px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #334155; }
+        .example { background: #0f172a; border-radius: 8px; padding: 12px 16px; margin-bottom: 10px; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 13px; }
+        .example .code { color: #f8fafc; margin-bottom: 2px; }
+        .example .code .kw { color: #c084fc; }
+        .example .code .str { color: #34d399; }
+        .example .code .fn { color: #38bdf8; }
+        .example .code .cm { color: #64748b; }
+        .example .code .num { color: #fb923c; }
+        .example .code .prop { color: #facc15; }
+        .example .result { color: #fbbf24; margin-top: 6px; padding-top: 6px; border-top: 1px dashed #334155; }
+        .note { font-size: 12px; color: #94a3b8; margin-top: 4px; font-style: italic; }
+        .highlight { color: #facc15; }
+
+        /* 事件流可视化 */
+        .flow-demo { background: #1a2332; border-radius: 12px; padding: 24px; margin: 20px 0; }
+        .flow-box { padding: 20px; border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.3s; margin: 0 auto; }
+        .flow-box.grandparent { background: #1e3a5f; border: 3px solid #3b82f6; width: 420px; }
+        .flow-box.parent { background: #1e3a3f; border: 3px solid #14b8a6; width: 280px; margin-top: 16px; }
+        .flow-box.child { background: #3a1e3f; border: 3px solid #d946ef; width: 160px; margin-top: 16px; }
+        .flow-box:hover { filter: brightness(1.2); }
+
+        .flow-log { background: #0f172a; border-radius: 8px; padding: 12px; margin-top: 16px; font-family: 'Cascadia Code', monospace; font-size: 13px; max-height: 260px; overflow-y: auto; }
+        .flow-log .entry { padding: 4px 0; border-bottom: 1px solid #1e293b; animation: fadeIn 0.3s; }
+        .flow-log .entry .cap { color: #f87171; }
+        .flow-log .entry .target { color: #facc15; }
+        .flow-log .entry .bubble { color: #34d399; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+
+        .controls { display: flex; gap: 10px; flex-wrap: wrap; margin: 16px 0; justify-content: center; }
+        .controls label { display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; }
+        .controls button { padding: 6px 14px; border-radius: 6px; border: 1px solid #475569; background: #1d4ed8; color: #e2e8f0; cursor: pointer; font-family: inherit; font-size: 13px; }
+        .controls button:hover { background: #2563eb; }
+    </style>
+</head>
+<body>
+    <h1>DOM 事件层级 · 事件流 · 事件委托</h1>
+    <p class="subtitle">理解事件的本质：从 HTML 属性到 addEventListener，从捕获到冒泡</p>
+
+    <!-- ==================== DOM 事件级别 ==================== -->
+    <h2 class="section-title">一、DOM 事件级别</h2>
+    <p class="note" style="margin-bottom:16px;">JS 事件绑定方式经历了从"写在 HTML 里"到"addEventListener"的演变</p>
+
+    <div class="grid">
+
+        <!-- DOM Level 0 -->
+        <div class="card">
+            <h2>1. DOM Level 0：HTML 属性绑定</h2>
+            <p class="note">最早的方式——直接在 HTML 标签上写事件，或给 DOM 属性赋值</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 方式一：HTML 内联（不推荐——耦合太强）</span></div>
+                <div class="code">&lt;button <span class="prop">onclick</span>=<span class="str">"alert('hello')"</span>&gt;点击&lt;/button&gt;</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 方式二：DOM 属性赋值（缺点在后面）</span></div>
+                <div class="code">btn.<span class="prop">onclick</span> = <span class="kw">function</span>() {</div>
+                <div class="code">&nbsp;&nbsp;console.<span class="fn">log</span>(<span class="str">'点击了'</span>)</div>
+                <div class="code">}</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 方式三：通过 setAttribute（不推荐）</span></div>
+                <div class="code">btn.<span class="fn">setAttribute</span>(<span class="str">'onclick'</span>, <span class="str">'fn()'</span>)</div>
+            </div>
+        </div>
+
+        <!-- DOM Level 0 的局限 -->
+        <div class="card">
+            <h2>2. DOM Level 0 的致命缺陷</h2>
+            <p class="note">同一个事件只能绑定一个处理函数，后者会覆盖前者</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 第一个处理函数</span></div>
+                <div class="code">btn.<span class="prop">onclick</span> = () => console.<span class="fn">log</span>(<span class="str">'处理函数 A'</span>)</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 第二个处理函数 → 把 A 覆盖了！</span></div>
+                <div class="code">btn.<span class="prop">onclick</span> = () => console.<span class="fn">log</span>(<span class="str">'处理函数 B'</span>)</div>
+                <div class="result">→ 点击后只输出"处理函数 B"，A 丢了!</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 解除绑定也只能设为 null</span></div>
+                <div class="code">btn.<span class="prop">onclick</span> = <span class="kw">null</span></div>
+            </div>
+        </div>
+
+        <!-- DOM Level 2 -->
+        <div class="card">
+            <h2>3. DOM Level 2：addEventListener</h2>
+            <p class="note">可以绑定多个处理函数，还能控制捕获/冒泡阶段</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 绑定事件 — 不会覆盖</span></div>
+                <div class="code">btn.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, handlerA)</div>
+                <div class="code">btn.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, handlerB)</div>
+                <div class="result">→ 点击后依次执行 handlerA、handlerB</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 解除绑定 — 必须用同一个函数引用</span></div>
+                <div class="code">btn.<span class="fn">removeEventListener</span>(<span class="str">'click'</span>, handlerA)</div>
+                <div class="code"><span class="cm">// ⚠️ 匿名函数无法移除！</span></div>
+            </div>
+        </div>
+
+        <!-- DOM Level 3 -->
+        <div class="card">
+            <h2>4. DOM Level 3：更多事件类型</h2>
+            <p class="note">Level 3 主要扩展了事件种类，没有改变事件绑定机制</p>
+            <div class="example">
+                <div class="code"><span class="cm">// Level 2 已有（核心事件）</span></div>
+                <div class="code">click, keydown, submit, focus, blur, load</div>
+                <div class="code">mouseover, mouseout, mousedown, mouseup</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// Level 3 新增（更丰富的交互事件）</span></div>
+                <div class="code"><span class="str">'wheel'</span>       — 滚轮事件（替代 mousewheel）</div>
+                <div class="code"><span class="str">'input'</span>      — 输入实时触发（替代 keypress 场景）</div>
+                <div class="code"><span class="str">'transitionend'</span> — CSS 过渡结束</div>
+                <div class="code"><span class="str">'animationend'</span>  — CSS 动画结束</div>
+                <div class="code"><span class="str">'pointerdown'</span>   — 指针按下（统一鼠标+触摸）</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== 事件流 ==================== -->
+    <h2 class="section-title">二、事件流（Event Flow）</h2>
+    <p class="note" style="margin-bottom:16px;">事件在 DOM 树中的传播路径：捕获阶段 → 目标阶段 → 冒泡阶段</p>
+
+    <div class="grid">
+
+        <!-- 三阶段模型 -->
+        <div class="card">
+            <h2>1. 事件的三个阶段</h2>
+            <p class="note">每次事件触发，都经历三个阶段的传播</p>
+            <div class="example">
+                <div class="code"><span class="str">① 捕获阶段（Capture）</span></div>
+                <div class="code"><span class="cm">window → document → html → body → ... → 目标父元素</span></div>
+                <div class="code"><span class="str">② 目标阶段（Target）</span></div>
+                <div class="code"><span class="cm">到达实际触发事件的元素</span></div>
+                <div class="code"><span class="str">③ 冒泡阶段（Bubble）</span></div>
+                <div class="code"><span class="cm">目标父元素 → ... → body → html → document → window</span></div>
+            </div>
+        </div>
+
+        <!-- addEventListener 第三参数 -->
+        <div class="card">
+            <h2>2. 捕获 vs 冒泡（addEventListener 第三参数）</h2>
+            <p class="note">默认在冒泡阶段触发；设 true 则在捕获阶段触发</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 默认：冒泡阶段触发（第三个参数 false/省略）</span></div>
+                <div class="code">el.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, fn)</div>
+                <div class="code">el.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, fn, <span class="kw">false</span>)</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 捕获阶段触发</span></div>
+                <div class="code">el.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, fn, <span class="kw">true</span>)</div>
+                <div class="code"><span class="cm">// 或写成对象形式（推荐）</span></div>
+                <div class="code">el.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, fn, { <span class="prop">capture</span>: <span class="kw">true</span> })</div>
+            </div>
+        </div>
+
+        <!-- 事件冒泡 -->
+        <div class="card">
+            <h2>3. 事件冒泡（Bubbling）详解</h2>
+            <p class="note">事件从最深的元素向上传播，每一层父元素都能监听到</p>
+            <div class="example">
+                <div class="code"><span class="cm">// HTML 结构：</span></div>
+                <div class="code"><span class="cm">// &lt;div class="parent"&gt;</span></div>
+                <div class="code"><span class="cm">//   &lt;button class="child"&gt;点我&lt;/button&gt;</span></div>
+                <div class="code"><span class="cm">// &lt;/div&gt;</span></div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 点击 button 时，click 事件会冒泡：</span></div>
+                <div class="code"><span class="cm">// button → div.parent → body → html → document</span></div>
+                <div class="code">child.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, () => console.<span class="fn">log</span>(<span class="str">'子元素'</span>))</div>
+                <div class="code">parent.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, () => console.<span class="fn">log</span>(<span class="str">'父元素也触发!'</span>))</div>
+            </div>
+        </div>
+
+        <!-- stopPropagation -->
+        <div class="card">
+            <h2>4. stopPropagation — 阻止传播</h2>
+            <p class="note">阻止事件继续向上冒泡，但不阻止同一元素上的其他监听器</p>
+            <div class="example">
+                <div class="code">child.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, (e) => {</div>
+                <div class="code">&nbsp;&nbsp;e.<span class="fn">stopPropagation</span>()</div>
+                <div class="code">&nbsp;&nbsp;console.<span class="fn">log</span>(<span class="str">'只在子元素触发，父元素收不到'</span>)</div>
+                <div class="code">})</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// stopImmediatePropagation 更彻底：</span></div>
+                <div class="code"><span class="cm">// 阻止冒泡 + 阻止同一元素上后续监听器的执行</span></div>
+                <div class="code">el.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, (e) => {</div>
+                <div class="code">&nbsp;&nbsp;e.<span class="fn">stopImmediatePropagation</span>()</div>
+                <div class="code">})</div>
+            </div>
+        </div>
+
+        <!-- preventDefault -->
+        <div class="card">
+            <h2>5. preventDefault — 阻止默认行为</h2>
+            <p class="note">阻止浏览器默认行为，但不阻止事件传播（重点！）</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 阻止 a 标签跳转</span></div>
+                <div class="code">link.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, (e) => {</div>
+                <div class="code">&nbsp;&nbsp;e.<span class="fn">preventDefault</span>()  <span class="cm">// a 不会跳转</span></div>
+                <div class="code">&nbsp;&nbsp;<span class="cm">// 但事件仍会冒泡到父元素！</span></div>
+                <div class="code">})</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 常见场景：</span></div>
+                <div class="code"><span class="cm">// - 阻止表单提交刷新页面</span></div>
+                <div class="code"><span class="cm">// - 阻止右键菜单弹出</span></div>
+                <div class="code"><span class="cm">// - 阻止 checkbox 被勾选</span></div>
+            </div>
+        </div>
+
+        <!-- 不冒泡的事件 -->
+        <div class="card">
+            <h2>6. 哪些事件不冒泡？</h2>
+            <p class="note">大部分事件冒泡，但有一批常用事件不冒泡</p>
+            <div class="example">
+                <div class="code"><span class="cm">// ❌ 不冒泡的事件：</span></div>
+                <div class="code">focus, blur, load, unload, error</div>
+                <div class="code">mouseenter, mouseleave</div>
+                <div class="code">DOMContentLoaded</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// ✅ 冒泡版本：</span></div>
+                <div class="code">focus → <span class="prop">focusin</span>（冒泡）</div>
+                <div class="code">blur  → <span class="prop">focusout</span>（冒泡）</div>
+                <div class="code">mouseenter → <span class="prop">mouseover</span>（冒泡）</div>
+                <div class="code">mouseleave → <span class="prop">mouseout</span>（冒泡）</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== 事件流可视化演示 ==================== -->
+    <h2 class="section-title">三、事件流可视化演示</h2>
+    <p class="note" style="margin-bottom:12px;">嵌套的三层盒子，点击最里层的紫色盒子，观察事件传播顺序</p>
+
+    <div class="controls">
+        <label><input type="checkbox" id="capToggle" checked> 启用捕获阶段</label>
+        <label><input type="checkbox" id="bubToggle" checked> 启用冒泡阶段</label>
+        <button id="clearFlow">清空日志</button>
+    </div>
+
+    <div class="flow-demo">
+        <div class="flow-box grandparent" id="grandParent">
+            👴 祖父元素（Document → 到此监听）
+            <div class="flow-box parent" id="parent">
+                👨 父元素
+                <div class="flow-box child" id="child">
+                    👶 目标元素（点我）
+                </div>
+            </div>
+        </div>
+        <div class="flow-log" id="flowLog">
+            <div class="entry">等待点击紫色盒子...</div>
+        </div>
+    </div>
+
+    <!-- ==================== 事件委托 ==================== -->
+    <h2 class="section-title">四、事件委托（Event Delegation）</h2>
+    <p class="note" style="margin-bottom:16px;">利用事件冒泡，在父元素上统一监听——DOM 事件最重要的实战技巧之一</p>
+
+    <div class="grid">
+
+        <!-- 事件委托原理 -->
+        <div class="card">
+            <h2>1. 为什么要事件委托？</h2>
+            <p class="note">动态添加的元素无法预先绑定事件，事件委托解决这个问题</p>
+            <div class="example">
+                <div class="code"><span class="cm">// ❌ 问题：新添加的元素没有事件</span></div>
+                <div class="code"><span class="kw">document</span>.<span class="fn">querySelectorAll</span>(<span class="str">'li'</span>).<span class="fn">forEach</span>(li => {</div>
+                <div class="code">&nbsp;&nbsp;li.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, handler)</div>
+                <div class="code">})</div>
+                <div class="code"><span class="cm">// 后来 append 的 li 没有事件！</span></div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// ✅ 事件委托：在父元素统一监听</span></div>
+                <div class="code">ul.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, (e) => {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">if</span> (e.<span class="prop">target</span>.<span class="fn">matches</span>(<span class="str">'li'</span>)) handler(e)</div>
+                <div class="code">})</div>
+                <div class="result">→ 动态添加的 li 也能响应!</div>
+            </div>
+        </div>
+
+        <!-- 事件委托关键 -->
+        <div class="card">
+            <h2>2. 事件委托的三个关键点</h2>
+            <p class="note">理解 target vs currentTarget，以及如何精确匹配</p>
+            <div class="example">
+                <div class="code"><span class="cm">// e.target — 实际点击的元素（最深层）</span></div>
+                <div class="code"><span class="cm">// e.currentTarget — 绑定事件的元素（即 this）</span></div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 1. matches() — 精确匹配选择器</span></div>
+                <div class="code"><span class="kw">if</span> (e.<span class="prop">target</span>.<span class="fn">matches</span>(<span class="str">'.btn'</span>)) { ... }</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 2. closest() — 向上查找最近的匹配元素</span></div>
+                <div class="code"><span class="kw">const</span> btn = e.<span class="prop">target</span>.<span class="fn">closest</span>(<span class="str">'.btn'</span>)</div>
+                <div class="code"><span class="kw">if</span> (btn) { ... }  <span class="cm">// 点击 .btn 内部子元素也能匹配</span></div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 3. contains() — 判断是否包含某元素</span></div>
+                <div class="code"><span class="kw">if</span> (el.<span class="fn">contains</span>(e.<span class="prop">target</span>)) { ... }</div>
+            </div>
+        </div>
+
+        <!-- 事件委托实战 -->
+        <div class="card">
+            <h2>3. 事件委托实战模板</h2>
+            <p class="note">几乎所有动态列表都用这个模式</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 通用委托模板</span></div>
+                <div class="code">container.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, (e) => {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">const</span> target = e.<span class="prop">target</span>.<span class="fn">closest</span>(<span class="str">'.item'</span>)</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">if</span> (!target) <span class="kw">return</span>  <span class="cm">// 不是我们关心的元素</span></div>
+                <div class="code">&nbsp;&nbsp;<span class="cm">// 通过 data-* 获取数据</span></div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">const</span> id = target.<span class="prop">dataset</span>.<span class="prop">id</span></div>
+                <div class="code">&nbsp;&nbsp;console.<span class="fn">log</span>(<span class="str">'点击了:'</span>, id)</div>
+                <div class="code">})</div>
+            </div>
+        </div>
+
+        <!-- 委托演示区 -->
+        <div class="card">
+            <h2>4. 动手试试 ↓</h2>
+            <div style="display:flex; gap:10px; align-items:center; margin-bottom:12px;">
+                <button id="addItem" style="padding:6px 14px; border-radius:6px; border:1px solid #3b82f6; background:#1d4ed8; color:#e2e8f0; cursor:pointer;">+ 添加项目</button>
+                <span style="font-size:12px; color:#94a3b8;">点击添加，然后点击下面的项目试试</span>
+            </div>
+            <div id="delegationDemo" style="display:flex; flex-direction:column; gap:6px; max-height:200px; overflow-y:auto;">
+                <button class="demo-item" data-id="1" style="padding:8px 12px; border-radius:6px; border:1px solid #475569; background:#1e293b; color:#e2e8f0; cursor:pointer; text-align:left;">
+                    项目 1（点击我）
+                </button>
+            </div>
+        </div>
+
+        <!-- stopPropagation 陷阱 -->
+        <div class="card">
+            <h2>5. stopPropagation 对委托的影响</h2>
+            <p class="note">在委托元素内部的某个子元素上调 stopPropagation 会导致委托失效</p>
+            <div class="example">
+                <div class="code"><span class="cm">// ❌ 危险：内部停止冒泡，委托监听器收不到</span></div>
+                <div class="code">innerBtn.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, (e) => {</div>
+                <div class="code">&nbsp;&nbsp;e.<span class="fn">stopPropagation</span>()  <span class="cm">// 父元素的委托失效！</span></div>
+                <div class="code">})</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// ✅ 解决：把委托设在捕获阶段</span></div>
+                <div class="code">parent.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, handler, <span class="kw">true</span>)</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== addEventListener 高级选项 ==================== -->
+    <h2 class="section-title">五、addEventListener 第三个参数（高级选项）</h2>
+
+    <div class="grid">
+
+        <!-- once -->
+        <div class="card">
+            <h2>1. once — 只执行一次</h2>
+            <p class="note">触发一次后自动移除，无需手动 removeEventListener</p>
+            <div class="example">
+                <div class="code">el.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, () => {</div>
+                <div class="code">&nbsp;&nbsp;console.<span class="fn">log</span>(<span class="str">'只触发一次!'</span>)</div>
+                <div class="code">}, { <span class="prop">once</span>: <span class="kw">true</span> })</div>
+                <div class="result">→ 第二次点击不会有任何反应</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 实战：一次性加载动画结束回调</span></div>
+                <div class="code">el.<span class="fn">addEventListener</span>(<span class="str">'animationend'</span>, cleanup, { <span class="prop">once</span>: <span class="kw">true</span> })</div>
+            </div>
+        </div>
+
+        <!-- passive -->
+        <div class="card">
+            <h2>2. passive — 不调用 preventDefault</h2>
+            <p class="note">告诉浏览器"我不会阻止默认行为"，提升滚动性能</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 移动端滚动优化关键！</span></div>
+                <div class="code">el.<span class="fn">addEventListener</span>(<span class="str">'touchstart'</span>, handler, { <span class="prop">passive</span>: <span class="kw">true</span> })</div>
+                <div class="code">el.<span class="fn">addEventListener</span>(<span class="str">'wheel'</span>, handler, { <span class="prop">passive</span>: <span class="kw">true</span> })</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// ⚠️ passive 和 preventDefault 不能共存</span></div>
+                <div class="code"><span class="cm">// 设了 passive: true 再调 e.preventDefault() → 无效+警告</span></div>
+                <div class="code"><span class="cm">// Chrome 默认将 touchstart/wheel 设为 passive</span></div>
+            </div>
+        </div>
+
+        <!-- signal -->
+        <div class="card">
+            <h2>3. signal — AbortController 批量移除</h2>
+            <p class="note">一次性移除多个事件监听器，比逐个 removeEventListener 优雅</p>
+            <div class="example">
+                <div class="code"><span class="kw">const</span> controller = <span class="kw">new</span> <span class="fn">AbortController</span>()</div>
+                <div class="code">el.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, fn1, { <span class="prop">signal</span>: controller.<span class="prop">signal</span> })</div>
+                <div class="code">el.<span class="fn">addEventListener</span>(<span class="str">'input'</span>, fn2, { <span class="prop">signal</span>: controller.<span class="prop">signal</span> })</div>
+                <div class="code"><span class="cm">// 一键全部移除！</span></div>
+                <div class="code">controller.<span class="fn">abort</span>()</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 实战：组件销毁时清理所有事件</span></div>
+                <div class="code"><span class="kw">class</span> <span class="fn">Component</span> {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">constructor</span>() {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">this</span>.<span class="prop">controller</span> = <span class="kw">new</span> <span class="fn">AbortController</span>()</div>
+                <div class="code">&nbsp;&nbsp;}</div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">destroy</span>() { <span class="kw">this</span>.<span class="prop">controller</span>.<span class="fn">abort</span>() }</div>
+                <div class="code">}</div>
+            </div>
+        </div>
+
+        <!-- 自定义事件 -->
+        <div class="card">
+            <h2>4. 自定义事件 CustomEvent</h2>
+            <p class="note">创建自己的事件类型，解耦模块间通信</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 创建自定义事件</span></div>
+                <div class="code"><span class="kw">const</span> event = <span class="kw">new</span> <span class="fn">CustomEvent</span>(<span class="str">'user:login'</span>, {</div>
+                <div class="code">&nbsp;&nbsp;<span class="prop">detail</span>: { <span class="prop">id</span>: <span class="num">1</span>, <span class="prop">name</span>: <span class="str">'张三'</span> }</div>
+                <div class="code">})</div>
+                <div class="code">el.<span class="fn">dispatchEvent</span>(event)</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 监听自定义事件</span></div>
+                <div class="code">el.<span class="fn">addEventListener</span>(<span class="str">'user:login'</span>, (e) => {</div>
+                <div class="code">&nbsp;&nbsp;console.<span class="fn">log</span>(<span class="str">'登录用户:'</span>, e.<span class="prop">detail</span>.<span class="prop">name</span>)</div>
+                <div class="code">})</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ========== 事件流可视化 ==========
+        const capToggle = document.getElementById('capToggle');
+        const bubToggle = document.getElementById('bubToggle');
+        const flowLog = document.getElementById('flowLog');
+        const grandParent = document.getElementById('grandParent');
+        const parent = document.getElementById('parent');
+        const child = document.getElementById('child');
+
+        function ts() { return new Date().toTimeString().slice(0, 8); }
+
+        function addFlowLog(text, cls) {
+            const entry = document.createElement('div');
+            entry.className = 'entry';
+            entry.innerHTML = `<span style="color:#64748b;margin-right:8px;">${ts()}</span><span class="${cls}">${text}</span>`;
+            flowLog.prepend(entry);
+            while (flowLog.children.length > 20) flowLog.lastChild.remove();
+        }
+
+        function bindFlowEvents() {
+            [grandParent, parent, child].forEach(el => {
+                // 移除旧事件（简化处理：用 cloneNode）
+                const clone = el.cloneNode(true);
+                el.parentNode.replaceChild(clone, el);
+            });
+            // 重新获取引用
+            const gp = document.getElementById('grandParent');
+            const p = document.getElementById('parent');
+            const c = document.getElementById('child');
+
+            const elements = [
+                { el: gp, name: '祖父', color: '#3b82f6' },
+                { el: p, name: '父', color: '#14b8a6' },
+                { el: c, name: '目标', color: '#facc15' },
+            ];
+
+            elements.forEach(({ el, name, color }) => {
+                // 点击处理
+                el.addEventListener('click', function (e) {
+                    if (e.eventPhase === Event.AT_TARGET) {
+                        addFlowLog(`🎯 ${name} — 目标阶段`, 'target');
+                    }
+                });
+
+                if (capToggle.checked) {
+                    el.addEventListener('click', function (e) {
+                        if (e.eventPhase === Event.CAPTURING_PHASE) {
+                            addFlowLog(`⬇️ ${name} — 捕获阶段`, 'cap');
+                        }
+                    }, true); // 捕获阶段
+                }
+
+                if (bubToggle.checked) {
+                    el.addEventListener('click', function (e) {
+                        if (e.eventPhase === Event.BUBBLING_PHASE) {
+                            addFlowLog(`⬆️ ${name} — 冒泡阶段`, 'bubble');
+                        }
+                    }, false); // 冒泡阶段
+                }
+            });
+        }
+
+        bindFlowEvents();
+
+        capToggle.addEventListener('change', () => {
+            bindFlowEvents();
+            addFlowLog('⚙️ 已更新捕获设置', 'cap');
+        });
+        bubToggle.addEventListener('change', () => {
+            bindFlowEvents();
+            addFlowLog('⚙️ 已更新冒泡设置', 'bubble');
+        });
+        document.getElementById('clearFlow').addEventListener('click', () => {
+            flowLog.innerHTML = '<div class="entry">已清空，点击紫色盒子重新演示...</div>';
+        });
+
+        // ========== 事件委托演示 ==========
+        let itemCount = 1;
+        const delegationDemo = document.getElementById('delegationDemo');
+
+        // 事件委托：父元素统一监听所有 demo-item
+        delegationDemo.addEventListener('click', (e) => {
+            const item = e.target.closest('.demo-item');
+            if (!item) return;
+            const id = item.dataset.id;
+            console.log('点击了项目:', id);
+            alert(`点击了项目 ${id}`);
+        });
+
+        document.getElementById('addItem').addEventListener('click', () => {
+            itemCount++;
+            const btn = document.createElement('button');
+            btn.className = 'demo-item';
+            btn.dataset.id = itemCount;
+            btn.textContent = `项目 ${itemCount}（动态添加，点击我）`;
+            btn.style.cssText = 'padding:8px 12px; border-radius:6px; border:1px solid #475569; background:#1e293b; color:#e2e8f0; cursor:pointer; text-align:left;';
+            delegationDemo.appendChild(btn);
+        });
+
+        // ========== 页面级委托示例 ==========
+        // 利用冒泡做一个全局点击监控
+        document.addEventListener('click', (e) => {
+            // 只记录有 data-track 属性的元素
+            const tracked = e.target.closest('[data-track]');
+            if (tracked) {
+                console.log('📊 追踪到点击:', tracked.dataset.track, tracked);
+            }
+        });
+
+        // ========== 控制台总结 ==========
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('  DOM 事件层级 · 事件流 · 事件委托 ✅');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('');
+        console.log('📌 事件级别演变:');
+        console.log('  Level 0 (1996): onclick 属性 / element.onclick = fn');
+        console.log('  Level 2 (2000): addEventListener / removeEventListener');
+        console.log('  Level 3 (2004~): 更多事件类型 (wheel, input, transitionend...)');
+        console.log('');
+        console.log('📌 事件流三阶段:');
+        console.log('  ① 捕获: window → document → ... → 目标父元素');
+        console.log('  ② 目标: 到达触发事件的元素');
+        console.log('  ③ 冒泡: 目标父元素 → ... → document → window');
+        console.log('');
+        console.log('📌 核心 API:');
+        console.log('  el.addEventListener(type, fn, { capture, once, passive, signal })');
+        console.log('  el.removeEventListener(type, fn)');
+        console.log('  e.stopPropagation()       — 阻止冒泡');
+        console.log('  e.stopImmediatePropagation() — 阻止冒泡+同级监听器');
+        console.log('  e.preventDefault()        — 阻止默认行为');
+        console.log('  e.target                  — 实际触发的元素');
+        console.log('  e.currentTarget           — 绑定监听器的元素');
+        console.log('');
+        console.log('📌 事件委托核心公式:');
+        console.log('  parent.addEventListener("click", e => {');
+        console.log('    const item = e.target.closest(".item");');
+        console.log('    if (!item) return;');
+        console.log('    // 处理 item...');
+        console.log('  });');
+        console.log('');
+        console.log('💡 面试常见问题:');
+        console.log('  - 事件流三个阶段是什么？');
+        console.log('  - stopPropagation vs stopImmediatePropagation 区别？');
+        console.log('  - 事件委托原理和优点？');
+        console.log('  - target 和 currentTarget 的区别？');
+        console.log('  - 哪些事件不冒泡？');
+        console.log('  - preventDefault vs stopPropagation 区别？');
+    </script>
+</body>
+</html>

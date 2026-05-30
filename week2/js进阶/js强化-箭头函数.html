@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>箭头函数深度解读</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f172a; color: #e2e8f0; padding: 24px; }
+        h1 { text-align: center; margin-bottom: 8px; font-size: 28px; color: #facc15; }
+        .subtitle { text-align: center; color: #94a3b8; margin-bottom: 32px; font-size: 14px; }
+        .section-title { font-size: 22px; color: #38bdf8; margin: 32px 0 16px; padding-bottom: 8px; border-bottom: 2px solid #334155; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(460px, 1fr)); gap: 20px; }
+
+        .card { background: #1e293b; border-radius: 12px; padding: 20px; border: 1px solid #334155; }
+        .card h2 { font-size: 18px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #334155; }
+        .card h2 .badge { font-size: 12px; padding: 2px 8px; border-radius: 99px; margin-left: 8px; vertical-align: middle; }
+        .badge.important { background: #7f1d1d; color: #fca5a5; }
+        .badge.tip { background: #14532d; color: #86efac; }
+
+        .example { background: #0f172a; border-radius: 8px; padding: 12px 16px; margin-bottom: 10px; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 13px; }
+        .example .code { color: #f8fafc; margin-bottom: 2px; }
+        .example .code .kw { color: #c084fc; }
+        .example .code .str { color: #34d399; }
+        .example .code .fn { color: #38bdf8; }
+        .example .code .cm { color: #64748b; }
+        .example .code .num { color: #fb923c; }
+        .example .code .prop { color: #facc15; }
+        .example .code .err { color: #f87171; }
+        .example .result { color: #fbbf24; margin-top: 6px; padding-top: 6px; border-top: 1px dashed #334155; }
+        .note { font-size: 12px; color: #94a3b8; margin-top: 4px; font-style: italic; }
+        .highlight { color: #facc15; font-weight: 600; }
+
+        /* 对比表格 */
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+        th { text-align: left; padding: 8px 10px; background: #0f172a; color: #facc15; border-bottom: 2px solid #334155; }
+        td { padding: 8px 10px; border-bottom: 1px solid #1e293b; }
+        tr:hover td { background: #1a2332; }
+        .td-bad { color: #f87171; }
+        .td-good { color: #86efac; }
+
+        /* 演示区 */
+        .demo-area { background: #1e293b; border: 2px dashed #475569; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center; }
+        .demo-area button { padding: 8px 16px; border-radius: 6px; border: 1px solid #3b82f6; background: #1d4ed8; color: #e2e8f0; cursor: pointer; font-family: inherit; font-size: 14px; margin: 4px; }
+        .demo-area button:hover { background: #2563eb; }
+        .demo-log { background: #0f172a; border-radius: 8px; padding: 12px; margin-top: 12px; font-family: 'Cascadia Code', monospace; font-size: 13px; max-height: 180px; overflow-y: auto; text-align: left; }
+        .demo-log .entry { padding: 3px 0; border-bottom: 1px solid #1e293b; }
+    </style>
+</head>
+<body>
+    <h1>箭头函数深度解读</h1>
+    <p class="subtitle">语法糖只是表面，核心是：没有自己的 this、arguments、prototype</p>
+
+    <!-- ==================== 基础语法 ==================== -->
+    <h2 class="section-title">一、基础语法</h2>
+
+    <div class="grid">
+
+        <!-- 语法变体 -->
+        <div class="card">
+            <h2>1. 语法变体</h2>
+            <p class="note">从最简到最完整的四种写法</p>
+            <div class="example">
+                <div class="code"><span class="cm">// ① 单参数 + 单表达式（最简）</span></div>
+                <div class="code">x => x * <span class="num">2</span></div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// ② 多参数需要括号</span></div>
+                <div class="code">(a, b) => a + b</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// ③ 函数体多行需要 {} + return</span></div>
+                <div class="code">(a, b) => {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">const</span> sum = a + b</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">return</span> sum * <span class="num">2</span></div>
+                <div class="code">}</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// ④ 返回对象字面量需要括号包起来</span></div>
+                <div class="code">(name, age) => ({ name, age })</div>
+                <div class="code"><span class="cm">// 不加括号 {} 会被当成函数体！</span></div>
+            </div>
+        </div>
+
+        <!-- 隐式返回 vs 显式返回 -->
+        <div class="card">
+            <h2>2. 隐式返回 vs 显式返回</h2>
+            <p class="note">省略 {} 时自动返回表达式的值（也叫 implicit return）</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 隐式返回：省略 {} 和 return</span></div>
+                <div class="code"><span class="kw">const</span> double = n => n * <span class="num">2</span></div>
+                <div class="code">double(<span class="num">5</span>)</div>
+                <div class="result">→ 10</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 显式返回：写了 {} 就必须写 return</span></div>
+                <div class="code"><span class="kw">const</span> double2 = n => { <span class="kw">return</span> n * <span class="num">2</span> }</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// ⚠️ 常见错误：写了 {} 但没写 return</span></div>
+                <div class="code"><span class="kw">const</span> bad = n => { n * <span class="num">2</span> }</div>
+                <div class="code">bad(<span class="num">5</span>)</div>
+                <div class="result">→ undefined（花括号里需要 return！）</div>
+            </div>
+        </div>
+
+        <!-- 参数规则 -->
+        <div class="card">
+            <h2>3. 参数规则与默认值</h2>
+            <p class="note">支持默认参数、剩余参数，但不支持 arguments 对象</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 默认参数</span></div>
+                <div class="code"><span class="kw">const</span> greet = (name = <span class="str">'匿名'</span>) => <span class="str">`你好，${name}`</span></div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 剩余参数（替代 arguments）</span></div>
+                <div class="code"><span class="kw">const</span> sum = (...nums) => nums.<span class="fn">reduce</span>((s, n) => s + n, <span class="num">0</span>)</div>
+                <div class="code">sum(<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>)</div>
+                <div class="result">→ 10</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 带默认值的解构参数</span></div>
+                <div class="code"><span class="kw">const</span> print = ({ name, age = <span class="num">0</span> }) => <span class="str">`${name}: ${age}`</span></div>
+            </div>
+        </div>
+
+        <!-- 立即执行箭头函数 -->
+        <div class="card">
+            <h2>4. 立即执行箭头函数（IIFE）</h2>
+            <p class="note">箭头函数也能立即执行，语法比传统 IIFE 更简洁</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 传统函数 IIFE</span></div>
+                <div class="code">(<span class="kw">function</span>() { console.<span class="fn">log</span>(<span class="str">'ok'</span>) })()</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 箭头函数 IIFE（注意括号位置）</span></div>
+                <div class="code">(() => {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">const</span> secret = <span class="str">'局部变量'</span></div>
+                <div class="code">&nbsp;&nbsp;console.<span class="fn">log</span>(secret)</div>
+                <div class="code">})()</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== 核心特性 ==================== -->
+    <h2 class="section-title">二、核心特性：this 绑定（最重要）</h2>
+    <p class="note" style="margin-bottom:16px;">箭头函数没有自己的 this → 继承外层作用域的 this → 这就是"词法 this"</p>
+
+    <div class="grid">
+
+        <!-- this 对比 -->
+        <div class="card">
+            <h2>5. this 对比：普通函数 vs 箭头函数<span class="badge important">核心</span></h2>
+            <p class="note">普通函数的 this 看调用者；箭头函数的 this 看定义时外层作用域</p>
+            <div class="example">
+                <div class="code"><span class="kw">const</span> obj = {</div>
+                <div class="code">&nbsp;&nbsp;<span class="prop">name</span>: <span class="str">'张三'</span>,</div>
+                <div class="code">&nbsp;&nbsp;<span class="cm">// 普通函数：this = 调用时 . 前面的对象</span></div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">sayName1</span>() { console.<span class="fn">log</span>(<span class="kw">this</span>.<span class="prop">name</span>) },</div>
+                <div class="code">&nbsp;&nbsp;<span class="cm">// 普通函数简写（ES6 方法简写，等价上面）</span></div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">sayName2</span>: () => console.<span class="fn">log</span>(<span class="kw">this</span>.<span class="prop">name</span>),</div>
+                <div class="code">}</div>
+                <div class="code">obj.<span class="fn">sayName1</span>()  <span class="cm">// → "张三"</span></div>
+                <div class="code">obj.<span class="fn">sayName2</span>()  <span class="cm">// → undefined（this 是外层/window！）</span></div>
+            </div>
+        </div>
+
+        <!-- 箭头函数解决 this 丢失 -->
+        <div class="card">
+            <h2>6. 经典场景：用箭头函数解决 this 丢失<span class="badge important">核心</span></h2>
+            <p class="note">回调函数中 this 会丢失，箭头函数天然解决——不需要 that=this 了</p>
+            <div class="example">
+                <div class="code"><span class="cm">// ❌ 普通函数写法：this 丢失</span></div>
+                <div class="code"><span class="kw">class</span> <span class="fn">Counter</span> {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">constructor</span>() { <span class="kw">this</span>.<span class="prop">count</span> = <span class="num">0</span> }</div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">start</span>() {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">setInterval</span>(<span class="kw">function</span>() {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">this</span>.<span class="prop">count</span>++  <span class="cm">// ❌ this 指向 window！</span></div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;}, <span class="num">1000</span>)</div>
+                <div class="code">&nbsp;&nbsp;}</div>
+                <div class="code">}</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// ✅ 箭头函数：this 继承自 start() 的 this</span></div>
+                <div class="code"><span class="kw">class</span> <span class="fn">Counter</span> {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">constructor</span>() { <span class="kw">this</span>.<span class="prop">count</span> = <span class="num">0</span> }</div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">start</span>() {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">setInterval</span>(() => {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">this</span>.<span class="prop">count</span>++  <span class="cm">// ✅ this = 实例</span></div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;}, <span class="num">1000</span>)</div>
+                <div class="code">&nbsp;&nbsp;}</div>
+                <div class="code">}</div>
+            </div>
+        </div>
+
+        <!-- call/apply/bind 无效 -->
+        <div class="card">
+            <h2>7. 箭头函数无法用 call/apply/bind 改变 this</h2>
+            <p class="note">箭头函数的 this 在定义时就固定了，call/apply/bind 传参会被忽略</p>
+            <div class="example">
+                <div class="code"><span class="kw">const</span> fn = () => console.<span class="fn">log</span>(<span class="kw">this</span>)</div>
+                <div class="code">fn.<span class="fn">call</span>({ <span class="prop">x</span>: <span class="num">1</span> })</div>
+                <div class="result">→ Window（不是 {x:1}！this 不变！）</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 但 call/apply 仍然可以传参数</span></div>
+                <div class="code"><span class="kw">const</span> add = (a, b) => a + b</div>
+                <div class="code">add.<span class="fn">call</span>(<span class="kw">null</span>, <span class="num">1</span>, <span class="num">2</span>)</div>
+                <div class="result">→ 3（参数正常传入，只是 this 不生效）</div>
+            </div>
+        </div>
+
+        <!-- 嵌套中的 this -->
+        <div class="card">
+            <h2>8. 箭头函数嵌套：this 穿透</h2>
+            <p class="note">无论嵌套多深，箭头函数的 this 始终指向最外层的普通函数 this</p>
+            <div class="example">
+                <div class="code"><span class="kw">const</span> obj = {</div>
+                <div class="code">&nbsp;&nbsp;<span class="prop">name</span>: <span class="str">'外层'</span>,</div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">outer</span>() {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">const</span> inner = () => {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">const</span> deep = () => {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;console.<span class="fn">log</span>(<span class="kw">this</span>.<span class="prop">name</span>)  <span class="cm">// 穿透两层，指向 obj</span></div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> deep()</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;}</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> inner()</div>
+                <div class="code">&nbsp;&nbsp;}</div>
+                <div class="code">}</div>
+                <div class="code">obj.<span class="fn">outer</span>()</div>
+                <div class="result">→ "外层"（this 穿透两层箭头函数）</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== 不能做的事 ==================== -->
+    <h2 class="section-title">三、箭头函数不能做的事（限制）</h2>
+
+    <div class="grid">
+
+        <!-- 不能 new -->
+        <div class="card">
+            <h2>9. 不能用作构造函数（不能用 new）</h2>
+            <p class="note">箭头函数没有 [[Construct]] 内部方法，new 会直接报错</p>
+            <div class="example">
+                <div class="code"><span class="kw">const</span> <span class="err">Foo</span> = () => {}</div>
+                <div class="code"><span class="kw">new</span> Foo()</div>
+                <div class="result">→ <span class="err">TypeError: Foo is not a constructor</span></div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 为什么？箭头函数没有 prototype 属性</span></div>
+                <div class="code"><span class="kw">const</span> fn = () => {}</div>
+                <div class="code">fn.<span class="prop">prototype</span></div>
+                <div class="result">→ undefined</div>
+            </div>
+        </div>
+
+        <!-- 没有 arguments -->
+        <div class="card">
+            <h2>10. 没有 arguments 对象</h2>
+            <p class="note">访问 arguments 会沿作用域链查找外层的 arguments</p>
+            <div class="example">
+                <div class="code"><span class="kw">const</span> fn = () => {</div>
+                <div class="code">&nbsp;&nbsp;console.<span class="fn">log</span>(<span class="prop">arguments</span>)</div>
+                <div class="code">}</div>
+                <div class="code">fn(<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>)</div>
+                <div class="result">→ 浏览器里是外层 arguments / Node 里直接报错</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// ✅ 用剩余参数替代</span></div>
+                <div class="code"><span class="kw">const</span> fn2 = (...args) => console.<span class="fn">log</span>(args)</div>
+                <div class="code">fn2(<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>)</div>
+                <div class="result">→ [1, 2, 3]</div>
+            </div>
+        </div>
+
+        <!-- 不能用 yield -->
+        <div class="card">
+            <h2>11. 不能用作生成器函数</h2>
+            <p class="note">箭头函数内部不能用 yield，也无法用 function* 定义</p>
+            <div class="example">
+                <div class="code"><span class="cm">// ❌ 语法错误</span></div>
+                <div class="code"><span class="kw">const</span> gen = () <span class="err">*</span> => { ... }  <span class="cm">// 不存在这种写法</span></div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// ✅ 生成器必须用普通函数</span></div>
+                <div class="code"><span class="kw">function</span>* <span class="fn">gen</span>() { <span class="kw">yield</span> <span class="num">1</span>; <span class="kw">yield</span> <span class="num">2</span> }</div>
+            </div>
+        </div>
+
+        <!-- 没有 new.target -->
+        <div class="card">
+            <h2>12. 没有 new.target</h2>
+            <p class="note">在箭头函数里访问 new.target 会取外层函数的值</p>
+            <div class="example">
+                <div class="code"><span class="kw">function</span> <span class="fn">Foo</span>() {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">const</span> inner = () => console.<span class="fn">log</span>(<span class="kw">new</span>.<span class="prop">target</span>)</div>
+                <div class="code">&nbsp;&nbsp;inner()  <span class="cm">// 继承 Foo 的 new.target</span></div>
+                <div class="code">}</div>
+                <div class="code"><span class="kw">new</span> Foo()</div>
+                <div class="result">→ [Function: Foo]</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== 什么时候不该用 ==================== -->
+    <h2 class="section-title">四、什么时候不该用箭头函数</h2>
+
+    <div class="grid">
+
+        <!-- 对象方法 -->
+        <div class="card">
+            <h2>13. ❌ 对象的方法</h2>
+            <p class="note">对象方法需要 this 指向对象本身，箭头函数做不到</p>
+            <div class="example">
+                <div class="code"><span class="cm">// ❌ 错误</span></div>
+                <div class="code"><span class="kw">const</span> user = {</div>
+                <div class="code">&nbsp;&nbsp;<span class="prop">name</span>: <span class="str">'张三'</span>,</div>
+                <div class="code">&nbsp;&nbsp;<span class="err">sayName: () => console.log(this.name)</span></div>
+                <div class="code">}</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// ✅ 正确：方法简写（ES6）</span></div>
+                <div class="code"><span class="kw">const</span> user = {</div>
+                <div class="code">&nbsp;&nbsp;<span class="prop">name</span>: <span class="str">'张三'</span>,</div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">sayName</span>() { console.<span class="fn">log</span>(<span class="kw">this</span>.<span class="prop">name</span>) }</div>
+                <div class="code">}</div>
+            </div>
+        </div>
+
+        <!-- 原型方法 -->
+        <div class="card">
+            <h2>14. ❌ 原型上的方法</h2>
+            <p class="note">和对象方法同理——需要 this 指向实例</p>
+            <div class="example">
+                <div class="code"><span class="cm">// ❌ 错误</span></div>
+                <div class="code"><span class="kw">function</span> <span class="fn">User</span>(name) { <span class="kw">this</span>.<span class="prop">name</span> = name }</div>
+                <div class="code">User.<span class="prop">prototype</span>.<span class="err">sayName = () => console.log(this.name)</span></div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// ✅ 正确：普通函数</span></div>
+                <div class="code">User.<span class="prop">prototype</span>.<span class="fn">sayName</span> = <span class="kw">function</span>() { console.<span class="fn">log</span>(<span class="kw">this</span>.<span class="prop">name</span>) }</div>
+            </div>
+        </div>
+
+        <!-- DOM 事件中需要 this -->
+        <div class="card">
+            <h2>15. ❌ 需要 this 指向 DOM 元素的事件</h2>
+            <p class="note">如果想在事件中通过 this 获取 DOM 元素，不能用箭头函数</p>
+            <div class="example">
+                <div class="code"><span class="cm">// ❌ this 不指向按钮</span></div>
+                <div class="code">btn.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, <span class="err">() => console.log(this)</span>)</div>
+                <div class="result">→ Window（不是 btn）</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// ✅ 用 event.target 替代（推荐方式）</span></div>
+                <div class="code">btn.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, (e) => console.<span class="fn">log</span>(e.<span class="prop">target</span>))</div>
+                <div class="result">→ btn 元素（用 e.target，this 不再重要）</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// ✅ 或坚持用 this，那就用普通函数</span></div>
+                <div class="code">btn.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, <span class="kw">function</span>() { console.<span class="fn">log</span>(<span class="kw">this</span>) })</div>
+            </div>
+        </div>
+
+        <!-- 动态 this -->
+        <div class="card">
+            <h2>16. ❌ 需要动态 this 的场景</h2>
+            <p class="note">call/apply/bind 无法改变箭头函数的 this</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 需要借用方法时，不能用箭头函数</span></div>
+                <div class="code"><span class="cm">// 比如：Array.prototype.slice.call(arguments)</span></div>
+                <div class="code"><span class="cm">// 这种依赖 this 动态绑定的场景必须用普通函数</span></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== this 可视化演示 ==================== -->
+    <h2 class="section-title">五、this 绑定可视化演示</h2>
+    <p class="note" style="margin-bottom:12px;">点击以下按钮，观察普通函数和箭头函数的 this 指向差异</p>
+
+    <div class="demo-area">
+        <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+            <button id="btnNormal">普通函数：console.log(this)</button>
+            <button id="btnArrow">箭头函数：console.log(this)</button>
+            <button id="btnCompare">对比：两者一起执行</button>
+        </div>
+        <div class="demo-log" id="thisLog">
+            <div class="entry">等待点击按钮...</div>
+        </div>
+    </div>
+
+    <!-- ==================== 实战模式 ==================== -->
+    <h2 class="section-title">六、箭头函数实战模式</h2>
+
+    <div class="grid">
+
+        <!-- 数组方法链式调用 -->
+        <div class="card">
+            <h2>17. 数组处理流水线<span class="badge tip">常用</span></h2>
+            <p class="note">配合 map/filter/reduce 实现链式数据处理</p>
+            <div class="example">
+                <div class="code"><span class="kw">const</span> result = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>]</div>
+                <div class="code">&nbsp;&nbsp;.<span class="fn">filter</span>(n => n % <span class="num">2</span> === <span class="num">0</span>)</div>
+                <div class="code">&nbsp;&nbsp;.<span class="fn">map</span>(n => n * n)</div>
+                <div class="code">&nbsp;&nbsp;.<span class="fn">reduce</span>((sum, n) => sum + n, <span class="num">0</span>)</div>
+                <div class="result">→ 20（偶数 2,4 → 平方 4,16 → 求和 20）</div>
+            </div>
+        </div>
+
+        <!-- Promise / async -->
+        <div class="card">
+            <h2>18. Promise / 异步回调<span class="badge tip">常用</span></h2>
+            <p class="note">箭头函数让 .then().catch() 链变得极简</p>
+            <div class="example">
+                <div class="code"><span class="fn">fetch</span>(<span class="str">'/api/user'</span>)</div>
+                <div class="code">&nbsp;&nbsp;.<span class="fn">then</span>(res => res.<span class="fn">json</span>())</div>
+                <div class="code">&nbsp;&nbsp;.<span class="fn">then</span>(data => console.<span class="fn">log</span>(data))</div>
+                <div class="code">&nbsp;&nbsp;.<span class="fn">catch</span>(err => console.<span class="fn">error</span>(err))</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// async/await 中的辅助箭头函数</span></div>
+                <div class="code"><span class="kw">const</span> userIds = users.<span class="fn">map</span>(u => u.<span class="prop">id</span>)</div>
+                <div class="code"><span class="kw">const</span> names = users.<span class="fn">filter</span>(u => u.<span class="prop">active</span>).<span class="fn">map</span>(u => u.<span class="prop">name</span>)</div>
+            </div>
+        </div>
+
+        <!-- React/Vue 组件 -->
+        <div class="card">
+            <h2>19. 组件中的箭头函数<span class="badge tip">框架</span></h2>
+            <p class="note">在 React 类组件中箭头函数自动绑定 this；Vue 中常用于 methods</p>
+            <div class="example">
+                <div class="code"><span class="cm">// React 类组件：箭头函数自动绑定</span></div>
+                <div class="code"><span class="kw">class</span> <span class="fn">Button</span> <span class="kw">extends</span> <span class="fn">React.Component</span> {</div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">handleClick</span> = () => {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">this</span>.<span class="fn">setState</span>({ ... })  <span class="cm">// ✅ this 自动正确</span></div>
+                <div class="code">&nbsp;&nbsp;}</div>
+                <div class="code">}</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// Vue 3 composition API：箭头函数或普通函数都行</span></div>
+                <div class="code"><span class="kw">const</span> <span class="fn">handleClick</span> = () => { state.<span class="prop">count</span>++ }</div>
+                <div class="code"><span class="kw">function</span> <span class="fn">handleClick</span>() { state.<span class="prop">count</span>++ }  <span class="cm">// 这个也行</span></div>
+            </div>
+        </div>
+
+        <!-- Composition 函数组合 -->
+        <div class="card">
+            <h2>20. 函数组合 / 柯里化</h2>
+            <p class="note">箭头函数天然适合表达式式的函数组合风格</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 柯里化：用箭头函数的链式写法</span></div>
+                <div class="code"><span class="kw">const</span> add = a => b => a + b</div>
+                <div class="code"><span class="kw">const</span> add5 = add(<span class="num">5</span>)</div>
+                <div class="code">add5(<span class="num">3</span>)</div>
+                <div class="result">→ 8</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 函数组合（compose）</span></div>
+                <div class="code"><span class="kw">const</span> compose = (f, g) => x => f(g(x))</div>
+                <div class="code"><span class="kw">const</span> upper = s => s.<span class="fn">toUpperCase</span>()</div>
+                <div class="code"><span class="kw">const</span> greet = s => <span class="str">`你好，${s}`</span></div>
+                <div class="code"><span class="kw">const</span> shout = compose(upper, greet)</div>
+                <div class="code">shout(<span class="str">'张三'</span>)</div>
+                <div class="result">→ "你好，张三"</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== 完整对比表 ==================== -->
+    <h2 class="section-title">七、箭头函数 vs 普通函数 — 完整对比</h2>
+
+    <table>
+        <tr><th style="width:30%;">特性</th><th style="width:35%;">普通函数</th><th style="width:35%;">箭头函数</th></tr>
+        <tr><td>this 绑定</td><td>动态（看调用方式）</td><td>词法（定义时确定）</td></tr>
+        <tr><td>用作构造函数（new）</td><td class="td-good">✅ 可以</td><td class="td-bad">❌ 报错 TypeError</td></tr>
+        <tr><td>prototype 属性</td><td class="td-good">✅ 有</td><td class="td-bad">❌ undefined</td></tr>
+        <tr><td>arguments 对象</td><td class="td-good">✅ 有</td><td class="td-bad">❌ 没有（用 ...args）</td></tr>
+        <tr><td>new.target</td><td class="td-good">✅ 有</td><td class="td-bad">❌ 继承外层</td></tr>
+        <tr><td>call/apply/bind 改变 this</td><td class="td-good">✅ 可以</td><td class="td-bad">❌ 传参被忽略</td></tr>
+        <tr><td>用作生成器（yield）</td><td class="td-good">✅ 可以</td><td class="td-bad">❌ 不能</td></tr>
+        <tr><td>绑定到对象方法</td><td class="td-good">✅ 适合</td><td class="td-bad">❌ this 错误</td></tr>
+        <tr><td>绑定到原型方法</td><td class="td-good">✅ 适合</td><td class="td-bad">❌ this 错误</td></tr>
+        <tr><td>回调函数 / 闭包</td><td>可以（需 that=this）</td><td class="td-good">✅ 天然正确</td></tr>
+        <tr><td>数组中作为回调</td><td>可以</td><td class="td-good">✅ 简洁优雅</td></tr>
+    </table>
+
+    <script>
+        // ========== this 可视化演示 ==========
+        const thisLog = document.getElementById('thisLog');
+        const demoObj = {
+            name: 'demo对象',
+            normalFn: function () { return this; },
+            arrowFn: () => this,
+        };
+
+        function addThisLog(text) {
+            const entry = document.createElement('div');
+            entry.className = 'entry';
+            entry.textContent = `[${new Date().toTimeString().slice(0, 8)}] ${text}`;
+            thisLog.prepend(entry);
+            while (thisLog.children.length > 12) thisLog.lastChild.remove();
+        }
+
+        document.getElementById('btnNormal').addEventListener('click', function () {
+            addThisLog(`普通函数 this === btn: ${this === document.getElementById('btnNormal')}`);
+            console.log('普通函数 this:', this);
+        });
+
+        document.getElementById('btnArrow').addEventListener('click', () => {
+            addThisLog(`箭头函数 this === window: ${this === window}`);
+            console.log('箭头函数 this:', this);
+        });
+
+        document.getElementById('btnCompare').addEventListener('click', function () {
+            const btn = this;
+            addThisLog('--- 对比开始 ---');
+            // 保存当前 this（普通函数中的 btn）
+            setTimeout(function () {
+                addThisLog(`普通函数回调 this === window: ${this === window}`);
+            }, 50);
+            setTimeout(() => {
+                addThisLog(`箭头函数回调 this === btn(外层this): ${this === btn}`);
+            }, 50);
+        });
+
+        // ========== 控制台完整演示 ==========
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('  箭头函数深度解读 ✅');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+        console.group('📌 1. 基础语法');
+        console.log('单参数 + 隐式返回:      const d = x => x * 2, d(5) =', (x => x * 2)(5));
+        console.log('多参数:                 const add = (a,b) => a + b, add(3,4) =', ((a, b) => a + b)(3, 4));
+        console.log('返回对象:               const f = (n,a) => ({n,a}), f("张三",25) =', ((n, a) => ({ n, a }))('张三', 25));
+        console.log('默认参数:               const g = (n="匿名") => `你好${n}`, g() =', ((n = '匿名') => `你好${n}`)());
+        console.log('剩余参数:               const s = (...ns) => ns.reduce((a,b)=>a+b), s(1,2,3,4) =', ((...ns) => ns.reduce((a, b) => a + b))(1, 2, 3, 4));
+        console.groupEnd();
+
+        console.group('📌 2. this 绑定（核心）');
+        const tester = {
+            name: '测试',
+            normal() { console.log('  普通函数 this.name:', this.name); },
+            arrow: () => console.log('  箭头函数 this.name:', this.name, '(undefined — 外层是 window)'),
+        };
+        console.log('对象方法中的 this:');
+        tester.normal();
+        tester.arrow();
+        console.groupEnd();
+
+        console.group('📌 3. call/apply/bind 对箭头函数无效');
+        const arrowLog = (x) => console.log('  this:', this, ', 参数:', x);
+        console.log('箭头函数用 call 传 this:');
+        arrowLog.call({ fake: 'this' }, 'hello');
+        console.log('→ this 不变，但参数正常传入');
+        console.groupEnd();
+
+        console.group('📌 4. 不能 new');
+        const NotConstructor = () => { };
+        try {
+            new NotConstructor();
+        } catch (e) {
+            console.log('new NotConstructor() →', e.message);
+        }
+        console.log('NotConstructor.prototype →', NotConstructor.prototype);
+        console.groupEnd();
+
+        console.group('📌 5. 实战：数组流水线');
+        const pipeline = [1, 2, 3, 4, 5]
+            .filter(n => n % 2 === 0)
+            .map(n => n * n)
+            .reduce((s, n) => s + n, 0);
+        console.log('[1,2,3,4,5] → 偶数 → 平方 → 求和 =', pipeline);
+        console.groupEnd();
+
+        console.group('📌 6. 实战：柯里化 add(1)(2)(3)');
+        const curryAdd = a => b => c => a + b + c;
+        console.log('add(1)(2)(3) =', curryAdd(1)(2)(3));
+        console.groupEnd();
+
+        console.group('📌 7. 实战：?. 可选链 + 箭头函数');
+        const users = [{ name: '张三' }, null, { name: '李四' }];
+        const names = users.map(u => u?.name ?? '未知');
+        console.log('处理含 null 的数组:', names);
+        console.groupEnd();
+
+        console.log('\n💡 核心总结：');
+        console.log('  1. 箭头函数没有自己的 this → 继承外层 → 解决回调 this 丢失');
+        console.log('  2. 不能用 new（没 prototype）、没有 arguments（用 ...args）');
+        console.log('  3. 不能当对象方法（this 不会指向对象）');
+        console.log('  4. call/apply/bind 改变 this 无效（但参数正常）');
+        console.log('  5. 最适合：回调函数、数组方法、Promise 链、闭包');
+        console.log('  6. 不适合：构造函数、对象方法、原型方法、generator');
+        console.log('  7. 一句口诀：谁定义我，我的 this 就是谁');
+    </script>
+</body>
+</html>

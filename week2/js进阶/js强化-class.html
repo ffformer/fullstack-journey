@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class 进阶 — static · super · Mixin · 实战模式</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f172a; color: #e2e8f0; padding: 24px; }
+        h1 { text-align: center; margin-bottom: 8px; font-size: 28px; color: #facc15; }
+        .subtitle { text-align: center; color: #94a3b8; margin-bottom: 32px; font-size: 14px; }
+        .section-title { font-size: 22px; color: #38bdf8; margin: 32px 0 16px; padding-bottom: 8px; border-bottom: 2px solid #334155; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(460px, 1fr)); gap: 20px; }
+        .card { background: #1e293b; border-radius: 12px; padding: 20px; border: 1px solid #334155; }
+        .card h2 { font-size: 18px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #334155; }
+        .card h2 .badge { font-size: 12px; padding: 2px 8px; border-radius: 99px; margin-left: 8px; vertical-align: middle; }
+        .badge.key { background: #7f1d1d; color: #fca5a5; }
+        .badge.pattern { background: #1e3a5f; color: #93c5fd; }
+        .example { background: #0f172a; border-radius: 8px; padding: 12px 16px; margin-bottom: 10px; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 13px; }
+        .example .code { color: #f8fafc; margin-bottom: 2px; }
+        .example .code .kw { color: #c084fc; }
+        .example .code .str { color: #34d399; }
+        .example .code .fn { color: #38bdf8; }
+        .example .code .cm { color: #64748b; }
+        .example .code .num { color: #fb923c; }
+        .example .code .prop { color: #facc15; }
+        .example .code .err { color: #f87171; }
+        .example .result { color: #fbbf24; margin-top: 6px; padding-top: 6px; border-top: 1px dashed #334155; }
+        .note { font-size: 12px; color: #94a3b8; margin-top: 4px; font-style: italic; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+        th { text-align: left; padding: 8px 10px; background: #0f172a; color: #facc15; border-bottom: 2px solid #334155; }
+        td { padding: 8px 10px; border-bottom: 1px solid #1e293b; }
+        tr:hover td { background: #1a2332; }
+    </style>
+</head>
+<body>
+    <h1>Class 进阶 — static · super · Mixin · 实战模式</h1>
+    <p class="subtitle">在 08-class与继承.html 的基础上，深入 class 的高级用法和设计模式 | 打开控制台（F12）</p>
+
+    <!-- ==================== static ==================== -->
+    <h2 class="section-title">一、static — 类自己的方法（不属于实例）</h2>
+
+    <div class="grid">
+
+        <div class="card">
+            <h2>1. static 方法和属性的本质</h2>
+            <p class="note">static 定义的东西挂在类本身，实例访问不到</p>
+            <div class="example">
+                <div class="code"><span class="kw">class</span> <span class="fn">MathUtil</span> {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">static</span> <span class="prop">PI</span> = <span class="num">3.14159</span>  <span class="cm">// 静态属性（ES2022）</span></div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">static</span> <span class="fn">add</span>(a, b) { <span class="kw">return</span> a + b }</div>
+                <div class="code">}</div>
+                <div class="code"><span class="fn">MathUtil</span>.<span class="fn">add</span>(<span class="num">1</span>, <span class="num">2</span>)  <span class="cm">// → 3（类上调用 ✅）</span></div>
+                <div class="code"><span class="kw">new</span> MathUtil().<span class="err">add</span>(<span class="num">1</span>, <span class="num">2</span>)  <span class="cm">// ❌ TypeError</span></div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 对比：实例方法挂在原型上</span></div>
+                <div class="code"><span class="kw">class</span> <span class="fn">Dog</span> {</div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">bark</span>() { <span class="kw">return</span> <span class="str">'汪汪'</span> }  <span class="cm">// 原型方法 — 实例调用</span></div>
+                <div class="code">}</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>2. static 的经典使用场景<span class="badge pattern">模式</span></h2>
+            <p class="note">工厂方法、缓存、单例、工具函数集合</p>
+            <div class="example">
+                <div class="code"><span class="cm">// ① 工厂方法：根据不同情况创建实例</span></div>
+                <div class="code"><span class="kw">class</span> <span class="fn">User</span> {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">constructor</span>(data) { <span class="fn">Object</span>.<span class="fn">assign</span>(<span class="kw">this</span>, data) }</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">static</span> <span class="fn">fromJson</span>(json) {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> <span class="kw">new</span> <span class="fn">User</span>(<span class="fn">JSON</span>.<span class="fn">parse</span>(json))  <span class="cm">// 从 JSON 创建</span></div>
+                <div class="code">&nbsp;&nbsp;}</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">static</span> <span class="fn">fromLocal</span>(key) {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">const</span> data = <span class="fn">JSON</span>.<span class="fn">parse</span>(localStorage.<span class="fn">getItem</span>(key))</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> <span class="kw">new</span> <span class="fn">User</span>(data)  <span class="cm">// 从 localStorage 创建</span></div>
+                <div class="code">&nbsp;&nbsp;}</div>
+                <div class="code">}</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// ② 计数/缓存</span></div>
+                <div class="code"><span class="kw">class</span> <span class="fn">Product</span> {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">static</span> <span class="prop">#cache</span> = <span class="kw">new</span> <span class="fn">Map</span>()  <span class="cm">// 静态私有字段</span></div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">static</span> <span class="fn">find</span>(id) {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> (!<span class="kw">this</span>.<span class="prop">#cache</span>.<span class="fn">has</span>(id)) {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">this</span>.<span class="prop">#cache</span>.<span class="fn">set</span>(id, <span class="fn">loadFromDb</span>(id))</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;}</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> <span class="kw">this</span>.<span class="prop">#cache</span>.<span class="fn">get</span>(id)</div>
+                <div class="code">&nbsp;&nbsp;}</div>
+                <div class="code">}</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>3. static 初始化块（ES2022）</h2>
+            <p class="note">一次性初始化复杂静态数据，比在外面写更清晰</p>
+            <div class="example">
+                <div class="code"><span class="kw">class</span> <span class="fn">Config</span> {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">static</span> <span class="prop">env</span> = {}</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">static</span> {  <span class="cm">// 静态初始化块</span></div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">try</span> {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">this</span>.<span class="prop">env</span> = <span class="fn">JSON</span>.<span class="fn">parse</span>(localStorage.<span class="fn">getItem</span>(<span class="str">'config'</span>) || <span class="str">'{}'</span>)</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;} <span class="kw">catch</span> {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">this</span>.<span class="prop">env</span> = { <span class="prop">debug</span>: <span class="kw">true</span> }</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;}</div>
+                <div class="code">&nbsp;&nbsp;}</div>
+                <div class="code">}</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>4. 继承中的 static</h2>
+            <p class="note">子类继承父类的静态方法（静态属性也会继承）</p>
+            <div class="example">
+                <div class="code"><span class="kw">class</span> <span class="fn">Base</span> {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">static</span> <span class="fn">whoami</span>() { <span class="kw">return</span> <span class="kw">this</span>.<span class="prop">name</span> }  <span class="cm">// this 指向调用时的类</span></div>
+                <div class="code">}</div>
+                <div class="code"><span class="kw">class</span> <span class="fn">Child</span> <span class="kw">extends</span> <span class="fn">Base</span> {}</div>
+                <div class="code"><span class="fn">Child</span>.<span class="fn">whoami</span>()</div>
+                <div class="result">→ "Child"（this 指向 Child，不是 Base）</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== super ==================== -->
+    <h2 class="section-title">二、super 详解 — 不止是调父类构造函数</h2>
+
+    <div class="grid">
+
+        <div class="card">
+            <h2>5. super 的两个身份</h2>
+            <p class="note">super 在构造函数里当函数用；在方法里当对象用</p>
+            <div class="example">
+                <div class="code"><span class="cm">// ① 构造函数中：super() = 调用父类 constructor</span></div>
+                <div class="code"><span class="kw">class</span> <span class="fn">Child</span> <span class="kw">extends</span> <span class="fn">Parent</span> {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">constructor</span>(name, age) {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">super</span>(name)  <span class="cm">// 必须调用！且在 this 之前</span></div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">this</span>.<span class="prop">age</span> = age  <span class="cm">// super 之后才能用 this</span></div>
+                <div class="code">&nbsp;&nbsp;}</div>
+                <div class="code">}</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// ② 方法中：super.method() = 调用父类同名方法</span></div>
+                <div class="code"><span class="kw">class</span> <span class="fn">Child</span> <span class="kw">extends</span> <span class="fn">Parent</span> {</div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">greet</span>() {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">super</span>.<span class="fn">greet</span>()  <span class="cm">// 先执行父类的 greet</span></div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;console.<span class="fn">log</span>(<span class="str">'再加上子类的逻辑'</span>)  <span class="cm">// 扩展</span></div>
+                <div class="code">&nbsp;&nbsp;}</div>
+                <div class="code">}</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>6. super 的 this 指向</h2>
+            <p class="note">super.method() 中的 this 仍然指向子类实例</p>
+            <div class="example">
+                <div class="code"><span class="kw">class</span> <span class="fn">Parent</span> {</div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">getName</span>() { <span class="kw">return</span> <span class="kw">this</span>.<span class="kw">constructor</span>.<span class="prop">name</span> }</div>
+                <div class="code">}</div>
+                <div class="code"><span class="kw">class</span> <span class="fn">Child</span> <span class="kw">extends</span> <span class="fn">Parent</span> {</div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">logName</span>() {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;console.<span class="fn">log</span>(<span class="kw">super</span>.<span class="fn">getName</span>())  <span class="cm">// 调用父方法</span></div>
+                <div class="code">&nbsp;&nbsp;}</div>
+                <div class="code">}</div>
+                <div class="code"><span class="kw">new</span> Child().<span class="fn">logName</span>()</div>
+                <div class="result">→ "Child"（super.getName 中的 this 仍是 Child 实例）</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>7. 继承内置类（extends Array / Error）</h2>
+            <p class="note">ES6 class 可以继承原生类，这是原型链继承做不到的</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 自定义数组——给数组加上额外方法</span></div>
+                <div class="code"><span class="kw">class</span> <span class="fn">MyArray</span> <span class="kw">extends</span> <span class="fn">Array</span> {</div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">first</span>() { <span class="kw">return</span> <span class="kw">this</span>.<span class="fn">at</span>(<span class="num">0</span>) }</div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">last</span>() { <span class="kw">return</span> <span class="kw">this</span>.<span class="fn">at</span>(-<span class="num">1</span>) }</div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">sum</span>() { <span class="kw">return</span> <span class="kw">this</span>.<span class="fn">reduce</span>((s, n) => s + n, <span class="num">0</span>) }</div>
+                <div class="code">}</div>
+                <div class="code"><span class="kw">const</span> arr = <span class="fn">MyArray</span>.<span class="fn">from</span>([<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>])</div>
+                <div class="code">arr.<span class="fn">first</span>() / arr.<span class="fn">last</span>() / arr.<span class="fn">sum</span>()</div>
+                <div class="result">→ 1 / 3 / 6</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>8. super 在类字段中的陷阱<span class="badge key">关键</span></h2>
+            <p class="note">类字段（field）在 super() 之后定义，但赋值时机容易混淆</p>
+            <div class="example">
+                <div class="code"><span class="kw">class</span> <span class="fn">Parent</span> {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">constructor</span>() { console.<span class="fn">log</span>(<span class="str">'parent'</span>) }</div>
+                <div class="code">}</div>
+                <div class="code"><span class="kw">class</span> <span class="fn">Child</span> <span class="kw">extends</span> <span class="fn">Parent</span> {</div>
+                <div class="code">&nbsp;&nbsp;<span class="prop">x</span> = <span class="kw">this</span>.<span class="fn">compute</span>()  <span class="cm">// 类字段赋值在 super() 之后执行</span></div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">compute</span>() { <span class="kw">return</span> <span class="num">42</span> }</div>
+                <div class="code">}</div>
+                <div class="result">→ 顺序：parent → compute → x=42</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== Mixin ==================== -->
+    <h2 class="section-title">三、Mixin — 多继承的替代方案</h2>
+
+    <div class="grid">
+
+        <div class="card">
+            <h2>9. 什么是 Mixin？</h2>
+            <p class="note">JS 只能单继承，Mixin 将多个类的功能"混入"一个类</p>
+            <div class="example">
+                <div class="code"><span class="cm">// Mixin = 一个返回 class 的函数</span></div>
+                <div class="code"><span class="kw">const</span> TimestampMixin = Base => <span class="kw">class</span> <span class="kw">extends</span> Base {</div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">getTimestamp</span>() { <span class="kw">return</span> <span class="kw">new</span> <span class="fn">Date</span>() }</div>
+                <div class="code">}</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 使用：把 Mixin "套"在目标类外面</span></div>
+                <div class="code"><span class="kw">class</span> <span class="fn">User</span> { <span class="cm">/* ... */</span> }</div>
+                <div class="code"><span class="kw">class</span> <span class="fn">UserWithTimestamp</span> <span class="kw">extends</span> <span class="fn">TimestampMixin</span>(User) {}</div>
+                <div class="code"><span class="kw">new</span> UserWithTimestamp().<span class="fn">getTimestamp</span>()</div>
+                <div class="result">→ 当前时间</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>10. 组合多个 Mixin</h2>
+            <p class="note">函数组合——把多个 Mixin 串起来</p>
+            <div class="example">
+                <div class="code"><span class="kw">const</span> pipe = (...mixins) =></div>
+                <div class="code">&nbsp;&nbsp;Base => mixins.<span class="fn">reduce</span>((cls, mixin) => mixin(cls), Base)</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 定义两个 Mixin</span></div>
+                <div class="code"><span class="kw">const</span> Loggable = Base => <span class="kw">class</span> <span class="kw">extends</span> Base {</div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">log</span>(msg) { console.<span class="fn">log</span>(<span class="str">`[${<span class="kw">new</span> Date().toISOString()}] ${msg}`</span>) }</div>
+                <div class="code">}</div>
+                <div class="code"><span class="kw">const</span> Serializable = Base => <span class="kw">class</span> <span class="kw">extends</span> Base {</div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">toJson</span>() { <span class="kw">return</span> <span class="fn">JSON</span>.<span class="fn">stringify</span>(<span class="kw">this</span>) }</div>
+                <div class="code">}</div>
+                <div class="code"><span class="cm">// 组合使用</span></div>
+                <div class="code"><span class="kw">class</span> <span class="fn">Model</span> <span class="kw">extends</span> <span class="fn">pipe</span>(Loggable, Serializable)(Object) {}</div>
+                <div class="code"><span class="kw">const</span> m = <span class="kw">new</span> Model()</div>
+                <div class="code">m.<span class="fn">log</span>(<span class="str">'hello'</span>)  <span class="cm">// ✅ 来自 Loggable</span></div>
+                <div class="code">m.<span class="fn">toJson</span>()  <span class="cm">// ✅ 来自 Serializable</span></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== 其他高级特性 ==================== -->
+    <h2 class="section-title">四、高级特性与实战模式</h2>
+
+    <div class="grid">
+
+        <!-- 类表达式 -->
+        <div class="card">
+            <h2>11. 类表达式 vs 类声明</h2>
+            <p class="note">class 可以是表达式（赋值给变量），也可以有名字</p>
+            <div class="example">
+                <div class="code"><span class="cm">// 匿名类表达式</span></div>
+                <div class="code"><span class="kw">const</span> MyClass = <span class="kw">class</span> {</div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">sayHi</span>() { <span class="kw">return</span> <span class="str">'hi'</span> }</div>
+                <div class="code">}</div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 具名类表达式 — 名字只在类内部可见</span></div>
+                <div class="code"><span class="kw">const</span> External = <span class="kw">class</span> <span class="fn">InternalName</span> {</div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">whoami</span>() { <span class="kw">return</span> InternalName.<span class="prop">name</span> }  <span class="cm">// InternalName 内部可用</span></div>
+                <div class="code">}</div>
+                <div class="code"><span class="kw">new</span> External().<span class="fn">whoami</span>()</div>
+                <div class="result">→ "InternalName"</div>
+            </div>
+        </div>
+
+        <!-- instanceof -->
+        <div class="card">
+            <h2>12. instanceof 原理</h2>
+            <p class="note">检查对象的原型链上是否有某个类的 prototype</p>
+            <div class="example">
+                <div class="code"><span class="kw">class</span> <span class="fn">Animal</span> {}</div>
+                <div class="code"><span class="kw">class</span> <span class="fn">Dog</span> <span class="kw">extends</span> <span class="fn">Animal</span> {}</div>
+                <div class="code"><span class="kw">const</span> d = <span class="kw">new</span> Dog()</div>
+            </div>
+            <div class="example">
+                <div class="code">d <span class="kw">instanceof</span> Dog     <span class="cm">// → true</span></div>
+                <div class="code">d <span class="kw">instanceof</span> Animal  <span class="cm">// → true</span></div>
+                <div class="code">d <span class="kw">instanceof</span> Object  <span class="cm">// → true</span></div>
+            </div>
+            <div class="example">
+                <div class="code"><span class="cm">// 手写 instanceof 原理</span></div>
+                <div class="code"><span class="kw">function</span> <span class="fn">myInstanceof</span>(obj, Constructor) {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">let</span> proto = <span class="fn">Object</span>.<span class="fn">getPrototypeOf</span>(obj)</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">while</span> (proto) {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> (proto === Constructor.<span class="prop">prototype</span>) <span class="kw">return</span> <span class="kw">true</span></div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;proto = <span class="fn">Object</span>.<span class="fn">getPrototypeOf</span>(proto)</div>
+                <div class="code">&nbsp;&nbsp;}</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">return</span> <span class="kw">false</span></div>
+                <div class="code">}</div>
+            </div>
+        </div>
+
+        <!-- 私有方法 -->
+        <div class="card">
+            <h2>13. 私有方法 —— 不暴露内部实现</h2>
+            <p class="note"># 开头的都是私有的，外部完全不可见</p>
+            <div class="example">
+                <div class="code"><span class="kw">class</span> <span class="fn">BankAccount</span> {</div>
+                <div class="code">&nbsp;&nbsp;<span class="prop">#balance</span> = <span class="num">0</span>  <span class="cm">// 私有字段</span></div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">deposit</span>(amount) {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">this</span>.<span class="fn">#validate</span>(amount)  <span class="cm">// 调私有方法</span></div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">this</span>.<span class="prop">#balance</span> += amount</div>
+                <div class="code">&nbsp;&nbsp;}</div>
+                <div class="code">&nbsp;&nbsp;<span class="fn">#validate</span>(amount) {  <span class="cm">// 私有方法</span></div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> (amount <= <span class="num">0</span>) <span class="kw">throw</span> <span class="kw">new</span> <span class="fn">Error</span>(<span class="str">'金额必须大于0'</span>)</div>
+                <div class="code">&nbsp;&nbsp;}</div>
+                <div class="code">}</div>
+                <div class="code"><span class="kw">const</span> acc = <span class="kw">new</span> BankAccount()</div>
+                <div class="code">acc.<span class="err">#validate</span>(<span class="num">100</span>)  <span class="cm">// ❌ SyntaxError — 不可访问</span></div>
+            </div>
+        </div>
+
+        <!-- 单例模式 -->
+        <div class="card">
+            <h2>14. 单例模式<span class="badge pattern">模式</span></h2>
+            <p class="note">一个类只允许有一个实例——用静态属性控制</p>
+            <div class="example">
+                <div class="code"><span class="kw">class</span> <span class="fn">AppState</span> {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">static</span> <span class="prop">#instance</span> = <span class="kw">null</span></div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">constructor</span>() {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> (AppState.<span class="prop">#instance</span>) {</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> AppState.<span class="prop">#instance</span>  <span class="cm">// 返回已有的实例</span></div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;}</div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;AppState.<span class="prop">#instance</span> = <span class="kw">this</span></div>
+                <div class="code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">this</span>.<span class="prop">data</span> = {}</div>
+                <div class="code">&nbsp;&nbsp;}</div>
+                <div class="code">}</div>
+                <div class="code"><span class="kw">new</span> AppState() === <span class="kw">new</span> AppState()</div>
+                <div class="result">→ true（同一个实例）</div>
+            </div>
+        </div>
+
+        <!-- 只读属性 -->
+        <div class="card">
+            <h2>15. 只读属性 — getter 不设 setter</h2>
+            <p class="note">只提供 get，不提供 set → 外部只能读不能写</p>
+            <div class="example">
+                <div class="code"><span class="kw">class</span> <span class="fn">Rectangle</span> {</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">constructor</span>(w, h) { <span class="kw">this</span>.<span class="prop">#w</span> = w; <span class="kw">this</span>.<span class="prop">#h</span> = h }</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">get</span> <span class="fn">area</span>() { <span class="kw">return</span> <span class="kw">this</span>.<span class="prop">#w</span> * <span class="kw">this</span>.<span class="prop">#h</span> }</div>
+                <div class="code">&nbsp;&nbsp;<span class="kw">get</span> <span class="fn">perimeter</span>() { <span class="kw">return</span> <span class="num">2</span> * (<span class="kw">this</span>.<span class="prop">#w</span> + <span class="kw">this</span>.<span class="prop">#h</span>) }</div>
+                <div class="code">}</div>
+                <div class="code"><span class="kw">const</span> r = <span class="kw">new</span> Rectangle(<span class="num">5</span>, <span class="num">3</span>)</div>
+                <div class="code">r.<span class="prop">area</span> / r.<span class="prop">perimeter</span></div>
+                <div class="result">→ 15 / 16</div>
+                <div class="code">r.<span class="prop">area</span> = <span class="num">999</span>  <span class="cm">// ❌ 无效（没有 setter）</span></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('  Class 进阶 — static · super · Mixin ✅');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+        // ========== static ==========
+        console.group('📌 1. static 方法和属性');
+        class MathUtil {
+            static PI = 3.14159;
+            static add(a, b) { return a + b; }
+            // 实例方法
+            addInstance(a, b) { return a + b; }
+        }
+        console.log('MathUtil.PI       →', MathUtil.PI);
+        console.log('MathUtil.add(1,2) →', MathUtil.add(1, 2));
+        try {
+            console.log('new MathUtil().PI →', new MathUtil().PI);
+        } catch { }
+        console.log('MathUtil.prototype.addInstance →', typeof MathUtil.prototype.addInstance, '(实例方法挂在原型)');
+        console.groupEnd();
+
+        // ========== static 工厂方法 ==========
+        console.group('📌 2. static 工厂方法');
+        class User {
+            constructor(data) { Object.assign(this, data); }
+            static fromJson(json) { return new User(JSON.parse(json)); }
+        }
+        const u = User.fromJson('{"name":"张三","age":25}');
+        console.log('User.fromJson(...) →', u);
+        console.groupEnd();
+
+        // ========== static 继承 ==========
+        console.group('📌 3. 继承中的 static');
+        class Base { static whoami() { return this.name; } }
+        class Child extends Base { }
+        console.log('Base.whoami()  →', Base.whoami());
+        console.log('Child.whoami() →', Child.whoami(), '(this 指向 Child)');
+        console.groupEnd();
+
+        // ========== super 详解 ==========
+        console.group('📌 4. super 用法');
+        class Parent {
+            constructor(name) { this.name = name; }
+            greet() { return `我是${this.name}`; }
+        }
+        class Kid extends Parent {
+            constructor(name, age) {
+                super(name);  // 必须且最优先
+                this.age = age;
+            }
+            greet() {
+                const parentGreeting = super.greet();  // 调用父方法
+                return `${parentGreeting}，今年${this.age}岁`;
+            }
+        }
+        const kid = new Kid('小明', 10);
+        console.log('kid.greet() →', kid.greet());
+        console.groupEnd();
+
+        // ========== 继承内置类 ==========
+        console.group('📌 5. 继承 Array');
+        class MyArray extends Array {
+            first() { return this.at(0); }
+            last() { return this.at(-1); }
+            sum() { return this.reduce((s, n) => s + n, 0); }
+        }
+        const arr = MyArray.from([10, 20, 30, 40]);
+        console.log('MyArray.from([10,20,30,40]):');
+        console.log('  first() →', arr.first());
+        console.log('  last()  →', arr.last());
+        console.log('  sum()   →', arr.sum());
+        console.log('  arr instanceof Array  →', arr instanceof Array);
+        console.log('  arr instanceof MyArray →', arr instanceof MyArray);
+        console.groupEnd();
+
+        // ========== Mixin ==========
+        console.group('📌 6. Mixin 混入');
+        const TimestampMixin = Base => class extends Base {
+            getTimestamp() { return new Date(); }
+        };
+        const Loggable = Base => class extends Base {
+            log(msg) { console.log(`[LOG] ${msg}`); }
+        };
+        const pipe = (...mixins) => Base => mixins.reduce((cls, mixin) => mixin(cls), Base);
+
+        class Model extends pipe(TimestampMixin, Loggable)(Object) {
+            constructor(name) { super(); this.name = name; }
+        }
+        const m = new Model('test');
+        console.log('m.name          →', m.name);
+        console.log('m.getTimestamp()→', m.getTimestamp());
+        m.log('Mixin 混入成功!');
+        console.groupEnd();
+
+        // ========== 单例 ==========
+        console.group('📌 7. 单例模式');
+        class AppState {
+            static #instance = null;
+            constructor() {
+                if (AppState.#instance) return AppState.#instance;
+                AppState.#instance = this;
+                this.createdAt = new Date();
+            }
+        }
+        const a = new AppState();
+        const b = new AppState();
+        console.log('new AppState() === new AppState() →', a === b);
+        console.log('createdAt:', a.createdAt.toLocaleTimeString());
+        console.groupEnd();
+
+        // ========== getter 只读 ==========
+        console.group('📌 8. getter 只读属性');
+        class Rectangle {
+            #w; #h;
+            constructor(w, h) { this.#w = w; this.#h = h; }
+            get area() { return this.#w * this.#h; }
+        }
+        const r = new Rectangle(5, 3);
+        console.log('r.area →', r.area);
+        r.area = 999;
+        console.log('尝试 r.area = 999 后 →', r.area, '(没变，因为没有 setter)');
+        console.groupEnd();
+
+        // ========== instanceof 原理 ==========
+        console.group('📌 9. instanceof 原理');
+        function myInstanceof(obj, Constructor) {
+            let proto = Object.getPrototypeOf(obj);
+            while (proto) {
+                if (proto === Constructor.prototype) return true;
+                proto = Object.getPrototypeOf(proto);
+            }
+            return false;
+        }
+        class A { } class B extends A { } class C extends B { }
+        const c = new C();
+        console.log('myInstanceof(c, C) →', myInstanceof(c, C));
+        console.log('myInstanceof(c, A) →', myInstanceof(c, A));
+        console.log('myInstanceof(c, Array) →', myInstanceof(c, Array));
+        console.log('原生:', c instanceof C, c instanceof A, c instanceof Array);
+        console.groupEnd();
+
+        console.log('\n💡 核心总结：');
+        console.log('  1. static = 挂在类上的方法和属性，实例不可访问');
+        console.log('  2. super() = 调用父类 constructor（必须最先写）');
+        console.log('  3. super.method() = 调用父类同名方法（this 仍指向子实例）');
+        console.log('  4. 可以 extends 内置类（Array、Error 等）');
+        console.log('  5. Mixin = 函数返回类 → 绕过单继承限制 → 组合多个功能');
+        console.log('  6. 单例 = 静态私有属性记录唯一实例 → 全局唯一');
+        console.log('  7. getter 不设 setter = 只读属性 → 防止意外修改');
+        console.log('  8. instanceof = 沿原型链逐级向上查找 prototype');
+    </script>
+</body>
+</html>
